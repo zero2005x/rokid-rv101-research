@@ -106,3 +106,59 @@ WSL 端的 git credential helper 已設定於 `~/.gitconfig`，
 不是需要遮蔽的個資。`REDACTION_LOG.md` 中遮蔽的是該帳號被當作**個人信箱前綴**使用的
 情形（`zero2005x@gmail.com`），兩者不同。此處刻意保留，否則讀者無法依本檔驗證發布結果。
 
+---
+
+## 七、第二階段：英文版補齊（2026-10-11）
+
+commit `c236451`。目的：讓 repo 內所有第一方非英文內容都有英文可讀版本。
+
+### 文件（186 個 `_EN.md` / `_EN.txt`，與中文原檔同目錄並存）
+
+| 範圍 | 數量 |
+|---|---|
+| `reports/` | 122 |
+| `docs/` | 17 |
+| `HITCON_ZeroDay_RV101/` | 11 |
+| 根目錄與索引 | 6 |
+| `RV101_Disclosure/` | 2 |
+| `desktop/`、`desktop/tools/` | 3 |
+| `deploy/` | 2 |
+| `android/branding/` | 1 |
+
+涵蓋 216,561 個中文字的內容。命名沿用既有 `NAME_EN.md` 慣例，中文原檔與英文版以標題下的
+互連連結雙向指向（**358 條連結，0 斷鏈、0 單向**）。排除 `research/` 下的第三方上游源碼
+（Shizuku、公開 exploit 參考），非本專案著作。
+
+### 程式碼註解（245 檔，原檔就地改寫，不另建檔案）
+
+Android 142 檔、`source_code/` 66 檔、`deploy/`+`scripts/`+`frida/`+`desktop/` 80 檔。
+
+### 刻意未翻譯（功能性資料，改了會壞）
+
+| 項目 | 數量 | 理由 |
+|---|---|---|
+| 程式輸出字串（`echo`/`log`/`printf`） | 約 2,084 處 CJK | `reports/` 逐字引用這些輸出作為證據，翻譯會使證據與程式對不上 |
+| 14 語系 `strings.xml` 的 `<string>` 值 | 全部 | 這些就是翻譯資源本身 |
+| `desktop/src/i18n_strings.h` | 690 處 | 由 `tools/gen_i18n.py` 產生，內容即翻譯資料 |
+| 真實檔名中的中文 | — | 改名會使既有引用與雜湊失效 |
+
+### 驗證
+
+| 檢查 | 結果 |
+|---|---|
+| Shell 語法 | 44/44 `bash -n` 通過 |
+| Python | 18/18 `py_compile` 通過；另以 `tokenize`+`AST` 證明程式碼逐字元相同 |
+| XML 格式 | 41/41 well-formed |
+| C 編譯 | `gcc`/MinGW 編譯後目的檔與改動前**逐位元組相同** |
+| Kotlin/Java | 無 `kotlinc` 可用；改以「去註解後與 HEAD 逐位元組相同」為證 |
+| 交叉連結 | 358 條，0 斷鏈、0 單向 |
+| 遮蔽回歸 | 15 種個資／憑證樣式全樹零殘留 |
+
+### 雜湊維護
+
+- `REDACTION_LOG.md` / `_EN.md`：遮蔽後欄更新為目前內容雜湊（112 筆變動，原因為新增互連
+  連結與註解英譯；「遮蔽前」欄與置換對照表仍為原始紀錄）
+- `RV101_Disclosure/`、`HITCON_ZeroDay_RV101/`、`desktop/` 的 `SHA256SUMS.txt` 全部重算
+  並驗證（59+59+35+3+3 筆，**0 筆不符**；41 筆為刻意排除的檔案，保留原值）
+- `GITHUB_PUBLISH_LOG.md` 內出現的 `zero2005x` 為本 repo 自身 URL，非個資，已於檔內加註
+
