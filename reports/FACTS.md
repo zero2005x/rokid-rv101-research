@@ -1,5 +1,7 @@
 # FACTS.md — 單一權威事實表（RV101 / GhostLock 專案）
 
+> English: [FACTS_EN.md](FACTS_EN.md)
+
 > **用途**：`reports/` 內 90+ 份文件常有「同一件事、不同說法」。本檔是**唯一的權威來源**：
 > 其他報告若與本表衝突，**以本表為準**，並請在該報告註明「見 `reports/FACTS.md` §X」。
 >

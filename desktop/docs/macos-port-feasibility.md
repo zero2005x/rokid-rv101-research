@@ -1,5 +1,7 @@
 # ZeroLightRokid Desktop — macOS Port Feasibility Study
 
+> English: [macos-port-feasibility_EN.md](macos-port-feasibility_EN.md)
+
 > ⚠ **行號僅供參考**：本文件大量引用 `zero_light_desktop.c` 的行號，那些行號取自 **v2.0 時期的快照**。
 > v3.0 自繪介面改寫（以及 2026-09-13 的開機迴圈保護）之後行號已大幅位移，
 > 引用時請以**函式名稱**搜尋，不要直接跳到行號。

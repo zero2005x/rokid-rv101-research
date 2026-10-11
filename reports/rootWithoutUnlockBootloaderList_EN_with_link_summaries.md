@@ -1,4 +1,5 @@
 # Recent Vulnerabilities Used to Obtain Root Without Unlocking the Bootloader
+> English: [rootWithoutUnlockBootloaderList_EN_with_link_summaries_EN.md](rootWithoutUnlockBootloaderList_EN_with_link_summaries_EN.md)
 
 > Purpose: security research, risk tracking, and defensive assessment.
 >

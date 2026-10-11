@@ -13,25 +13,26 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 遮蔽設定。
+ * Masking configuration.
  *
- * <p>來源有兩層，後者覆寫前者：
+ * <p>There are two layers of configuration; the latter overrides the former:
  * <ol>
- *   <li><b>建置期預設</b>：{@code -PmaskTargets=...} 燒進 {@link BakedDefaults}（目標 App 白名單）。</li>
- *   <li><b>執行期覆寫</b>：{@value #CONF_PATH}，由 adb/root 寫入，hook 端每 {@value #RELOAD_INTERVAL_MS} ms
- *       檢查一次並自動重載（不必重開機、不必重建 APK）。</li>
+ *   <li><b>Build-time default</b>: {@code -PmaskTargets=...} is baked into {@link BakedDefaults}
+ *       (target app allowlist).</li>
+ *   <li><b>Runtime override</b>: {@value #CONF_PATH}, written by adb/root; the hook side checks every
+ *       {@value #RELOAD_INTERVAL_MS} ms and reloads automatically (no reboot, no APK rebuild).</li>
  * </ol>
  *
- * <p>設定檔格式（{@code #} 之後為註解）：
+ * <p>Config file format ({@code #} starts a comment):
  * <pre>
- * enabled=1                    # 總開關
- * targets=*                    # 目標 App：* / 空白分隔的包名 / !包名 = 排除
- * mask_settings=1              # Settings.Global/Secure/System 讀取
- * mask_query=1                 # ContentResolver.query（cursor 直讀 settings）
- * mask_props=1                 # SystemProperties 讀取
- * setting=adb_enabled=0        # 追加／覆寫要遮蔽的 settings key
+ * enabled=1                    # master switch
+ * targets=*                    # target apps: * / space-separated package names / !pkg = exclude
+ * mask_settings=1              # Settings.Global/Secure/System reads
+ * mask_query=1                 # ContentResolver.query (direct cursor reads of settings)
+ * mask_props=1                 # SystemProperties reads
+ * setting=adb_enabled=0        # add/override a settings key to mask
  * prop=ro.boot.verifiedbootstate=green
- * del_setting=adb_wifi_enabled # 移除某個 key
+ * del_setting=adb_wifi_enabled # remove a key
  * del_prop=ro.debuggable
  * </pre>
  */
@@ -40,15 +41,15 @@ final class MaskConfig {
     static final String CONF_PATH = "/data/local/tmp/usbdebug_hider.conf";
     static final long RELOAD_INTERVAL_MS = 2_000L;
 
-    /** 預設遮蔽的 settings（Global）key → App 會讀到的假值。 */
+    /** Default masked settings (Global) keys -> the fake value the app will read. */
     static final Map<String, String> DEFAULT_SETTINGS;
 
-    /** 預設遮蔽的系統屬性 key → App 會讀到的假值。 */
+    /** Default masked system property keys -> the fake value the app will read. */
     static final Map<String, String> DEFAULT_PROPS;
 
     /**
-     * 即使 uid >= 10000 也不遮蔽的套件：USB/MTP 檔案傳輸與媒體骨幹，
-     * 遮蔽它們會讓 MTP 檔案傳輸與媒體掃描行為異常。
+     * Packages never masked even when uid >= 10000: the USB/MTP file transfer and media
+     * backbone; masking them breaks MTP file transfer and media scanning.
      */
     static final Set<String> DEFAULT_EXCLUDE;
 
@@ -60,7 +61,7 @@ final class MaskConfig {
         DEFAULT_SETTINGS = Collections.unmodifiableMap(s);
 
         Map<String, String> p = new LinkedHashMap<>();
-        // USB gadget 狀態：App 讀到「純 MTP、adbd 沒在跑」
+        // USB gadget state: the app reads "MTP only, adbd not running"
         p.put("sys.usb.config", "mtp");
         p.put("sys.usb.state", "mtp");
         p.put("persist.sys.usb.config", "mtp");
@@ -72,7 +73,7 @@ final class MaskConfig {
         p.put("persist.service.adb.enable", "0");
         p.put("sys.usb.ffs.ready", "0");
         p.put("sys.usb.ffs.adb.ready", "0");
-        // 除錯/建置旗標
+        // debug/build flags
         p.put("ro.debuggable", "0");
         p.put("ro.adb.secure", "1");
         p.put("ro.build.type", "user");
@@ -90,12 +91,12 @@ final class MaskConfig {
         DEFAULT_EXCLUDE = Collections.unmodifiableSet(e);
     }
 
-    // ── 生效設定 ────────────────────────────────────────────────────────────
+    // ── Active settings ─────────────────────────────────────────────────────
     volatile boolean enabled = true;
     volatile boolean maskSettings = true;
     volatile boolean maskQuery = true;
     volatile boolean maskProps = true;
-    /** native（PLT/GOT）層是否也遮蔽屬性；關掉就只剩 Java 層。 */
+    /** Whether the native (PLT/GOT) layer also masks properties; disabling it leaves only the Java layer. */
     volatile boolean maskPropsNative = true;
     volatile boolean allTargets = true;
 
@@ -106,7 +107,7 @@ final class MaskConfig {
 
     String targetsRaw = "*";
     String source = "baked";
-    /** props 遮蔽表的序列化結果（給 native 層用）；空字串 = native 層不遮蔽。 */
+    /** Serialized props mask table (used by the native layer); empty string = the native layer masks nothing. */
     String propTableCache = "";
 
     private MaskConfig() {
@@ -122,17 +123,17 @@ final class MaskConfig {
         return allTargets || targets.contains(pkg);
     }
 
-    /** @return 該 settings key 要回給 App 的假值，null = 不遮蔽。 */
+    /** @return the fake value to return to the app for this settings key, null = do not mask. */
     String setting(String key) {
         return maskSettings ? settings.get(key) : null;
     }
 
-    /** @return 該系統屬性要回給 App 的假值，null = 不遮蔽。 */
+    /** @return the fake value to return to the app for this system property, null = do not mask. */
     String prop(String key) {
         return maskProps ? props.get(key) : null;
     }
 
-    // ── 載入 ────────────────────────────────────────────────────────────────
+    // ── Loading ─────────────────────────────────────────────────────────────
     private static volatile MaskConfig sInstance;
     private static volatile long sNextCheck;
 
@@ -165,7 +166,7 @@ final class MaskConfig {
         return c;
     }
 
-    /** 把 props 遮蔽表序列化成 key=value\n... 給 native 層。 */
+    /** Serialize the props mask table as key=value\n... for the native layer. */
     private static String buildPropTable(MaskConfig c) {
         if (!c.maskProps || !c.maskPropsNative) {
             return "";
@@ -198,7 +199,7 @@ final class MaskConfig {
             }
         }
         if (c.targets.isEmpty() && !c.allTargets) {
-            // 空清單 → 保守起見視為「全部第三方 App」
+            // empty list -> treat as "all third-party apps" to stay conservative
             c.allTargets = true;
             if (c.targetsRaw.isEmpty()) {
                 c.targetsRaw = "*";
@@ -263,7 +264,7 @@ final class MaskConfig {
                 }
             }
         } catch (Throwable ignored) {
-            // 設定檔壞掉時沿用預設值，絕不讓 hook 端例外冒出去
+            // on a broken config file keep the defaults; never let an exception escape from the hook side
         }
     }
 
@@ -280,7 +281,7 @@ final class MaskConfig {
                 || "on".equalsIgnoreCase(v);
     }
 
-    // ── 顯示用 ──────────────────────────────────────────────────────────────
+    // ── Display ─────────────────────────────────────────────────────────────
     String describe() {
         StringBuilder sb = new StringBuilder();
         sb.append("enabled        = ").append(enabled).append('\n');

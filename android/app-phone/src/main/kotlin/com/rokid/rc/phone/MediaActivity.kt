@@ -18,9 +18,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
- * 媒體照片牆（3 欄正方格）。
- * mode=remote：眼鏡端相簿（縮圖走 RFCOMM、多選可批次下載/刪除眼鏡端原檔）
- * mode=local ：本機已下載相簿（多選僅能刪除本機檔案）
+ * Media photo wall (3-column square grid).
+ * mode=remote: glasses-side album (thumbnails over RFCOMM; multi-select can batch-download / batch-delete the originals on the glasses)
+ * mode=local : locally downloaded album (multi-select can only delete the local files)
  */
 class MediaActivity : AppCompatActivity() {
 
@@ -108,7 +108,7 @@ class MediaActivity : AppCompatActivity() {
         else -> ThumbLoader.local(LocalStore.localFilePath(albumId, item.fileName), 512)
     }
 
-    // ---------- 多選 ----------
+    // ---------- multi-select ----------
 
     private fun enterSelection() {
         adapter?.setSelectionMode(true)
@@ -243,7 +243,7 @@ class MediaActivity : AppCompatActivity() {
         else -> LocalStore.localMediaItems(albumId)
     }
 
-    // ---------- 檢視 ----------
+    // ---------- view ----------
 
     private fun openViewer(item: MediaItem) {
         val i = android.content.Intent(this, ViewerActivity::class.java)

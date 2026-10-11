@@ -1,6 +1,6 @@
 /*
  * Binder Write-Read Command Test
- * 測試各種 Binder 命令
+ * Tests various Binder commands
  */
 
 #define _GNU_SOURCE
@@ -110,7 +110,7 @@ void test_binder_cmd(int fd, uint32_t cmd, const char *name, size_t extra_size)
     uint8_t write_buf[512] = {0};
     uint8_t read_buf[256] = {0};
 
-    // 構建命令
+    // Build the command
     *(uint32_t *)write_buf = cmd;
     size_t write_size = 4 + extra_size;
 
@@ -168,12 +168,12 @@ int main(int argc, char **argv)
     // Test commands
     printf("[*] Testing BC commands:\n");
 
-    // 無參數命令
+    // Commands without arguments
     test_binder_cmd(fd, BC_REGISTER_LOOPER, "BC_REGISTER_LOOPER", 0);
     test_binder_cmd(fd, BC_ENTER_LOOPER, "BC_ENTER_LOOPER", 0);
     test_binder_cmd(fd, BC_EXIT_LOOPER, "BC_EXIT_LOOPER", 0);
 
-    // 帶參數命令
+    // Commands with arguments
     test_binder_cmd(fd, BC_INCREFS, "BC_INCREFS", 4);
     test_binder_cmd(fd, BC_ACQUIRE, "BC_ACQUIRE", 4);
     test_binder_cmd(fd, BC_RELEASE, "BC_RELEASE", 4);
@@ -182,15 +182,15 @@ int main(int argc, char **argv)
     test_binder_cmd(fd, BC_FREE_BUFFER, "BC_FREE_BUFFER", 8);
     test_binder_cmd(fd, BC_DEAD_BINDER_DONE, "BC_DEAD_BINDER_DONE", 8);
 
-    // 較複雜的命令
+    // More complex commands
     test_binder_cmd(fd, BC_TRANSACTION, "BC_TRANSACTION", sizeof(struct binder_transaction_data));
     test_binder_cmd(fd, BC_REPLY, "BC_REPLY", sizeof(struct binder_transaction_data));
 
-    // 其他
+    // Others
     test_binder_cmd(fd, BC_REQUEST_DEATH_NOTIFICATION, "BC_REQUEST_DEATH_NOTIF", sizeof(struct binder_handle_cookie));
     test_binder_cmd(fd, BC_CLEAR_DEATH_NOTIFICATION, "BC_CLEAR_DEATH_NOTIF", sizeof(struct binder_handle_cookie));
 
-    // 嘗試讀取 mapped memory
+    // Try reading from mapped memory
     printf("\n[*] Reading from mapped binder memory...\n");
     sig_received = 0;
     if (sigsetjmp(jmp_env, 1) == 0)

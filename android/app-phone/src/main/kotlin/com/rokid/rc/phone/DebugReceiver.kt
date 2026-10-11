@@ -14,14 +14,14 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * Debug 用廣播接收器：讓 `adb shell am broadcast` 能觸發遠端指令，
- * 便於自動化驗證（MIUI 封鎖了 shell 的 input 注入）。
+ * Debug broadcast receiver: lets `adb shell am broadcast` trigger remote commands,
+ * for easier automated verification (MIUI blocks input injection from shell).
  */
 class DebugReceiver : BroadcastReceiver() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // 除錯接收器僅在開發/自動化使用；藍牙權限已於 Manifest 宣告並由 App 取得
+    // the debug receiver is used only in development/automation; the Bluetooth permission is declared in the Manifest and granted to the app
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
         Remote.ensureInit(context.applicationContext)
@@ -33,7 +33,7 @@ class DebugReceiver : BroadcastReceiver() {
                 when (cmd) {
                     "SET_LED" -> Log.i(TAG, "SET_LED result=${Remote.setLed(intent.getBooleanExtra("on", true), intent.getStringExtra("color") ?: "white")}")
                     "SET_GHOSTLOCK" -> Log.i(TAG, "SET_GHOSTLOCK result=${Remote.setGhostlock(intent.getBooleanExtra("enabled", true))}")
-                    // 失敗時把眼鏡端回傳的**原因**也印出來（只印 boolean 無法遠端診斷）
+                    // on failure also print the **reason** returned by the glasses (printing only a boolean gives no remote diagnosis)
                     "CAPTURE_PHOTO" -> Remote.capturePhoto().fold(
                         onSuccess = { Log.i(TAG, "CAPTURE_PHOTO ok ${it.fileName}") },
                         onFailure = { Log.w(TAG, "CAPTURE_PHOTO failed: ${it.message}") }
@@ -46,7 +46,7 @@ class DebugReceiver : BroadcastReceiver() {
                         onSuccess = { Log.i(TAG, "STOP_VIDEO ok ${it.fileName}") },
                         onFailure = { Log.w(TAG, "STOP_VIDEO failed: ${it.message}") }
                     )
-                    // 遠端診斷：把眼鏡端 STATUS 全欄位（含 cameraBusy／ringDevice／rootAcquired）印出來
+                    // remote diagnosis: print every field of the glasses-side STATUS (including cameraBusy/ringDevice/rootAcquired)
                     "DUMP_STATUS" -> Remote.status().fold(
                         onSuccess = { st ->
                             Log.i(TAG, "STATUS cameraBusy=${st.cameraBusy} rootMode=${st.rootMode} " +
@@ -58,7 +58,7 @@ class DebugReceiver : BroadcastReceiver() {
                     )
                     "ACQUIRE_ROOT" -> Log.i(TAG, "ACQUIRE_ROOT result=${Remote.acquireRoot()}")
                     "WIFI_CONNECT" -> {
-                        // debug 直連（同 LAN 測試用）：--es host <ip> [--ei port 8555]
+                        // debug direct connect (for testing on the same LAN): --es host <ip> [--ei port 8555]
                         val host = intent.getStringExtra("host")
                         if (host != null) {
                             val port = intent.getIntExtra("port", com.rokid.rc.shared.protocol.Protocol.WIFI_PORT)
@@ -99,7 +99,7 @@ class DebugReceiver : BroadcastReceiver() {
                         )
                         Log.i(TAG, "SET_DISPLAY result=${Remote.setDisplayConfig(cfg)}")
                     }
-                    // 驗證 ghostlock 進度代碼 → 手機語系文字（GhostlockText）
+                    // verify ghostlock progress code → phone-locale text (GhostlockText)
                     "TEST_PROGRESS" -> {
                         val arg = intent.getStringExtra("arg") ?: "/data/local/tmp/ghostlock_rv101"
                         val codes = listOf(
@@ -121,8 +121,8 @@ class DebugReceiver : BroadcastReceiver() {
                             Log.i(TAG, "TEST_PROGRESS $c -> ${shown ?: "(unmapped)"}")
                         }
                     }
-                    // 驗證「眼鏡端結構化事件 → 手機語系文字」的對照表（RingText）
-                    // 用法：--es cmd TEST_RING_TEXT [--es key photo_ok] [--es arg IMG_1.jpg]
+                    // verify the "glasses structured event → phone-locale text" mapping table (RingText)
+                    // usage: --es cmd TEST_RING_TEXT [--es key photo_ok] [--es arg IMG_1.jpg]
                     "TEST_RING_TEXT" -> {
                         val keys = intent.getStringExtra("key")?.let { listOf(it) }
                             ?: listOf(
@@ -284,8 +284,8 @@ class DebugReceiver : BroadcastReceiver() {
     }
 
     /**
-     * 計時下載測試：`TEST_TRANSFER [--es mediaId X]`。
-     * 不指定 mediaId 時挑「最大的」媒體（影片），才能看出 WiFi/藍牙的差距。
+     * Timed download test: `TEST_TRANSFER [--es mediaId X]`.
+     * When no mediaId is given it picks the "largest" media (a video), so the WiFi/Bluetooth difference becomes visible.
      */
     private suspend fun testTransfer(mediaId: String?) {
         val albums = Remote.listAlbums().getOrNull() ?: emptyList()

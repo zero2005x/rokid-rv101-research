@@ -23,8 +23,8 @@ import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 
 /**
- * WiFi 媒體通道建立失敗（帶原因代碼；UI 依 code 顯示在地化訊息，
- * 訊息本文僅供 logcat 除錯，不直接顯示給使用者）。
+ * WiFi media channel setup failed (carries a reason code; the UI shows a localized message by code,
+ * this message text is only for logcat debugging and is not shown to the user directly).
  */
 class WifiSetupException(
     val code: Code,
@@ -34,7 +34,7 @@ class WifiSetupException(
     enum class Code { AP_TIMEOUT, AP_NOT_READY, AP_JOIN_MANUAL, TCP, NOT_CONNECTED }
 }
 
-/** 手機端遠端 API 封裝（單例）。 */
+/** Phone-side remote API wrapper (singleton). */
 object Remote {
     lateinit var appContext: Context
         private set
@@ -44,16 +44,17 @@ object Remote {
         private set
 
     /**
-     * WiFi 通道（控制指令與媒體**都**優先走 WiFi、藍牙回退）。
+     * WiFi channel (both control commands and media prefer WiFi, falling back to Bluetooth).
      *
-     * 注意：眼鏡端 BluetoothServer 與 WifiServer 在 accept 新連線時都會 `graph.connection?.close()`，
-     * 兩條通道互斥、「後連上者勝」。因此只要有任何一般指令走藍牙重連，就會把 WiFi socket 踢掉，
-     * 媒體便默默退回藍牙（實測 10 秒影片傳輸極慢的根因）。
+     * NOTE: the glasses-side BluetoothServer and WifiServer both call `graph.connection?.close()` when accepting a
+     * new connection, so the two channels are mutually exclusive and "the last one to connect wins". So as soon as any
+     * ordinary command reconnects over Bluetooth it kicks out the WiFi socket, and media silently falls back to
+     * Bluetooth (measured: the root cause of extremely slow 10-second video transfers).
      */
     val tcp = TcpClient()
     val wifiLink: WifiLink by lazy { WifiLink(appContext) }
 
-    /** 任一通道可用即視為已連線（WiFi 連上時眼鏡會主動關閉藍牙，不可只看藍牙）。 */
+    /** Usable if either channel is up (the glasses actively close Bluetooth when WiFi connects, so do not look at Bluetooth alone). */
     val isConnected: Boolean get() = client.connected || tcp.connected
     val wifiMode: Boolean get() = tcp.connected
 
@@ -61,40 +62,41 @@ object Remote {
     private const val PREF = "rc_phone"
     private const val KEY_AUTO_WIFI = "auto_wifi_media"
 
-    /** 媒體前自動建立 WiFi 通道（預設開啟；可由設定頁「WiFi 傳輸」開關調整）。 */
+    /** Establish the WiFi channel before media (on by default; adjustable from the "WiFi transfer" switch on the settings page). */
     @Volatile
     var autoWifi: Boolean = true
         private set
 
-    /** 自動建立失敗後的冷卻，避免每次操作都彈系統加入視窗（鎖內外都會存取）。 */
+    /** Cooldown after a failed auto-setup, so not every operation pops the system join dialog (accessed both inside and outside the lock). */
     @Volatile
     private var lastAutoWifiFailAt = 0L
     private const val AUTO_WIFI_COOLDOWN_MS = 60_000L
 
-    /** 自動模式下熱點啟動等待次數（5s/次）；比手動模式短，避免 UI 卡住過久。 */
+    /** Hotspot startup poll count in auto mode (5 s each); shorter than manual mode so the UI does not freeze for too long. */
     private const val AUTO_AP_TRIES = 6
 
     private val wifiEnsureLock = Mutex()
 
     /**
-     * 正在建立 WiFi 媒體通道（開熱點／加入 AP／連 TCP）。
+     * A WiFi media channel is being established (starting the hotspot / joining the AP / connecting TCP).
      *
-     * UI 用它在「還沒連上」的幾秒內顯示「WiFi 連線中…」，而不是顯示成「藍牙」——
-     * 否則使用者下載影片時看到的是藍牙，但其實幾秒後就跑在 WiFi 上（傳輸很快、標示卻相反）。
+     * The UI uses it to show "WiFi 連線中…" during the few seconds before it is connected, instead of showing
+     * "藍牙" — otherwise the user downloading a video sees Bluetooth even though it runs over WiFi a moment later
+     * (fast transfer, opposite label).
      */
     @Volatile
     var wifiNegotiating: Boolean = false
         private set
 
-    /** 傳輸通道狀態變化（開始協商／連上／失敗／斷線）→ UI 應重新整理。可能來自背景執行緒。 */
+    /** Transfer channel state changes (negotiation started / connected / failed / disconnected) → the UI should refresh. May come from a background thread. */
     @Volatile
     var onTransportChanged: (() -> Unit)? = null
 
     /**
-     * 眼鏡主動推送的訊息（`PROGRESS` 等）。
+     * Messages the glasses push proactively (`PROGRESS` etc.).
      *
-     * **必須兩條通道都註冊**：眼鏡端 `AppGraph.push()` 是用「當前連線」推送的，
-     * 只註冊藍牙會讓 WiFi 成為當前通道時推播全部被丟棄（LPE 進度即失效）。
+     * **Both channels must be registered**: the glasses-side `AppGraph.push()` pushes over the "current connection",
+     * so registering Bluetooth alone means every push is dropped while WiFi is the current channel (LPE progress stops working).
      */
     @Volatile
     var onPush: ((JSONObject) -> Unit)? = null
@@ -113,8 +115,8 @@ object Remote {
             appContext = context.applicationContext
             autoWifi = appContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
                 .getBoolean(KEY_AUTO_WIFI, true)
-            // 集中在此註冊：任何通道連上或斷線都要更新 UI（原本只有「斷線」會更新，
-            // 導致 WiFi 自動建立後畫面仍停在「傳輸：藍牙」）
+            // Registered centrally here: any channel connecting or disconnecting must update the UI (originally only "disconnected" updated,
+            // which left the screen stuck on "傳輸：藍牙" after WiFi was established automatically)
             client.onConnected = { notifyTransportChanged() }
             client.onDisconnected = { notifyTransportChanged() }
             tcp.onConnected = { notifyTransportChanged() }
@@ -122,7 +124,7 @@ object Remote {
         }
     }
 
-    /** 設定頁「WiFi 傳輸」開關：記錄偏好（下一次媒體操作即自動套用）。 */
+    /** Settings page "WiFi transfer" switch: remember the preference (applied automatically on the next media operation). */
     fun setAutoWifi(enabled: Boolean) {
         autoWifi = enabled
         if (::appContext.isInitialized) {
@@ -142,13 +144,13 @@ object Remote {
     }
 
     /**
-     * 目前可用的控制通道：WiFi 優先、藍牙回退。
+     * Currently usable control channel: WiFi preferred, Bluetooth as fallback.
      *
-     * 一般指令也要走 WiFi，否則藍牙重連會把 WiFi socket 關掉（見 [tcp] 說明）。
+     * Ordinary commands must go over WiFi too, otherwise a Bluetooth reconnect closes the WiFi socket (see the note on [tcp]).
      */
     fun link(): LinkClient = if (tcp.connected) tcp else client
 
-    /** 若連線已斷，嘗試用已知裝置重連（僅在 WiFi 不可用時才會有機會重連藍牙）。 */
+    /** If the connection is down, try to reconnect with a known device (Bluetooth only gets a chance to reconnect when WiFi is unavailable). */
     private suspend fun ensureConnected(): Boolean {
         if (client.connected) return true
         if (tcp.connected) return false
@@ -156,7 +158,7 @@ object Remote {
         return client.connect(d).isSuccess
     }
 
-    /** 長時指令（跑 ghostlock LPE）的請求逾時。 */
+    /** Request timeout for long commands (running the ghostlock LPE). */
     private const val LONG_TIMEOUT = 600_000L
 
     private suspend fun request(msg: JSONObject, timeoutMs: Long = 30_000L): JSONObject {
@@ -166,7 +168,7 @@ object Remote {
             } catch (e: IOException) {
                 android.util.Log.w(TAG, "wifi control failed: ${e.message}")
                 tcp.disconnect()
-                // 長時指令不重送（避免重複觸發 LPE／擷取），直接讓呼叫端看到錯誤
+                // do not resend long commands (avoid triggering the LPE/capture twice), let the caller see the error directly
                 if (timeoutMs > 30_000L) throw e
                 if (!client.connected && !ensureConnected()) throw e
                 client.request(msg, timeoutMs)
@@ -177,22 +179,23 @@ object Remote {
     }
 
     /**
-     * 媒體通道：WiFi 優先。
+     * Media channel: WiFi preferred.
      *
-     * 未連線且允許自動模式時，主動請眼鏡開熱點並加入；失敗（含使用者未授權加入 AP）則回退藍牙，
-     * 並進入冷卻避免連續彈窗。
+     * When not connected and auto mode is allowed, proactively ask the glasses to start a hotspot and join it; on
+     * failure (including the user not authorizing the AP join) fall back to Bluetooth and enter cooldown to avoid
+     * repeated dialogs.
      */
     private suspend fun ensureMediaLink(): LinkClient {
         if (tcp.connected) return tcp
         if (autoWifi) {
             wifiEnsureLock.withLock {
-                // 等鎖期間別人可能已經連上，或剛剛才失敗（冷卻中）
+                // while waiting for the lock someone else may have connected, or it may just have failed (cooling down)
                 if (tcp.connected) return tcp
                 val cooling = System.currentTimeMillis() - lastAutoWifiFailAt < AUTO_WIFI_COOLDOWN_MS
                 if (!cooling) {
                     appLog("媒體通道：建立 WiFi 中…")
                     wifiNegotiating = true
-                    notifyTransportChanged()   // UI 立刻改顯示「WiFi 連線中…」
+                    notifyTransportChanged()   // UI immediately switches to showing "WiFi 連線中…"
                     try {
                         val r = ensureWifiMedia(apTries = AUTO_AP_TRIES)
                         if (r.isSuccess && tcp.connected) {
@@ -216,7 +219,7 @@ object Remote {
         return client
     }
 
-    /** 寫入 App 內共用操作紀錄（無 UI 時只留 logcat）。 */
+    /** Write to the shared in-app operation log (when there is no UI, only logcat). */
     private fun appLog(msg: String) {
         android.util.Log.i(TAG, msg)
         runCatching { com.rokid.rc.phone.ui.LogStore.append(msg) }
@@ -237,21 +240,21 @@ object Remote {
     }
 
     /**
-     * 建立 WiFi 媒體通道：
-     * 藍牙請眼鏡開熱點（ENSURE_WIFI_AP，輪詢至 AP up）→ 手機加入 AP（系統彈窗或手動）
-     * → TCP 連 8555。失敗回傳可讀訊息（UI 可引導手動加入 AP）。
+     * Establish the WiFi media channel:
+     * ask the glasses over Bluetooth to start the hotspot (ENSURE_WIFI_AP, poll until the AP is up) → the phone joins the AP (system dialog or manual)
+     * → TCP connect to 8555. On failure return a readable message (the UI can guide a manual AP join).
      *
-     * @param apTries 熱點啟動輪詢次數（每次間隔 5 秒）；自動模式用較短的值。
+     * @param apTries hotspot startup poll count (5 seconds apart); auto mode uses a shorter value.
      */
     suspend fun ensureWifiMedia(apTries: Int = 18): Result<WifiApInfo> {
         if (tcp.connected) return Result.success(wifiLink.apInfo)
-        // 控制鏈路（藍牙）必須先通；否則 request() 會拋 IOException 造成當機（曾實際發生）
+        // the control link (Bluetooth) must be up first; otherwise request() throws IOException and crashes (this actually happened)
         if (!client.connected && !ensureConnected()) {
             return Result.failure(
                 WifiSetupException(WifiSetupException.Code.NOT_CONNECTED, "glasses control link not connected")
             )
         }
-        // 1) 請眼鏡確保 SoftAP；AP 啟動慢（5~90s），輪詢直到 up 或逾時
+        // 1) ask the glasses to ensure the SoftAP; the AP starts slowly (5-90 s), poll until up or timeout
         var lastOk = false
         for (i in 1..apTries) {
             val r = runCatching { client.request(Msg.build(MsgType.ENSURE_WIFI_AP), 30_000L) }
@@ -274,7 +277,7 @@ object Remote {
                 else WifiSetupException(WifiSetupException.Code.AP_NOT_READY, "hotspot not ready")
             )
         }
-        // 2) 手機加入 AP
+        // 2) the phone joins the AP
         if (!wifiLink.isOnAp()) {
             val joined = wifiLink.requestJoinAp()
             if (!joined) {
@@ -286,7 +289,7 @@ object Remote {
                 )
             }
         }
-        // 3) TCP 連線（**必須綁定到剛加入的眼鏡 AP 網路**，否則會走行動網路而逾時）
+        // 3) TCP connect (**must bind to the glasses AP network just joined**, otherwise it goes over mobile data and times out)
         val apNet = wifiLink.joinedApNetwork()
         android.util.Log.i("Remote", "wifi media: apNet=${apNet?.toString() ?: "null"} localIp=${wifiLink.currentLocalIp()}")
         val res = tcp.connect(wifiLink.apInfo.ip, wifiLink.apInfo.port, network = apNet)
@@ -299,7 +302,7 @@ object Remote {
         )
     }
 
-    /** 關閉 WiFi 通道，並把藍牙控制鏈路接回來（眼鏡端在 WiFi accept 時已關掉藍牙）。 */
+    /** Close the WiFi channel and bring the Bluetooth control link back (the glasses side already closed Bluetooth when it accepted WiFi). */
     suspend fun closeWifiMedia() {
         tcp.disconnect()
         lastAutoWifiFailAt = 0L
@@ -330,26 +333,26 @@ object Remote {
         if (Msg.ok(r)) Unit else throw IOException(Msg.error(r) ?: "failed")
     }
 
-    /** 設定眼鏡端儀表板顯示內容（五類開關；眼鏡端持久化）。 */
+    /** Set the glasses-side dashboard contents (five switch groups; persisted on the glasses). */
     suspend fun setDisplayConfig(config: DisplayConfig): Result<Unit> = runCatching {
         val r = request(Msg.build(MsgType.SET_DISPLAY_CONFIG, 0L, "display" to config.toJson()))
         if (Msg.ok(r)) Unit else throw IOException(Msg.error(r) ?: "failed")
     }
 
-    /** 讀回眼鏡端目前的儀表板顯示配置（連線時同步勾選狀態）。 */
+    /** Read back the glasses-side dashboard display configuration (sync the checkbox state on connect). */
     suspend fun fetchDisplayConfig(): Result<DisplayConfig> = runCatching {
         val r = request(Msg.build(MsgType.GET_STATUS))
         DisplayConfig.fromJson(r.getJSONObject("display"))
     }
 
-    /** 切換眼鏡端「靜音拍攝」（強制壓制拍照/錄影提示音；需 root）。 */
+    /** Toggle glasses-side "silent capture" (force-suppress the photo/video notification sound; requires root). */
     suspend fun setSilent(enabled: Boolean): Result<Boolean> = runCatching {
         val r = request(Msg.build(MsgType.SET_SILENT, 0L, "enabled" to enabled), LONG_TIMEOUT)
         if (Msg.ok(r)) Msg.data(r)?.optBoolean("applied", false) ?: false
         else throw IOException(Msg.error(r) ?: "failed")
     }
 
-    /** 要求眼鏡開啟無線 adb（root 後可用；回傳可連線的 ip:port）。 */
+    /** Ask the glasses to enable wireless adb (available after root; returns a connectable ip:port). */
     suspend fun enableWifiAdb(): Result<Pair<String, Int>> = runCatching {
         val r = request(Msg.build(MsgType.ENABLE_WIFI_ADB), 30_000L)
         if (!Msg.ok(r)) throw IOException(Msg.error(r) ?: "failed")
@@ -358,9 +361,9 @@ object Remote {
     }
 
 
-    // ---- 開發模式（無線 adb 按需開關；眼鏡端 DevModeController） ----
+    // ---- dev mode (wireless adb switch on demand; glasses-side DevModeController) ----
 
-    /** 開始開發模式：眼鏡加入 ssid 網段並開啟 adb TCP listener。 */
+    /** Start dev mode: the glasses join the ssid subnet and open an adb TCP listener. */
     suspend fun devModeStart(ssid: String?, pass: String?, security: String = "wpa2",
                              idleMs: Long = 10 * 60_000L): Result<JSONObject> = runCatching {
         val m = Msg.build(MsgType.DEV_MODE_START)
@@ -373,21 +376,21 @@ object Remote {
         Msg.data(r) ?: JSONObject()
     }
 
-    /** 停止開發模式（清 persist.adb.tcp.port、必要時還原 SoftAP）。 */
+    /** Stop dev mode (clear persist.adb.tcp.port, restore the SoftAP if necessary). */
     suspend fun devModeStop(): Result<JSONObject> = runCatching {
         val r = request(Msg.build(MsgType.DEV_MODE_STOP), 30_000L)
         if (!Msg.ok(r)) throw IOException(Msg.error(r) ?: "failed")
         Msg.data(r) ?: JSONObject()
     }
 
-    /** 查詢開發模式狀態（state/ssid/ip/listenerTcp/listenerManaged/message）。 */
+    /** Query dev mode status (state/ssid/ip/listenerTcp/listenerManaged/message). */
     suspend fun devModeStatus(): Result<JSONObject> = runCatching {
         val r = request(Msg.build(MsgType.DEV_MODE_STATUS), 20_000L)
         if (!Msg.ok(r)) throw IOException(Msg.error(r) ?: "failed")
         Msg.data(r) ?: JSONObject()
     }
 
-    /** 查詢眼鏡端權限/SELinux/WiFi AP 狀況。 */
+    /** Query the glasses-side permission/SELinux/WiFi AP situation. */
     suspend fun deviceInfo(): Result<JSONObject> = runCatching {
         val info = request(Msg.build(MsgType.GET_DEVICE_INFO)).getJSONObject("info")
         if (info.has("wifiAp")) {
@@ -397,8 +400,8 @@ object Remote {
     }
 
     /**
-     * 檢查回覆是否為錯誤（眼鏡端失敗時回 `{ok:false,error:"..."}`，沒有 media 欄位）。
-     * 沒有這層檢查時，失敗會變成難懂的 `No value for media`（實測踩到）。
+     * Check whether the reply is an error (on glasses-side failure it returns `{ok:false,error:"..."}` with no media field).
+     * Without this check a failure turns into the obscure `No value for media` (hit this in practice).
      */
     private fun requireOk(r: JSONObject) {
         if (!r.optBoolean("ok", true)) {
@@ -415,7 +418,7 @@ object Remote {
         }
     }
 
-    /** 路徑 B：遠端開關眼鏡端的戒指／觸控板控制。 */
+    /** Path B: remotely toggle the glasses-side ring / touchpad control. */
     suspend fun setRing(enabled: Boolean, pattern: String? = null): Result<Boolean> = runCatching {
         val m = Msg.build(MsgType.SET_RING).put("enabled", enabled)
         if (!pattern.isNullOrBlank()) m.put("pattern", pattern)
@@ -475,10 +478,10 @@ object Remote {
     }
 
     /**
-     * 依檔案大小估算傳輸逾時。
+     * Estimate the transfer timeout from the file size.
      *
-     * 速率取 **45 KB/s**：實測藍牙 RFCOMM 只有 **51.7 KB/s**（16.7 MB 檔 ＝ 324 秒），
-     * 原本假設 60 KB/s 會讓同一個檔案**剛好逾時失敗**（位元組其實已到齊）。
+     * Rate taken as **45 KB/s**: measured Bluetooth RFCOMM is only **51.7 KB/s** (a 16.7 MB file = 324 seconds),
+     * and the original assumption of 60 KB/s made the same file **fail right at the timeout** (the bytes had in fact all arrived).
      */
     private fun transferTimeout(sizeBytes: Long): Long =
         (sizeBytes * 1000 / 45_000).coerceAtLeast(30_000L) + 45_000L

@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""gen_silent_payload.py — 由靜音 OGG 產生眼鏡端 SilentPayloads.kt（內嵌 base64）。
+"""gen_silent_payload.py — generate the glasses-side SilentPayloads.kt (embedded base64) from a
+silent OGG.
 
-為什麼要產生：眼鏡端壓制拍照/錄影提示音的做法，是以 root 把一個「合法靜音 OGG」
-bind-mount 覆蓋 `/product/media/audio/ui/*.ogg`；該靜音檔需內嵌進 App（無需外部檔案、
-Shizuku 與 bridge 兩條路徑共用）。音檔很小（3584 B → base64 4780 字元）。
+Why generate it: the glasses side suppresses the photo/video shutter sound by using root to
+bind-mount a "legitimate silent OGG" over `/product/media/audio/ui/*.ogg`; that silent file must
+be embedded in the App (no external file needed, shared by the Shizuku and bridge paths). The
+audio file is tiny (3584 B -> 4780 base64 characters).
 
-用法：
+Usage:
     python3 scripts/gen_silent_payload.py
-輸入：reports/media/silent_camera.ogg
-輸出：android/app-glasses/src/main/kotlin/com/rokid/rc/glasses/ghost/SilentPayloads.kt
-（重新產生靜音檔：用 imageio-ffmpeg 的 ffmpeg）
+Input:  reports/media/silent_camera.ogg
+Output: android/app-glasses/src/main/kotlin/com/rokid/rc/glasses/ghost/SilentPayloads.kt
+(Regenerate the silent file with imageio-ffmpeg's ffmpeg)
     FF=.venv/lib/python3.13/site-packages/imageio_ffmpeg/binaries/ffmpeg-linux-x86_64-v7.0.2
     $FF -y -f lavfi -i anullsrc=r=44100:cl=mono -t 0.3 -c:a libvorbis -q:a 0 reports/media/silent_camera.ogg
 """
@@ -107,7 +109,8 @@ def main() -> int:
     body = "\n".join(
         f'        "{r}"' + (" +" if i < len(rows) - 1 else "") for i, r in enumerate(rows)
     )
-    # 佔位符替換（模板含大量 % 與 {}，不可用 %-format/format）
+    # placeholder replacement (the template contains many % and {}, so %-format/format
+    # cannot be used)
     OUT.write_text(TEMPLATE.replace("@@B64@@", body), encoding="utf-8")
     print(f"[+] 已產生 {OUT.relative_to(ROOT)}（ogg {OGG.stat().st_size} B → base64 {len(b64)} 字元）")
     return 0

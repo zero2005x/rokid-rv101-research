@@ -1,18 +1,21 @@
 /**
- * ota_hook.js — 掛 com.rokid.glass.ota，dump OTA 版本檢查的「請求/回應」。
+ * ota_hook.js — hook com.rokid.glass.ota and dump the OTA version-check request/response.
  *
- * 抓三層，互為備援：
- *   1. java.net.URL 建構       → 抓到 app 正在連的網址（含 ota.rokid.com check API）
- *   2. OkHttp Request.Builder  → 抓到請求 URL + headers（含裝置認證簽名）
- *      OkHttp ResponseBody.string() → 抓到回應 JSON（含最新 download_url / version）
- *   3. SharedPreferences.Editor→ 抓到 app 寫入 ota_sp.xml 的最終結果：
+ * Three layers, each a fallback for the others:
+ *   1. java.net.URL construction    -> the URL the app is connecting to (including the
+ *                                      ota.rokid.com check API)
+ *   2. OkHttp Request.Builder       -> request URL + headers (including the device auth
+ *                                      signature)
+ *      OkHttp ResponseBody.string() -> response JSON (including the latest download_url /
+ *                                      version)
+ *   3. SharedPreferences.Editor     -> what the app finally writes into ota_sp.xml:
  *        download_url / download_version / check_sum / image_size / change_log
  *
- * 用法：
- *   真機（frida-server 已跑）：frida -U -f com.rokid.glass.ota -l ota_hook.js --no-pause
- *   附加已執行 app：           frida -U -n com.rokid.glass.ota -l ota_hook.js
+ * Usage:
+ *   Real device (frida-server running): frida -U -f com.rokid.glass.ota -l ota_hook.js --no-pause
+ *   Attach to a running app:            frida -U -n com.rokid.glass.ota -l ota_hook.js
  *
- * 輸出標記 [OTA-HOOK]，方便 logcat/終端過濾。
+ * Output is tagged [OTA-HOOK] for easy filtering in logcat/terminal.
  */
 'use strict';
 
@@ -21,7 +24,7 @@ var TAG = '[OTA-HOOK]';
 function log(msg) { console.log(TAG + ' ' + msg); }
 function safeStr(s) { try { return s.toString(); } catch (e) { return '<' + e + '>'; } }
 
-// 只 dump 含關鍵字的 URL/內容，避免大量無關 log
+// only dump URLs/content matching the keywords, to avoid a flood of unrelated log lines
 function interesting(s) {
     if (s === null || s === undefined) return false;
     var t = String(s);
@@ -31,7 +34,7 @@ function interesting(s) {
 Java.perform(function () {
 
     // =====================================================================
-    // 1) java.net.URL 建構 — 抓所有 URL
+    // 1) java.net.URL construction — capture every URL
     // =====================================================================
     try {
         var URL = Java.use('java.net.URL');
@@ -44,7 +47,7 @@ Java.perform(function () {
     } catch (e) { log('hook URL 失敗: ' + e); }
 
     // =====================================================================
-    // 2) OkHttp 請求 + 回應
+    // 2) OkHttp request + response
     // =====================================================================
     try {
         var ReqBuilder = Java.use('okhttp3.Request$Builder');
@@ -78,7 +81,7 @@ Java.perform(function () {
     } catch (e) { log('hook OkHttp ResponseBody 失敗: ' + e); }
 
     // =====================================================================
-    // 3) SharedPreferences.Editor — 抓最終寫入的 download_url/version/checksum
+    // 3) SharedPreferences.Editor — capture the final download_url/version/checksum writes
     // =====================================================================
     var Editor = null;
     try {

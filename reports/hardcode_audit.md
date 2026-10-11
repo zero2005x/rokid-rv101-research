@@ -1,5 +1,7 @@
 # 硬編碼稽核報告（全專案）
 
+> English: [hardcode_audit_EN.md](hardcode_audit_EN.md)
+
 - 日期：2026-09-12
 - 工具：`python3 scripts/audit_hardcode.py`（可重跑；輸出五個章節：中文字面值／路徑／版面／重複字面值／腳本）
 - 範圍：`android/app-phone`、`android/app-glasses`、`android/shared`、`deploy/`、`scripts/`、版面 XML

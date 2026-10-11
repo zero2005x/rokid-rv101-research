@@ -15,40 +15,40 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-/** 相簿卡片（2 欄方形封面）。 */
+/** Album card (2-column square cover). */
 data class AlbumCard(
     val id: String,
     val name: String,
     val countText: String,
     val subText: String? = null,
     val empty: Boolean = false,
-    /** 徽章數字（項數）；null 表示不顯示徽章。 */
+    /** Badge number (item count); null means no badge is shown. */
     val badgeCount: Int? = null
 )
 
 /**
- * 相簿卡 adapter（相簿頁與本機頁共用）。
+ * Album card adapter (shared by the albums page and the local page).
  *
- * 支援**多選模式**：長按進入選取、點擊切換勾選；進入/離開與選取變化會回呼
- * [onSelectionChanged]，由畫面決定工具列與批次動作。
+ * Supports a **multi-select mode**: long press enters selection, tapping toggles the check; entering/leaving and
+ * selection changes call back [onSelectionChanged], and the screen decides the toolbar and the batch actions.
  */
 class AlbumCardAdapter(
     private var items: List<AlbumCard> = emptyList(),
     private val coverLoader: suspend (AlbumCard) -> Bitmap? = { null },
     private val onClick: (AlbumCard) -> Unit = {},
     private val onLongClick: (AlbumCard) -> Unit = {},
-    /** true（本機頁）＝長按進入多選；false（相簿頁）＝長按交給 [onLongClick] 開選單。 */
+    /** true (local page) = long press enters multi-select; false (albums page) = long press is handed to [onLongClick] to open a menu. */
     private val longPressEntersSelection: Boolean = true
 ) : RecyclerView.Adapter<AlbumCardAdapter.VH>() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    /** 多選狀態。 */
+    /** Multi-select state. */
     var selectionMode: Boolean = false
         private set
     val selected = LinkedHashSet<String>()
 
-    /** 選取或模式變化時回呼（用於更新工具列／批次列）。 */
+    /** Callback on a selection or mode change (used to update the toolbar/batch row). */
     var onSelectionChanged: (() -> Unit)? = null
 
     class VH(v: View) : RecyclerView.ViewHolder(v) {
@@ -75,7 +75,7 @@ class AlbumCardAdapter(
         h.emptyIcon.visibility = if (showPlaceholder) View.VISIBLE else View.INVISIBLE
         h.cover.visibility = if (showPlaceholder) View.INVISIBLE else View.VISIBLE
 
-        // 項數徽章
+        // item count badge
         if (a.badgeCount != null && a.badgeCount > 0) {
             h.badge.visibility = View.VISIBLE
             h.badge.text = a.badgeCount.toString()
@@ -83,7 +83,7 @@ class AlbumCardAdapter(
             h.badge.visibility = View.GONE
         }
 
-        // 選取狀態
+        // selection state
         val checked = selected.contains(a.id)
         h.check.visibility = if (selectionMode) View.VISIBLE else View.GONE
         h.check.setImageResource(
@@ -121,7 +121,7 @@ class AlbumCardAdapter(
         h.itemView.setTag(R.id.cover_job, null)
     }
 
-    // ---------------- 多選 ----------------
+    // ---------------- multi-select ----------------
 
     fun enterSelection(id: String) {
         selectionMode = true
@@ -157,7 +157,7 @@ class AlbumCardAdapter(
 
     fun submit(list: List<AlbumCard>) {
         items = list
-        // 清掉已不存在的選取項目
+        // drop selected entries that no longer exist
         val ids = list.map { it.id }.toSet()
         selected.retainAll(ids)
         if (selected.isEmpty()) selectionMode = false

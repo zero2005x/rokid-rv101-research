@@ -17,11 +17,11 @@ import java.io.FileOutputStream
 import java.util.UUID
 
 /**
- * 眼鏡端相簿冊與媒體索引。
+ * Glasses-side album and media index.
  *
- * - 實體檔案：`<externalFilesDir>/media/albums/<albumId>/<file>`
- * - 索引：`<externalFilesDir>/media/index.json`（單一 JSON，易於檢視）
- * - 縮圖：`<cacheDir>/thumbs/<mediaId>.jpg`
+ * - Actual files: `<externalFilesDir>/media/albums/<albumId>/<file>`
+ * - Index: `<externalFilesDir>/media/index.json` (a single JSON, easy to inspect)
+ * - Thumbnails: `<cacheDir>/thumbs/<mediaId>.jpg`
  */
 class MediaRepository(private val context: Context) {
 
@@ -142,7 +142,7 @@ class MediaRepository(private val context: Context) {
     fun getThumbnail(id: String, maxW: Int, maxH: Int): File? {
         val m = synchronized(lock) { media[id] } ?: return null
         val src = mediaFile(id) ?: return null
-        // 來源檔已不在 → 不可回舊快取縮圖（否則刪檔後仍看得到圖，與清單狀態不一致）
+        // the source file is gone → must not return a stale cached thumbnail (otherwise a deleted file would still show an image, inconsistent with the list state)
         if (!src.isFile) return null
         val thumb = thumbFile(id)
         if (thumb.exists() && thumb.length() > 0) return thumb
@@ -246,8 +246,8 @@ class MediaRepository(private val context: Context) {
                 val root = JSONObject(indexFile.readText())
                 val albArr = root.optJSONArray("albums") ?: JSONArray()
                 for (i in 0 until albArr.length()) {
-                    // 與 media 相同：逐筆容錯。`Album.fromJson` 用 getString("id"/"name")，
-                    // 一筆壞掉若共用外層 try，會連帶讓整個 media 陣列也不載入（見 §16 A/B 的同型缺陷）
+                    // same as media: per-entry fault tolerance. `Album.fromJson` uses getString("id"/"name"),
+                    // so one broken entry sharing the outer try would also stop the whole media array from loading (the same class of defect as §16 A/B)
                     try {
                         val a = Album.fromJson(albArr.getJSONObject(i))
                         albums[a.id] = a
@@ -257,8 +257,8 @@ class MediaRepository(private val context: Context) {
                 }
                 val medArr = root.optJSONArray("media") ?: JSONArray()
                 for (i in 0 until medArr.length()) {
-                    // 逐筆解析：單一壞掉的项目不該讓其餘全部消失
-                    // （原本一筆丟例外就會被外層 catch 吞掉，後面全部不載入）
+                    // parse entry by entry: a single broken item must not make all the others disappear
+                    // (previously one entry throwing was swallowed by the outer catch and everything after it failed to load)
                     try {
                         val m = MediaItem.fromJson(medArr.getJSONObject(i))
                         media[m.id] = m
@@ -274,20 +274,21 @@ class MediaRepository(private val context: Context) {
     }
 
     /**
-     * 用磁碟上的實際檔案校正索引（索引不是唯一真相）。
+     * Reconcile the index against the actual files on disk (the index is not the only truth).
      *
-     * 為什麼需要：索引是**單一 JSON 檔**，任何一次「非原子寫入被中斷」或「解析失敗」都會讓已拍攝的
-     * 項目從清單消失——**實際發生過**：相簿 7 筆只剩 1 筆，但 7 個檔案都還在磁碟上（2026-09-13 23:04）。
-     * 這裡把「在磁碟上、但不在索引裡」的檔案重新登記，清單即可自我修復。
+     * Why it is needed: the index is a **single JSON file**, so any "interrupted non-atomic write" or "parse failure"
+     * makes already-captured items vanish from the list — **this actually happened**: an album went from 7 entries down
+     * to 1 while all 7 files were still on disk (2026-09-13 23:04). This re-registers "files that are on disk but not
+     * in the index", so the list can repair itself.
      */
     private fun reconcileWithDisk() {
         if (!albumsDir.isDirectory) return
         var added = 0
         var dropped = 0
         synchronized(lock) {
-            // (0) 反向：索引有、磁碟沒有 → 移除。
-            // 少了這一步，被 App 以外的方式刪掉的檔案會變成永久「幽靈項目」：
-            // 清單仍顯示、每次 persist 又把它寫回去（DOWNLOAD_MEDIA 會回 media not found）。
+            // (0) the reverse direction: in the index but not on disk → remove.
+            // without this step, files deleted by anything other than the app become permanent "ghost entries":
+            // the list still shows them and every persist writes them back (DOWNLOAD_MEDIA returns media not found).
             media.values.filter { !File(albumDir(it.albumId), it.fileName).isFile }.forEach { m ->
                 media.remove(m.id)
                 thumbFile(m.id).delete()
@@ -341,8 +342,8 @@ class MediaRepository(private val context: Context) {
             root.put("albums", albArr).put("media", medArr)
             val dir = indexFile.parentFile
             dir?.mkdirs()
-            // 原子寫入：先寫 .tmp 再 rename。原本直接 writeText（truncate 後才寫），
-            // 程序若在兩者之間被殺（LMK／force-stop／安裝 APK）就會留下空或半截的索引。
+            // atomic write: write .tmp first, then rename. The original used writeText directly (truncate, then write),
+            // so a process killed in between (LMK / force-stop / APK install) left an empty or half-written index.
             val tmp = File(dir, "index.json.tmp")
             tmp.writeText(root.toString())
             if (!tmp.renameTo(indexFile)) {

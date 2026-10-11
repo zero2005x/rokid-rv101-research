@@ -1,4 +1,7 @@
 # 裝置事實取證：ramoops / uptime 條件 / 系統基準
+
+> English: [device_facts_ramoops_uptime_2026-09-13_EN.txt](device_facts_ramoops_uptime_2026-09-13_EN.txt)
+
 # 日期：2026-09-13 14:08:58  裝置：<DEVICE_SERIAL>（1.22.009 / 5.10.209-perf-gd908d71a0404）
 
 ## 1) kernel cmdline（ramoops / pstore / console）

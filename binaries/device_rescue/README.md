@@ -1,5 +1,7 @@
 # device_rescue/ — 從裝置搶救回來的二進位（2026-09-13）
 
+> English: [README_EN.md](README_EN.md)
+
 ## 為什麼會有這個目錄
 
 `reports/missing_binaries_inventory_2026-09-13.md` 的盤點顯示：320 個被報告引用的二進位中，

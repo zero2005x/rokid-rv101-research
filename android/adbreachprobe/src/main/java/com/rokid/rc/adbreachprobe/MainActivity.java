@@ -12,9 +12,9 @@ import android.widget.TextView;
 import java.util.List;
 
 /**
- * 啟動器 Activity：一被 am start 就打全部探針（在背景 thread），
- * 並把結果同時送進 logcat(tag=ADBREACH) 與 external files dir。
- * 同時啟動 ProbeService，讓探針在 Activity 離開後仍持續存在。
+ * Launcher Activity: as soon as it is am start-ed it runs all probes (on a background thread),
+ * sending the results to both logcat (tag=ADBREACH) and the external files dir.
+ * It also starts ProbeService so the probe keeps running after the Activity goes away.
  */
 public class MainActivity extends Activity {
 
@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
         root.addView(sv);
         setContentView(root);
 
-        // 背景 thread 執行（connect/read 為阻塞式）
+        // run on a background thread (connect/read are blocking)
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -57,7 +57,7 @@ public class MainActivity extends Activity {
             }
         }, "adbreach-probe").start();
 
-        // 讓探針也以 Service 形式常駐（best effort；失敗不影響上面的結果）
+        // keep the probe resident as a Service too (best effort; failure does not affect the results above)
         try {
             startService(new Intent(this, ProbeService.class));
         } catch (Throwable t) {

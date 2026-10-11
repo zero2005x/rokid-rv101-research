@@ -1,4 +1,7 @@
 # GateServiced Protocol Semantics & Capability Set — Live Probe
+
+> English: [gateserviced_probe_2026-09-13_EN.txt](gateserviced_probe_2026-09-13_EN.txt)
+
 **Device:** Rokid RV101 (`<DEVICE_SERIAL>`, product `glasses`) · **Date:** 2026-09-13
 **Service:** `GateServiced` pid 1792 (root), binary `/vendor/bin/GateServiced`, listening `0.0.0.0:8341`
 **Instrument:** device-loopback TCP client (validated by controls C1–C3 before use)

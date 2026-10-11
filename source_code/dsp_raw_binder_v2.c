@@ -54,21 +54,21 @@ int main() {
     printf("[+] /dev/hwbinder opened successfully\n");
 
     const char *interface = "vendor.qti.hardware.dsp@1.0::IDspService/dspservice";
-    uint32_t transaction_code = 2;        // <--- 強烈建議用 IDA 確認 getNewDSPSession 的實際 code
+    uint32_t transaction_code = 2;        // <--- strongly recommend confirming getNewDSPSession's actual code in IDA
 
     Parcel req;
     parcel_init(&req, 4096);
 
-    // HIDL 標準開頭：Interface Descriptor
+    // HIDL standard preamble: Interface Descriptor
     parcel_write_string(&req, interface);
 
     // Transaction Code (method index)
     parcel_write_int32(&req, transaction_code);
 
-    // 參數：client_id (通常是 0)
+    // Arguments: client_id (usually 0)
     parcel_write_int32(&req, 0);
 
-    // 準備 BWR
+    // Prepare the BWR
     char *read_buffer = (char*)malloc(8192);
 
     struct binder_write_read bwr = {
@@ -85,7 +85,7 @@ int main() {
     } else {
         printf("[+] Transaction completed. Reply size: %lu\n", bwr.read_consumed);
         
-        // TODO: 在這裡解析 reply，尋找 hidl_handle (FD)
+        // TODO: parse the reply here and look for a hidl_handle (FD)
         if (bwr.read_consumed > 0) {
             printf("[!] Check reply buffer for returned file descriptor\n");
         }

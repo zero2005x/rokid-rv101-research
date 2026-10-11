@@ -1,5 +1,8 @@
 # 提權程式碼「值得再改寫嗎？」評估報告
 
+> English: [su_escalation_roi_assessment_EN.md](su_escalation_roi_assessment_EN.md)
+
+
 - 日期：2026-09-13
 - 問題：是否值得花時間改寫提權（root）程式碼，以提高**效率／成功率**？
 - 結論：**不值得改寫提權鏈本身；值得花約 2–4 天做「維運層」強化。** 詳見 §5 建議與 §6 決策準則。

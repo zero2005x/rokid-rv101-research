@@ -1,5 +1,7 @@
 # Evidence Index — Rokid RV101 LPE Disclosure
 
+> English: [Evidence_Index_EN.md](Evidence_Index_EN.md)
+
 Every artifact below is keyed to its entry in `12_Hashes/SHA256SUMS.txt`. The
 "staged" path is the copy inside this package; the "origin" path is where it lives
 in the research repo. Device identifier is `<DEVICE_SERIAL>`; firmware/build is

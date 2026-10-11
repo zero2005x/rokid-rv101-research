@@ -1,17 +1,19 @@
 /*
- * kgsl_ioctl_probe.c — KGSL ioctl 世代回測探針（唯讀、benign）
+ * kgsl_ioctl_probe.c — KGSL ioctl generation regression probe (read-only, benign)
  *
- * 目的：裁決「同一組 ioctl 在不同韌體世代回傳值不同」的歷史爭議
- *      （1.14.006 時代報告寫 ✅ 成功；1.22.009 實測 ENOTSUP／ENOTTY）。
+ * Purpose: settle the historical dispute that "the same ioctl set returns different values on
+ *      different firmware generations" (the 1.14.006-era report says ✅ success; 1.22.009
+ *      measured ENOTSUP / ENOTTY).
  *
- * 設計原則（安全）：
- *   - **不做任何 exploit**：沒有 heap spray、沒有 fake fops、沒有 race。
- *   - 參數一律 zero-init；只呼叫「查詢／配置／建立」類 ioctl。
- *   - GPU_COMMAND 類以**空命令批次**送（會在最前段被拒），並由外層 `timeout` 保護。
+ * Design principles (safety):
+ *   - **No exploit of any kind**: no heap spray, no fake fops, no race.
+ *   - All parameters are zero-initialised; only "query / allocate / create" ioctls are called.
+ *   - GPU_COMMAND-class ioctls are sent with an **empty command batch** (rejected at the very
+ *     first stage), wrapped in an outer `timeout`.
  *
- * 輸出：每個 ioctl 一行 `name cmd=0x… ret=… errno=… (…)`，最後一行 SUMMARY。
+ * Output: one line per ioctl, `name cmd=0x... ret=... errno=... (...)`, with a SUMMARY line at the end.
  *
- * 編譯：deploy/build_kgsl_probe.sh（NDK clang，與 root_daemon 相同工具鏈）
+ * Build: deploy/build_kgsl_probe.sh (NDK clang, same toolchain as root_daemon)
  */
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -23,7 +25,8 @@
 #include <sys/ioctl.h>
 #include <stdint.h>
 
-/* ---- ioctl 編碼（取自本專案既有探針 source_code/kgsl_gpu_cmd.c，對應 msm_kgsl.h）---- */
+/* ---- ioctl encodings (taken from the project's existing probe source_code/kgsl_gpu_cmd.c,
+ * matching msm_kgsl.h) ---- */
 #define IOCTL_KGSL_DEVICE_GETPROPERTY 0xc0100902
 #define IOCTL_KGSL_GPUMEM_ALLOC       0xc018092f
 #define IOCTL_KGSL_GPUMEM_FREE        0x40080910
@@ -37,13 +40,13 @@
 #define IOCTL_KGSL_TIMESTAMP_EVENT    0xc010090e
 #define IOCTL_KGSL_GPU_COMMAND        0xc0580940
 
-/* 歷史爭議中出現過的號碼（用來判斷「當年到底打的是哪一個」） */
+/* numbers that appeared in the historical dispute (to tell which one was really used) */
 #define CMD_0xc0180920 0xc0180920u
 #define CMD_0xc0180932 0xc0180932u
 #define CMD_0xc0040956 0xc0040956u
 #define CMD_0xc0040958 0xc0040958u
 
-/* KGSL property ids（msm_kgsl.h）*/
+/* KGSL property ids (msm_kgsl.h) */
 #define KGSL_PROP_DEVICE_INFO       0x1
 #define KGSL_PROP_VERSION           0x2
 #define KGSL_PROP_GPU_RESET_STAT    0x7
@@ -57,7 +60,7 @@ struct cmd_obj           { uint32_t type; uint32_t padding; uint64_t gpuaddr; ui
 struct gpu_command       { uint32_t flags; uint32_t cmdlist_len; struct cmd_obj *cmdlist; uint64_t timestamp; uint32_t context_id; uint32_t padding; };
 struct gpuobj_info       { uint64_t gpuaddr; uint32_t id; uint32_t type; uint64_t size; uint32_t flags; uint32_t padding; };
 struct gpuobj_import     { uint64_t gpuaddr; uint32_t id; uint32_t padding; };
-/* 泛用大緩衝：避免個別結構大小差異造成越界讀 */
+/* Generic large buffer: avoids out-of-bounds reads from per-struct size differences */
 static uint8_t big[512] __attribute__((aligned(16)));
 
 static int fd = -1;
@@ -96,9 +99,9 @@ int main(void) {
     printf("open(/dev/kgsl-3d0) = OK\n");
     printf("uid=%d gid=%d\n", getuid(), getgid());
 
-    /* 1) DEVICE_GETPROPERTY：世代資訊（最安全的查詢） */
+    /* 1) DEVICE_GETPROPERTY: generation info (the safest query) */
     struct dev_getproperty p1; memset(&p1, 0, sizeof(p1));
-    /* 實務上 value 需為 kernel 可寫緩衝；用 big 當目標 */
+    /* In practice value must be a kernel-writable buffer; use big as the target */
     p1.type = KGSL_PROP_VERSION; p1.value = big; p1.sizebytes = 64;
     probe("DEVICE_GETPROPERTY(VERSION)", IOCTL_KGSL_DEVICE_GETPROPERTY, &p1, sizeof(p1));
     printf("    version 原始位元組: %02x %02x %02x %02x\n", big[0], big[1], big[2], big[3]);
@@ -107,14 +110,14 @@ int main(void) {
     p1.type = KGSL_PROP_GPU_RESET_STAT; p1.value = big; p1.sizebytes = 8;
     probe("DEVICE_GETPROPERTY(RESET)", IOCTL_KGSL_DEVICE_GETPROPERTY, &p1, sizeof(p1));
 
-    /* 2) GPUMEM_ALLOC（歷史爭議核心） */
+    /* 2) GPUMEM_ALLOC (the core of the historical dispute) */
     struct gpumem_alloc_req a; memset(&a, 0, sizeof(a));
     a.size = 0x1000; a.flags = 0;
     probe("GPUMEM_ALLOC(0x1000)", IOCTL_KGSL_GPUMEM_ALLOC, &a, sizeof(a));
     printf("    id=%u gpuaddr=0x%llx\n", a.id, (unsigned long long)a.gpuaddr);
     uint32_t alloc_id = a.id;
 
-    /* 3) 爭議中的其他號碼（判斷當年打的是哪個 ioctl） */
+    /* 3) the other numbers in the dispute (tell which ioctl was used back then) */
     probe("?0xc0180920(未知/舊編碼)", CMD_0xc0180920, NULL, 0);
     probe("?0xc0180932(未知)", CMD_0xc0180932, NULL, 0);
     probe("?0xc0040956(舊 SYNCSOURCE?)", CMD_0xc0040956, NULL, 0);
@@ -122,14 +125,14 @@ int main(void) {
 
     /* 4) drawctxt create/destroy */
     struct drawctxt_create c; memset(&c, 0, sizeof(c));
-    c.flags = 0x1; /* KGSL_CONTEXT_SAVE_GMEM 類的常見旗標 */
+    c.flags = 0x1; /* a common flag of the KGSL_CONTEXT_SAVE_GMEM kind */
     probe("DRAWCTXT_CREATE", IOCTL_KGSL_DRAWCTXT_CREATE, &c, sizeof(c));
     printf("    ctx id=%u\n", c.id);
     uint32_t ctx = c.id;
     struct drawctxt_destroy d; memset(&d, 0, sizeof(d)); d.id = ctx;
     probe("DRAWCTXT_DESTROY", IOCTL_KGSL_DRAWCTXT_DESTROY, &d, sizeof(d));
 
-    /* 5) GPUOBJ 系列 */
+    /* 5) GPUOBJ family */
     struct gpuobj_info gi; memset(&gi, 0, sizeof(gi)); gi.id = alloc_id; gi.type = 1;
     probe("GPUOBJ_INFO(alloc_id)", IOCTL_KGSL_GPUOBJ_INFO, &gi, sizeof(gi));
     struct gpuobj_import im; memset(&im, 0, sizeof(im)); im.gpuaddr = a.gpuaddr;
@@ -138,12 +141,12 @@ int main(void) {
     probe("SPARSE_BIND(0xc0280957)", IOCTL_KGSL_SPARSE_BIND, NULL, 0);
     probe("TIMESTAMP_EVENT", IOCTL_KGSL_TIMESTAMP_EVENT, NULL, 0);
 
-    /* 6) GPU_COMMAND（空批次；最前段就會被拒） */
+    /* 6) GPU_COMMAND (empty batch; rejected at the very first stage) */
     struct gpu_command gc; memset(&gc, 0, sizeof(gc));
     gc.flags = 0; gc.cmdlist_len = 0; gc.cmdlist = NULL; gc.context_id = ctx;
     probe("GPU_COMMAND(空批次)", IOCTL_KGSL_GPU_COMMAND, &gc, sizeof(gc));
 
-    /* 7) 釋放 */
+    /* 7) release */
     struct gpumem_free_req f; memset(&f, 0, sizeof(f)); f.id = alloc_id;
     probe("GPUMEM_FREE", IOCTL_KGSL_GPUMEM_FREE, &f, sizeof(f));
 

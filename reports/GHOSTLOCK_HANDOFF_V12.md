@@ -1,5 +1,7 @@
 # GhostLock RV101 — 工作狀態交接 v12（第十二任：W2 uid=0 達成 + 可重現）
 
+> English: [GHOSTLOCK_HANDOFF_V12_EN.md](GHOSTLOCK_HANDOFF_V12_EN.md)
+
 > 更新於 2026-08-22。本輪（第十二任）在實機（<DEVICE_SERIAL>）上完成：
 > **1. W2 credential overwrite 成功：child uid = 0，且可重現（本任 2/2 + 並行代理 1/1）。**
 > **2. 定案現行 `do_cred_write()` 走 mode-5（Strategy 1），並逐指令追蹤 rb_erase 證明其正確。**

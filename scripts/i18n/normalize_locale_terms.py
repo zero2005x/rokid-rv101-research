@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""術語正規化：讓 scripts/i18n/out/*.xml 的新字串用語與各語系「既有」strings.xml 一致。
+"""Terminology normalisation: make the new strings in scripts/i18n/out/*.xml use the same
+terms as each locale's **existing** strings.xml.
 
-背景：新字串由翻譯產出時統一使用 `WiFi`／`Bluetooth`／`LED` 等拉丁寫法，但各語系既有
-翻譯早已選定各自的慣用詞（例：ja 用「Wi-Fi」「メガネ」、de 用「WLAN」、ar 用「واي فاي」「بلوتوث」、
-ko 用「블루투스」）。同一語系檔內混用會顯得不一致，故以本腳本統一。
+Background: fresh translation output uniformly uses Latin spellings such as `WiFi` /
+`Bluetooth` / `LED`, but each locale's existing translation already settled on its own customary
+term (e.g. ja uses "Wi-Fi" and "メガネ", de uses "WLAN", ar uses "واي فاي" and "بلوتوث", ko uses
+"블루투스"). Mixing them inside one locale file looks inconsistent, so this script unifies them.
 
-本腳本可重複執行（idempotent）：先做詞彙替換，再對隱私指示燈相關 key 寫入各語系固定譯法。
-執行順序：翻譯產出 → normalize_locale_terms.py → apply_phone_strings.py
+The script is idempotent: it does the term replacements first, then writes the fixed per-locale
+renderings for the privacy-indicator keys.
+Order of execution: translation output -> normalize_locale_terms.py -> apply_phone_strings.py
 """
 import pathlib
 import re
@@ -15,7 +18,8 @@ import sys
 ROOT = pathlib.Path("/home/kali/rokid_root")
 OUT = ROOT / "scripts/i18n/out"
 
-# locale tag（out 檔內的 @@ 標記）→ 該語系既有檔案的慣用詞
+# locale tag (the @@ marker inside an out file) -> the customary term in that locale's
+# existing files
 TERMS = {
     "values-fr":      {"wifi": "Wi-Fi"},
     "values-de":      {"wifi": "WLAN"},
@@ -31,7 +35,8 @@ TERMS = {
     "values-ar":      {"wifi": "واي فاي", "bluetooth": "بلوتوث"},
 }
 
-# 隱私指示燈／LED 相關 key 的各語系固定譯法（對齊既有 sec_led／led_switch_label）
+# Fixed per-locale renderings for privacy-indicator / LED keys (aligned with the existing
+# sec_led / led_switch_label)
 LED = {
     "values-zh-rCN": {
         "log_led_enabling": "开启隐私指示灯…", "log_led_disabling": "关闭隐私指示灯…",
@@ -103,10 +108,10 @@ LED = {
     },
 }
 
-# 其他零星對齊（依既有檔案的用詞）
+# Other one-off alignments (following the wording in existing files)
 MISC = {
-    "values-uk": {"Тихе фотографування": "Тиха зйомка"},          # silent_switch_label 用「Тиха зйомка」
-    "values-ja": {"グラス": "メガネ"},                              # conn_card_title 用「メガネ」
+    "values-uk": {"Тихе фотографування": "Тиха зйомка"},          # silent_switch_label uses "Тиха зйомка"
+    "values-ja": {"グラス": "メガネ"},                              # conn_card_title uses "メガネ"
 }
 
 STR_RE = re.compile(r'<string name="([^"]+)">(.*)</string>$')

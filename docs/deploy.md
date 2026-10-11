@@ -1,5 +1,7 @@
 # 建置與佈署指南
 
+> English: [deploy_EN.md](deploy_EN.md)
+
 ## 0. 前置
 
 - 開發機：Android Studio（Windows/WSL 均可），JDK 17（本機路徑見 §1）。

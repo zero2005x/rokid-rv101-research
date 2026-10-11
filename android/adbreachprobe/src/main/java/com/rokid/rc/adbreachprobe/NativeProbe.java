@@ -1,12 +1,11 @@
 package com.rokid.rc.adbreachprobe;
 
 /**
- * JNI 綁定：raw socket syscall 探針（見 src/main/jni/adbreachprobe.c）。
+ * JNI binding: raw socket syscall probe (see src/main/jni/adbreachprobe.c).
  *
- * 為什麼需要：Android 的 android.net.LocalSocket 在這個 ROM 上於 connect() 前
- * 就丟出 framework 層例外（"socket not created" / UnsupportedOperationException），
- * 根本沒碰到 kernel。native 版本直接做 socket()/connect()/read()，
- * 拿到的 errno 才是 DAC + SELinux 的真實答案。
+ * Why it is needed: on this ROM Android's android.net.LocalSocket throws a framework-level exception before
+ * connect() ("socket not created" / UnsupportedOperationException) and never reaches the kernel. The native
+ * version does socket()/connect()/read() directly, so the errno it gets is the real DAC + SELinux answer.
  */
 public final class NativeProbe {
 
@@ -35,15 +34,15 @@ public final class NativeProbe {
     }
 
     /**
-     * connect() 到 path，成功則在 timeoutMs 內最多讀 24 bytes。
-     * @return int[28]： [0]=errno [1]=stage(1=socket,2=connect,3=read)
-     *                   [2]=nbytes [3]=extra [4..27]=讀到的 bytes
+     * connect() to path; on success read at most 24 bytes within timeoutMs.
+     * @return int[28]: [0]=errno [1]=stage(1=socket,2=connect,3=read)
+     *                  [2]=nbytes [3]=extra [4..27]=bytes read
      */
     public static native int[] connectUnixRead(String path, int timeoutMs);
 
     /**
-     * 控制組：在 path 建立自己的 socket、listen、connect、accept、echo 1 byte。
-     * @return int[28]： [0]=errno [1]=stage(1..7) [2]=nbytes [3]=bind 後的 mode
+     * Control group: create our own socket at path, listen, connect, accept, echo 1 byte.
+     * @return int[28]: [0]=errno [1]=stage(1..7) [2]=nbytes [3]=mode after bind
      */
     public static native int[] loopbackUnix(String path, int timeoutMs);
 

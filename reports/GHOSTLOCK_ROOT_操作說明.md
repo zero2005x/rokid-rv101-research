@@ -1,4 +1,6 @@
 # GHOSTLOCK RV101 — Root 取得操作說明（v9.60）
+
+> English: [GHOSTLOCK_ROOT_操作說明_EN.md](GHOSTLOCK_ROOT_操作說明_EN.md)
 > ⚠ **2026-09-13 更新**：repo 路徑已改為 `/home/kali/rokid_root`（本文原寫 Windows 路徑，已全數替換）。
 > 本檔為**手動 fallback** 操作說明；App 端引擎已改為執行期自動探測（`AutoGhostlockEngine`），
 > 一般情況只需 `deploy/root_bridge.sh` 或 `deploy/start_shizuku.sh`。最新流程見 `docs/deploy.md`。

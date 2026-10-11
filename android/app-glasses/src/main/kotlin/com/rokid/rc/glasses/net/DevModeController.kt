@@ -12,35 +12,35 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 /**
- * DevModeController — 「開發模式」狀態機：**無線 adb 的按需開關**。
+ * DevModeController — the "dev mode" state machine: **an on-demand switch for wireless adb**.
  *
- * ## 機制（2026-09-20 實測後定案）
+ * ## Mechanism (settled after real-device testing on 2026-09-20)
  *
  * ```
- *  ON  ：setprop persist.adb.tcp.port 5555 + setprop ctl.restart adbd
- *         → adbd 立即在 [::]:5555 監聽（**不需重開機**，且 USB 列舉不受影響）
- *  OFF ：setprop persist.adb.tcp.port ""   + setprop ctl.restart adbd
- *         → listener 立即消失（同樣不需重開機）
+ *  ON  : setprop persist.adb.tcp.port 5555 + setprop ctl.restart adbd
+ *         → adbd immediately listens on [::]:5555 (**no reboot needed**, and USB enumeration is unaffected)
+ *  OFF : setprop persist.adb.tcp.port ""   + setprop ctl.restart adbd
+ *         → the listener disappears immediately (likewise with no reboot)
  * ```
- * 這兩步都需要 **root**（`persist.*` 與 `ctl.*` 只有 root/system 能寫）。
- * 無 root 時本控制器仍能控制「要不要加入網段」，但**無法**開啟或關閉 listener，
- * 會以 `listenerManaged=false` 明確回報，避免使用者誤以為已經關掉了。
+ * Both steps need **root** (only root/system can write `persist.*` and `ctl.*`).
+ * Without root this controller can still control "whether to join the subnet", but it **cannot** open or close the
+ * listener, and it reports that explicitly as `listenerManaged=false`, so the user is not misled into thinking it is off.
  *
- * ## 為什麼不用 userland relay（TCP → /dev/socket/adbd）
- * 實測（2026-09-20）：
- *  · `/dev/socket/adbd` 是 `srw-rw---- system:system` → 非 system 身分被 DAC 拒絕（EACCES）。
- *  · 用 `SOCK_STREAM` 連會得到 **EPROTOTYPE(91)**；`SOCK_SEQPACKET` 雖 connect 成功，
- *    但**立即 EOF**（adbd 立刻關閉）→ 無法轉發。該 socket 不是可用的 relay 後端。
- *  · 因此「App 內建 relay」路不通；**原生 listener 切換**才是可靠路徑。
+ * ## Why not a userland relay (TCP → /dev/socket/adbd)
+ * Measured (2026-09-20):
+ *  · `/dev/socket/adbd` is `srw-rw---- system:system` → a non-system identity is rejected by DAC (EACCES).
+ *  · Connecting with `SOCK_STREAM` yields **EPROTOTYPE(91)**; `SOCK_SEQPACKET` does connect but is **immediately EOF**
+ *    (adbd closes at once) → it cannot forward. That socket is not a usable relay backend.
+ *  · So "a relay inside the app" is a dead end; **switching the native listener** is the reliable path.
  *
- * ## 狀態
+ * ## States
  * ```
- *  OFF ──start()──▶ JOINING ──(listener OK + 取得 IP)──▶ ACTIVE ──(idle 逾時／stop())──▶ OFF
- *                     └──────────(失敗／逾時)──────────▶ OFF（並回報原因）
+ *  OFF ──start()──▶ JOINING ──(listener OK + got an IP)──▶ ACTIVE ──(idle timeout / stop())──▶ OFF
+ *                     └──────────(failure / timeout)──────────▶ OFF (and report the reason)
  * ```
- * ⚠ 副作用（已實測）：`ctl.restart adbd` 會連帶殺掉以 adb shell 啟動的 root daemon
- *   （keepalive 是其子行程）。因此 OFF 之後若要再 ON，需重新武裝提權。
- *   這是本機 adbd 由 vendor 方式啟動的固有行為，不是本控制器的 bug。
+ * ⚠ Side effect (measured): `ctl.restart adbd` also kills the root daemon started through adb shell
+ *   (keepalive is its child process). So after OFF, turning ON again requires re-arming escalation.
+ *   This is inherent to the way the vendor starts adbd on this device, not a bug in this controller.
  */
 class DevModeController(private val ctx: Context) {
 
@@ -87,7 +87,7 @@ class DevModeController(private val ctx: Context) {
         AdbWifiService.notifyStatus(ctx, status)
     }
 
-    /** adbd 是否正在聽 TCP（IPv4 或 IPv6；本機為 IPv6 wildcard `[::]:5555`）。 */
+    /** Whether adbd is listening on TCP (IPv4 or IPv6; on this device it is the IPv6 wildcard `[::]:5555`). */
     private fun adbListenerPresent(): Boolean = try {
         val p = ProcessBuilder("sh", "-c",
             "grep -q ':15B3 ' /proc/net/tcp && echo v4; grep -q ':15B3 ' /proc/net/tcp6 && echo v6")
@@ -99,7 +99,7 @@ class DevModeController(private val ctx: Context) {
         false
     }
 
-    /** 輪詢等待 listener 達到期望狀態（adbd 重啟需數秒）。 */
+    /** Poll until the listener reaches the expected state (restarting adbd takes a few seconds). */
     private suspend fun awaitListener(want: Boolean, timeoutMs: Long): Boolean {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
@@ -112,10 +112,10 @@ class DevModeController(private val ctx: Context) {
     fun statusJson(): JSONObject = status.toJson()
 
     /**
-     * 開啟開發模式。
-     * @param ssid 目標網段（null = 用已存憑證；都沒有則只開 listener 不加入網段）
-     * @param idleTimeoutMs 進入 ACTIVE 後閒置多久自動關（0 = 不自動關）
-     * @param timeoutMs 加入網段的等待上限
+     * Turn dev mode on.
+     * @param ssid target subnet (null = use the saved credential; if there is none either, just open the listener without joining a subnet)
+     * @param idleTimeoutMs how long to stay idle after entering ACTIVE before switching off automatically (0 = never)
+     * @param timeoutMs upper bound on waiting to join the subnet
      */
     fun start(
         ssid: String?,
@@ -134,12 +134,12 @@ class DevModeController(private val ctx: Context) {
             val isRoot = root.isRoot()
             status = status.copy(listenerManaged = isRoot)
             try {
-                // ① 開 listener（需 root；無 root 時只能靠已存在的 listener）
+                // 1) open the listener (needs root; without root only a pre-existing listener can be used)
                 if (isRoot) {
                     set(State.JOINING, "開啟 adb TCP listener …", ssid = cred?.ssid)
                     val out = root.exec(CMD_ON, 30_000L)
                     Log.i(TAG, "ON → ${out.trim().take(200)}")
-                    // 輪詢等待 listener 出現（adbd 重啟需要數秒；固定 delay 曾造成誤判）
+                    // poll until the listener appears (restarting adbd takes a few seconds; a fixed delay once caused a misreport)
                     if (!awaitListener(true, 20_000L)) {
                         set(State.ERROR, "已下 ON 指令但 listener 未出現：${out.trim().take(120)}")
                         return@launch
@@ -149,7 +149,7 @@ class DevModeController(private val ctx: Context) {
                     return@launch
                 }
 
-                // ② 加入網段（可選）
+                // 2) join the subnet (optional)
                 if (cred != null) {
                     set(State.JOINING, "加入 ${cred.ssid} …", ssid = cred.ssid)
                     val (ok, msg, method) = wifiJoin.join(cred, preferRoot = isRoot, timeoutMs = timeoutMs)
@@ -164,7 +164,7 @@ class DevModeController(private val ctx: Context) {
                     set(State.ACTIVE, "listener 已開啟（未指定網段）", ip = wifiJoin.ipv4())
                 }
 
-                // ③ 閒置逾時自動關（有 adb 連線即續期）
+                // 3) auto-off on idle timeout (any adb connection renews it)
                 if (idleTimeoutMs > 0) {
                     var waited = 0L
                     while (waited < idleTimeoutMs) {
@@ -210,12 +210,12 @@ class DevModeController(private val ctx: Context) {
         const val DEFAULT_IDLE_MS = 10 * 60_000L
         const val DEFAULT_JOIN_MS = 45_000L
 
-        /** 開啟 listener：persist（跨開機）＋ 立即生效（不重開機、不掉 USB）。 */
+        /** Open the listener: persist (survives reboots) + takes effect immediately (no reboot, no USB drop). */
         private const val CMD_ON =
             "setprop persist.adb.tcp.port 5555; setprop ctl.restart adbd; sleep 3; " +
                 "echo persist=$(getprop persist.adb.tcp.port) listener=$(grep -c ':15B3 ' /proc/net/tcp6)"
 
-        /** 關閉 listener：清 persist ＋ 立即生效。 */
+        /** Close the listener: clear persist + take effect immediately. */
         private const val CMD_OFF =
             "setprop persist.adb.tcp.port ''; setprop ctl.restart adbd; sleep 3; " +
                 "echo persist=[$(getprop persist.adb.tcp.port)] listener=$(grep -c ':15B3 ' /proc/net/tcp6)"

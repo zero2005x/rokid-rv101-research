@@ -1,5 +1,7 @@
 # GateServiced — `0x300A` hardcoding + `dma_unalloc` return-value space
 
+> English: [gate_300a_and_dma_unalloc_2026-09-13_EN.md](gate_300a_and_dma_unalloc_2026-09-13_EN.md)
+
 **Date**: 2026-09-13
 **Artifact**: `/home/kali/rokid_root/build-cache/GateServiced`
 (`sha256 ecf72a60303aed8ecf7a21f99136572a1949862f7aeb1ee9ffbecbfb09e9fe75`, 20,304 B, ELF64 aarch64 `ET_DYN` PIE,

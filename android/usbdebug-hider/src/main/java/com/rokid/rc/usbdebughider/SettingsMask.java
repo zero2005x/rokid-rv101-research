@@ -12,18 +12,18 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * Settings（{@code adb_enabled} / {@code adb_wifi_enabled} / {@code development_settings_enabled}）
- * 的遮蔽，覆蓋三條偵測途徑：
+ * Masking for Settings ({@code adb_enabled} / {@code adb_wifi_enabled} / {@code development_settings_enabled}),
+ * covering three detection paths:
  *
  * <ol>
- *   <li>{@code Settings$NameValueCache.getStringForUser} —— {@code Settings.Global/Secure/System}
- *       所有 getter（getInt/getLong/getFloat/getString）真正的取值點，一次 hook 全部覆蓋。</li>
- *   <li>{@code Settings$Global|Secure|System} 的靜態 getter —— 少數 ROM 走不同路徑時的保險。</li>
- *   <li>{@code ContentResolver.query} —— 直接讀 {@code content://settings/global} cursor 的偵測器。</li>
+ *   <li>{@code Settings$NameValueCache.getStringForUser} — the real read point for every
+ *       {@code Settings.Global/Secure/System} getter (getInt/getLong/getFloat/getString), so one hook covers all.</li>
+ *   <li>Static getters on {@code Settings$Global|Secure|System} — a safeguard for the few ROMs that take another path.</li>
+ *   <li>{@code ContentResolver.query} — detectors that read the {@code content://settings/global} cursor directly.</li>
  * </ol>
  *
- * <p>所有 hook 都在目標 App 的行程內，且每次取值才呼叫 {@link MaskConfig#get()}，
- * 因此改設定檔即時生效（不必重新注入）。
+ * <p>Every hook runs inside the target app's process and calls {@link MaskConfig#get()} on each
+ * read, so editing the config file takes effect immediately (no re-injection needed).
  */
 final class SettingsMask {
 
@@ -40,7 +40,7 @@ final class SettingsMask {
         return ok;
     }
 
-    // ── (1) NameValueCache：所有 getter 的必經之路 ───────────────────────────
+    // ── (1) NameValueCache: the path every getter must take ──────────────────
     private static boolean hookNameValueCache(ClassLoader cl) {
         try {
             Class<?> nvc = XposedHelpers.findClass("android.provider.Settings$NameValueCache", cl);
@@ -55,7 +55,7 @@ final class SettingsMask {
                     if (fake != null) {
                         param.setResult(fake);
                     }
-                    // 偵測器常在讀完 settings 後才載入自己的 native 檢查庫 → 順手補掃
+                    // Detectors often load their native check library only after reading settings -> rescan too
                     NativeMask.repatch();
                 }
             });
@@ -66,7 +66,7 @@ final class SettingsMask {
         }
     }
 
-    // ── (2) 靜態 getter（保險層） ───────────────────────────────────────────
+    // ── (2) Static getters (fallback layer) ─────────────────────────────────
     private static boolean hookStaticGetters(ClassLoader cl) {
         boolean ok = false;
         for (String name : new String[]{
@@ -105,7 +105,7 @@ final class SettingsMask {
         }
     };
 
-    /** {@code MethodHookParam.method} 是 {@link java.lang.reflect.Member}，要自己轉成 Method 才拿得到回傳型別。 */
+    /** {@code MethodHookParam.method} is a {@link java.lang.reflect.Member}; cast it to Method to get the return type. */
     private static Class<?> returnType(XC_MethodHook.MethodHookParam param) {
         java.lang.reflect.Member m = param.method;
         return (m instanceof java.lang.reflect.Method) ? ((java.lang.reflect.Method) m).getReturnType() : null;
@@ -134,7 +134,7 @@ final class SettingsMask {
         return null;
     }
 
-    // ── (3) ContentResolver.query：cursor 直讀 route ────────────────────────
+    // ── (3) ContentResolver.query: direct cursor read route ─────────────────
     private static boolean hookQuery(ClassLoader cl) {
         try {
             Class<?> cr = XposedHelpers.findClass("android.content.ContentResolver", cl);
@@ -176,9 +176,9 @@ final class SettingsMask {
     }
 
     /**
-     * 把 settings cursor 內被遮蔽的 key 換成假值。
+     * Replace masked keys in a settings cursor with their fake values.
      *
-     * <p>若沒有任何一列命中，直接回傳原 cursor（不包裝），把對呼叫端的行為影響降到最低。
+     * <p>If no row matches, return the original cursor unwrapped to minimise the behavioural impact on callers.
      */
     private static Cursor filter(Cursor src, Uri uri, MaskConfig cfg) {
         try {
@@ -191,7 +191,7 @@ final class SettingsMask {
 
             String uriName = null;
             if (nameIdx < 0) {
-                // content://settings/global/adb_enabled —— key 在路徑上，cursor 只有 value 欄
+                // content://settings/global/adb_enabled — the key is in the path and the cursor only has a value column
                 List<String> segs = uri.getPathSegments();
                 if (!segs.isEmpty()) {
                     String last = segs.get(segs.size() - 1);
@@ -208,7 +208,7 @@ final class SettingsMask {
             try {
                 pos = src.getPosition();
             } catch (Throwable ignored) {
-                // 某些 cursor 不支援 getPosition
+                // some cursors do not support getPosition
             }
 
             boolean hit = false;
@@ -263,7 +263,7 @@ final class SettingsMask {
                         out.setExtras(extras);
                     }
                 } catch (Throwable ignored) {
-                    // extras 非必要
+                    // extras are optional
                 }
                 try {
                     src.close();

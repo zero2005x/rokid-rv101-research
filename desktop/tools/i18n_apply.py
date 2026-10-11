@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-i18n_apply.py — 把翻譯片段併入 tools/i18n_master.json，並補齊缺漏。
+i18n_apply.py — merge translation fragments into tools/i18n_master.json and fill the gaps.
 
-用法：
-  python3 tools/i18n_apply.py                 # 只補齊缺漏（未翻譯者暫用英文）
-  python3 tools/i18n_apply.py frag1.json ...  # 併入片段後補齊
-  python3 tools/i18n_apply.py --status        # 顯示各語系翻譯進度
+Usage:
+  python3 tools/i18n_apply.py                 # fill gaps only (untranslated entries use English)
+  python3 tools/i18n_apply.py frag1.json ...  # merge fragments, then fill gaps
+  python3 tools/i18n_apply.py --status        # show per-locale translation progress
 
-片段格式（只需含要更新的 locale 與 key，其餘可省略）：
+Fragment format (only the locales and keys to update; the rest may be omitted):
   {
     "de": { "BTN_APPLY": "Übernehmen", "BTN_CANCEL": "Abbrechen" },
     "fr": { "BTN_APPLY": "Appliquer" }
   }
 
-補齊規則：某 (key, locale) 若為空或不存在，就以該 key 的 en 值填入，
-確保 i18n_master.json 永遠是「完整」的，產生器隨時可跑、程式隨時可編。
+Filling rule: if a (key, locale) pair is empty or absent, that key's en value is used, so
+i18n_master.json is always "complete", the generator can run at any time and the program can
+always compile.
 """
 
 import json
@@ -95,9 +96,10 @@ def main():
                 applied += 1
         print("已併入 %s" % path)
 
-    # ---- 補齊缺漏 ----
-    # 注意：en 是「基準語言」，永遠不可由其他語系回填 —— 否則會把中文寫進 en，
-    # 進而污染所有以 en 暫代的語系（曾實際發生過）。
+    # ---- fill in the gaps ----
+    # NOTE: en is the "baseline language" and must never be backfilled from another locale —
+    # otherwise Chinese gets written into en and pollutes every locale temporarily using English
+    # (this really happened).
     missing_en = [k for k, e in strings.items() if not e.get("en")]
     if missing_en:
         print("錯誤：以下 key 缺少 en 基準值，請先補上再執行：", file=sys.stderr)
@@ -113,7 +115,7 @@ def main():
                 e[lc] = ref
                 filled += 1
 
-    # 依 locales 順序重排每個 key 的欄位，讓 diff 穩定
+    # reorder each key's fields to follow the locales order, keeping diffs stable
     for key, e in strings.items():
         strings[key] = {lc: e.get(lc, "") for lc in codes}
 

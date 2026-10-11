@@ -1,4 +1,6 @@
 # Linux 5.10.x 內核漏洞掃描報告
+
+> English: [CVE_5_10_x_Scan_Report_EN.md](CVE_5_10_x_Scan_Report_EN.md)
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 > ⚠ **2026-09-13 更正**：本文假設的 Fastboot／Magisk／刷 boot.img 路線**不可行**（取不到 boot.img、`fastboot flash/boot/erase` 被移除）；root 已由 GhostLock LPE 於執行期取得。

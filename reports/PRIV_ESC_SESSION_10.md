@@ -1,4 +1,7 @@
 # Rokid AR Glasses 提權漏洞研究報告 - Session 10
+
+> English: [PRIV_ESC_SESSION_10_EN.md](PRIV_ESC_SESSION_10_EN.md)
+
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 > ⚠ **2026-09-13 更正**：本文假設的 Fastboot／Magisk／刷 boot.img 路線**不可行**（取不到 boot.img、`fastboot flash/boot/erase` 被移除）；root 已由 GhostLock LPE 於執行期取得。

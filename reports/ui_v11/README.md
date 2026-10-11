@@ -1,5 +1,7 @@
 # Rokid Remote v1.1 — 現代化 UI 驗收紀錄（2026-09-08）
 
+> English: [README_EN.md](README_EN.md)
+
 ## 版本
 - app-phone v1.1 (versionCode 2)，debug build
 - 已實裝紅米 21091116UG（serial <PHONE_SERIAL>）

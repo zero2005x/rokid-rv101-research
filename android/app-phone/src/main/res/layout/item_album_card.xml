@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 相簿卡（重做）：方形封面＋右上項數徽章＋左下標題／副標＋選取勾選圈 -->
+<!-- Album card (rework): square cover + item-count badge top right
+     + title/subtitle bottom left + selection check circle -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -12,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- 封面底圖（無封面時顯示） -->
+        <!-- Cover placeholder image (shown when there is no cover) -->
         <View
             android:id="@+id/vCoverBg"
             android:layout_width="0dp"
@@ -33,7 +34,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 無封面時的中央圖示 -->
+        <!-- Centre icon when there is no cover -->
         <ImageView
             android:id="@+id/ivEmpty"
             android:layout_width="44dp"
@@ -47,7 +48,7 @@
             app:layout_constraintTop_toTopOf="@id/vCoverBg"
             app:tint="@color/primary" />
 
-        <!-- 項數徽章 -->
+        <!-- Item-count badge -->
         <TextView
             android:id="@+id/tvBadge"
             android:layout_width="wrap_content"
@@ -61,7 +62,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 選取勾選圈 -->
+        <!-- Selection check circle -->
         <ImageView
             android:id="@+id/ivCheck"
             android:layout_width="28dp"

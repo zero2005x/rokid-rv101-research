@@ -1,5 +1,7 @@
 # HITCON ZeroDay 版揭露時間線
 
+> English: [HITCON_Disclosure_Timeline_EN.md](HITCON_Disclosure_Timeline_EN.md)
+
 > 時區：Asia/Taipei（UTC+8）。未知日期不得推測。
 
 | 日期 | 事件 | 證據／備註 |

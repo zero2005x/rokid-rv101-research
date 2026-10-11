@@ -7,7 +7,7 @@
         android:label="DebugMask"
         android:supportsRtl="true">
 
-        <!-- LSPosed / Vector 模組宣告（經典 Xposed API） -->
+        <!-- LSPosed / Vector module declaration (classic Xposed API) -->
         <meta-data
             android:name="xposedmodule"
             android:value="true" />

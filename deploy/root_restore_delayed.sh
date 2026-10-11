@@ -1,24 +1,26 @@
 #!/system/bin/sh
-# root_restore_delayed.sh — 延遲 N 秒後把 root daemon 與 keepalive 重新拉起。
+# root_restore_delayed.sh — bring the root daemon and keepalive back up after N seconds.
 #
-# ## 為什麼需要
+# ## Why this exists
 #
-# 有些測試必須讓「root 對 App 而言不可用」（例如驗證 RootDaemonKeeper 的租約守衛：
-# 守衛程式碼在 `if (client.isRoot()) return` **之後**才會被執行）。
+# Some tests need root to be unavailable to the App (for example verifying RootDaemonKeeper's
+# lease guard: the guard code only runs **after** `if (client.isRoot()) return`).
 #
-# 但 root daemon 一旦被殺，**只有 root 身分才能把它重建回來** —— 也就是說，
-# 少了這支腳本，測試完就只能重跑一次 exploit（慢、且對核心狀態敏感）。
+# But once the root daemon is killed, **only root can bring it back** — so without this script,
+# finishing a test means rerunning the exploit (slow, and sensitive to kernel state).
 #
-# 作法：在殺掉 daemon **之前**，先經 root socket 以 root 身分啟動本腳本。
-# 它是一個獨立的 detach 行程，daemon 死了它還活著，時間到就把 daemon 與 keepalive 帶回來。
+# Approach: **before** killing the daemon, start this script as root through the root socket.
+# It is a detached process that outlives the daemon and brings the daemon and keepalive back
+# once the time is up.
 #
-# ## 用法（必須經 root socket 啟動，否則沒有重建 daemon 的權限）
+# ## Usage (must be started through the root socket, otherwise there is no permission to rebuild the daemon)
 #
 #   printf 'setsid sh /data/local/tmp/root_restore_delayed.sh 150 >/dev/null 2>&1 &\n' \
 #     | adb shell "nc -U /data/local/tmp/root_daemon.sock"
 #
-# 第一個參數＝延遲秒數（預設 90）。請留足夠時間給測試，並記得先確認它真的在跑
-# （`ps -A -o ARGS | grep '[r]oot_restore_delayed'`）再殺 daemon。
+# First argument = delay in seconds (default 90). Leave enough time for the test, and check
+# that it is really running (`ps -A -o ARGS | grep '[r]oot_restore_delayed'`) before killing
+# the daemon.
 set -u
 
 DELAY="${1:-90}"
@@ -31,7 +33,7 @@ echo "$(date '+%F %T') restorer: armed (delay=${DELAY}s pid=$$)" >> "$LOG"
 sleep "$DELAY"
 echo "$(date '+%F %T') restorer: waking up" >> "$LOG"
 
-# 只在真的沒有 daemon 時才重建——避免蓋掉測試期間已由其他路徑恢復的實例
+# only rebuild when there really is no daemon, so an instance restored by another path during the test is not clobbered
 if ! grep -q 'root_daemon.sock' /proc/net/unix 2>/dev/null; then
   rm -f "$SOCK"
   setsid "$DAEMON" >>"$LOG" 2>&1 &
@@ -42,7 +44,7 @@ fi
 
 sleep 3
 
-# keepalive 若不在，重新拉起（同樣必須是 root 身分，才能持續重建 daemon）
+# restart the keepalive if it is absent (again it must be root to keep rebuilding the daemon)
 if ! ps -A -o ARGS 2>/dev/null | grep -q '[r]oot_daemon_keepalive.sh'; then
   setsid sh "$KA" >>"$LOG" 2>&1 &
   echo "$(date '+%F %T') restorer: keepalive restarted" >> "$LOG"

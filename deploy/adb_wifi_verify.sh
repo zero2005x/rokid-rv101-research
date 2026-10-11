@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# adb_wifi_verify.sh — 無線 adb 一鍵驗證（**不需要切換 PC 網路**）
+# adb_wifi_verify.sh — one-shot wireless adb verification (**no need to switch the PC network**)
 #
-# 檢查眼鏡端「該開的都有開」，並印出 PC 端要下的指令；若 PC 已經在眼鏡網段，
-# 會直接嘗試 adb connect 並回報結果。
+# Check that everything required is enabled on the glasses and print the commands to run on
+# the PC; if the PC is already on the glasses' subnet it tries adb connect and reports back.
 #
-# 用法：
+# Usage:
 #   source deploy/env.sh
-#   bash deploy/adb_wifi_verify.sh          # 用 env.sh 的 SERIAL
+# use the SERIAL from env.sh
 #   SERIAL=<DEVICE_SERIAL> bash deploy/adb_wifi_verify.sh
 set -u
 source "$(dirname "$0")/env.sh"
 
 PORT=5555
-HEX=":$(printf '%04X' "$PORT")"          # 5555 → :15B3
+HEX=":$(printf '%04X' "$PORT")"          # 5555 -> :15B3
 
 D() { "$ADB" -s "$SERIAL" shell "$1" 2>&1; }
 

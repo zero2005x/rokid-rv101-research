@@ -1,6 +1,6 @@
 /*
  * Simple BPF Info Leak Test
- * 簡化版本 - 測試 helper 和返回值
+ * Simplified version - tests helpers and return values
  */
 #define _GNU_SOURCE
 #include <stdio.h>

@@ -3,6 +3,8 @@
 
 ﻿# 🔄 Rokid AR Glasses 提權攻擊 - Session 交接文件
 
+> English: [HANDOVER_SESSION_20260131_EN.md](HANDOVER_SESSION_20260131_EN.md)
+
 ## 2026-02-24 Recovery/fastboot 全封鎖後的 root 方案困境
 
 ### 2026-02-24 run-as dd 測試結果

@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Rokid Capture/Remote 品牌標誌（adaptive icon 前景，108×108 viewport，安全區 66×66 內）：
-     AR 眼鏡：左鏡片=相機光圈（青），右鏡片=隱私遮斷（琥珀斜線 + 白點）。 -->
+<!-- Rokid Capture/Remote brand mark (adaptive icon foreground, 108x108 viewport, inside the 66x66 safe zone):
+     AR glasses: left lens = camera aperture (cyan), right lens = privacy cut-out (amber slash + white dot). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- 左鏡腿 -->
+    <!-- left temple arm -->
     <path
         android:pathData="M22,48 Q20,44 26,39"
         android:strokeColor="#E8EDF5"
         android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
-    <!-- 右鏡腿 -->
+    <!-- right temple arm -->
     <path
         android:pathData="M86,48 Q88,44 82,39"
         android:strokeColor="#E8EDF5"
         android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
-    <!-- 鏡橋 -->
+    <!-- nose bridge -->
     <path
         android:pathData="M46,50 Q54,44 62,50"
         android:strokeColor="#E8EDF5"
@@ -29,35 +29,35 @@
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
 
-    <!-- 左鏡片框（圓角矩形） -->
+    <!-- left lens frame (rounded rectangle) -->
     <path
         android:pathData="M28,46 H40 A6,6 0 0 1 46,52 V60 A6,6 0 0 1 40,66 H28 A6,6 0 0 1 22,60 V52 A6,6 0 0 1 28,46 Z"
         android:strokeColor="#E8EDF5"
         android:strokeWidth="2.5"
         android:fillColor="#00000000" />
-    <!-- 右鏡片框 -->
+    <!-- right lens frame -->
     <path
         android:pathData="M68,46 H80 A6,6 0 0 1 86,52 V60 A6,6 0 0 1 80,66 H68 A6,6 0 0 1 62,60 V52 A6,6 0 0 1 68,46 Z"
         android:strokeColor="#E8EDF5"
         android:strokeWidth="2.5"
         android:fillColor="#00000000" />
 
-    <!-- 左鏡片內：相機光圈外環 -->
+    <!-- inside the left lens: camera aperture outer ring -->
     <path
         android:pathData="M34,48.5 A7.5,7.5 0 1 0 34,63.5 A7.5,7.5 0 1 0 34,48.5 Z"
         android:strokeColor="#E8EDF5"
         android:strokeWidth="2.5"
         android:fillColor="#00000000" />
-    <!-- 左鏡片內：光圈中心（品牌青） -->
+    <!-- inside the left lens: aperture centre (brand cyan) -->
     <path
         android:pathData="M34,52.5 A3.5,3.5 0 1 0 34,59.5 A3.5,3.5 0 1 0 34,52.5 Z"
         android:fillColor="#4FC3F7" />
 
-    <!-- 右鏡片內：隱私指示點 -->
+    <!-- inside the right lens: privacy indicator dot -->
     <path
         android:pathData="M74,54 A2,2 0 1 0 74,58 A2,2 0 1 0 74,54 Z"
         android:fillColor="#E8EDF5" />
-    <!-- 右鏡片內：隱私遮斷斜線（品牌琥珀） -->
+    <!-- inside the right lens: privacy cut-out slash (brand amber) -->
     <path
         android:pathData="M66.5,49 L81.5,63"
         android:strokeColor="#FFC24B"

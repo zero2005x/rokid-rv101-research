@@ -6,31 +6,31 @@ import com.rokid.rc.shared.protocol.GhostlockCodes
 import java.io.File
 
 /**
- * 執行期引擎選擇（**P1**）：不再用編譯期常數 `USE_ENGINE`。
+ * Runtime engine selection (**P1**): the compile-time constant `USE_ENGINE` is no longer used.
  *
- * 每次呼叫時依「**現在哪條觸發管線活著**」挑引擎並委派：
- * | 順序 | 條件 | 引擎 | 說明 |
+ * On each call it picks an engine according to "**which trigger pipeline is alive right now**" and delegates:
+ * | Order | Condition | Engine | Note |
  * |------|------|------|------|
- * | 1 | Shizuku server 在跑 | [ShizukuGhostlockEngine] | 以 shell 身分跑 exploit；內部失敗會回退 bridge |
- * | 2 | bridge helper 常駐 | [BridgeGhostlockEngine] | `deploy/root_bridge.sh` 常駐迴圈 |
- * | 3 | 皆無 | [ShizukuGhostlockEngine] | 由它回報「Shizuku 未執行」並嘗試回退，訊息最完整 |
+ * | 1 | Shizuku server is running | [ShizukuGhostlockEngine] | runs the exploit as shell; an internal failure falls back to bridge |
+ * | 2 | bridge helper is resident | [BridgeGhostlockEngine] | the resident `deploy/root_bridge.sh` loop |
+ * | 3 | neither | [ShizukuGhostlockEngine] | it reports "Shizuku not running" and attempts the fallback, giving the most complete message |
  *
- * 若 root daemon 已經活著，任何引擎的 `acquireRoot()` 都會走快速路徑直接回報成功（跳過 LPE）。
+ * If the root daemon is already alive, any engine's `acquireRoot()` takes the fast path and reports success directly (skipping the LPE).
  *
- * 這樣換環境（先跑 start_shizuku 或 root_bridge）**不需要重新建置 APK**，
- * 且失敗時回報的原因對應實際探測結果。
+ * This way, changing the environment (running start_shizuku or root_bridge first) **needs no APK rebuild**,
+ * and a reported failure reason corresponds to the actual probe result.
  */
 class AutoGhostlockEngine(private val app: Context) : GhostlockEngine {
 
     private val shizuku = ShizukuGhostlockEngine(app, fallback = BridgeGhostlockEngine())
     private val bridge = BridgeGhostlockEngine()
 
-    /** 最近一次實際使用的引擎名稱（`shizuku`／`bridge`），供 P2 度量與狀態顯示。 */
+    /** Name of the engine actually used most recently (`shizuku`/`bridge`), for P2 metrics and status display. */
     @Volatile
     var lastEngineName: String = "none"
         private set
 
-    /** 最近一次的選擇原因（結構化代碼，供手機顯示）。 */
+    /** Reason for the most recent selection (structured code, shown on the phone). */
     @Volatile
     var lastReasonCode: String? = null
         private set
@@ -67,7 +67,7 @@ class AutoGhostlockEngine(private val app: Context) : GhostlockEngine {
         engine.progress(GhostlockCodes.ENGINE_SELECTED, lastEngineName)
         val result = engine.acquireRoot()
         if (result.success || engine.rootAcquired) return result
-        // 選中的引擎失敗時，若另一條管線其實可用，再試一次（避免探測時序造成的誤判）
+        // if the selected engine fails and the other pipeline is in fact usable, try once more (avoid misjudging on probe timing)
         val other = if (engine === shizuku) bridge else shizuku
         val otherReady = if (other === bridge) isBridgeHelperResident() else isShizukuAvailable()
         if (!otherReady) return result
@@ -79,7 +79,7 @@ class AutoGhostlockEngine(private val app: Context) : GhostlockEngine {
         return if (retry.success || other.rootAcquired) retry else result
     }
 
-    /** 依目前環境挑引擎（並記錄原因代碼）。 */
+    /** Pick an engine for the current environment (and record the reason code). */
     private fun resolve(): GhostlockEngine {
         val shizukuUp = isShizukuAvailable()
         val helperUp = isBridgeHelperResident()
@@ -103,13 +103,13 @@ class AutoGhostlockEngine(private val app: Context) : GhostlockEngine {
     }
 
     /**
-     * Shizuku 是否可用：用官方 API（`Shizuku.pingBinder()`）。
-     * ⚠ 不可用 `ps` 判斷——Android 的 App 看不到其他 process。
+     * Whether Shizuku is available: use the official API (`Shizuku.pingBinder()`).
+     * ⚠ Do not judge by `ps` — an Android app cannot see other processes.
      */
     private fun isShizukuAvailable(): Boolean =
         runCatching { rikka.shizuku.Shizuku.pingBinder() }.getOrDefault(false)
 
-    /** bridge helper 是否常駐：讀 helper 心跳檔（1 秒一輪）。 */
+    /** Whether the bridge helper is resident: read the helper heartbeat file (one round a second). */
     private fun isBridgeHelperResident(): Boolean = runCatching {
         val f = File(com.rokid.rc.glasses.GlassesPaths.BRIDGE_HELPER_ALIVE)
         if (!f.exists()) return@runCatching false

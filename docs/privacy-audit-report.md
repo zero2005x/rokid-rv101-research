@@ -1,5 +1,7 @@
 # Rokid 眼鏡隱私稽核報告（資料外傳分析）
 
+> English: [privacy-audit-report_EN.md](privacy-audit-report_EN.md)
+
 - 設備：Rokid RG-glasses，序號 `<DEVICE_SERIAL>`，Android 12（SDK 32），YodaOS-Sprite `1.22.009-20260710-150201`
 - 對應手機：Redmi 21091116UG（`<PHONE_SERIAL>`），裝有 Rokid 官方 App `com.rokid.sprite.global.aiapp`
 - 稽核方式：root（uid=0 + SELinux Permissive）後，靜態反編譯（jadx 1.5.1）眼鏡端系統 App 與手機端 Rokid App、擷取 native 庫字串、dump 裝置內資料庫/SharedPreferences

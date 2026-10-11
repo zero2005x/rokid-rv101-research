@@ -1,5 +1,7 @@
 # Rokid 手機 App 術語對照表（Windows 工具翻譯基準）
 
+> English: [i18n_glossary_EN.md](i18n_glossary_EN.md)
+
 > 來源：`/home/kali/rokid_root/android/app-phone/src/main/res/values*/strings.xml`
 > 與 `values/`（預設 = zh-TW），共 159 個 key × 14 語系，經程式化驗證 key 集完全一致。
 >

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# build_debugmask_so.sh — 編譯 usbdebug-hider 的 native 層（PLT/GOT hook）
-# 產出：android/usbdebug-hider/src/main/jniLibs/arm64-v8a/libdebugmask.so
+# build_debugmask_so.sh — build the usbdebug-hider native layer (PLT/GOT hook)
+# Output: android/usbdebug-hider/src/main/jniLibs/arm64-v8a/libdebugmask.so
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

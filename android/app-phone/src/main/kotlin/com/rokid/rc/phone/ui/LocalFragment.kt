@@ -23,7 +23,7 @@ import com.rokid.rc.phone.util.ThumbLoader
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** 本機分頁：顯示已下載到手機的相簿。 */
+/** Local tab: shows the albums already downloaded to the phone. */
 class LocalFragment : Fragment() {
 
     private var rootV: View? = null
@@ -40,7 +40,7 @@ class LocalFragment : Fragment() {
         val activity = requireActivity() as MainActivity
 
         val rv = v.findViewById<RecyclerView>(R.id.rvLocalAlbums)
-        rv.layoutManager = GridLayoutManager(context, 3)   // 本機同樣 3 欄
+        rv.layoutManager = GridLayoutManager(context, 3)   // 3 columns locally as well
         adapter = AlbumCardAdapter(
             coverLoader = { card -> localCover(card) },
             onClick = { card ->
@@ -88,7 +88,7 @@ class LocalFragment : Fragment() {
         reloading = true
         val adapter = adapter ?: return
         reloadJob = viewLifecycleOwner.lifecycleScope.launch {
-            // 連線時順便把眼鏡端的相簿名稱同步到本機索引
+            // sync the glasses-side album names into the local index while connected
             if (Remote.isConnected) {
                 Remote.listAlbums().onSuccess { LocalStore.syncNamesFromRemote(it) }
             }
@@ -120,7 +120,7 @@ class LocalFragment : Fragment() {
         }
     }
 
-    /** 摘要列：已下載 N 本 · M 項 · 佔用容量。 */
+    /** Summary row: N albums downloaded · M items · storage used. */
     private fun updateSummary() {
         val v = rootV ?: return
         val albums = LocalStore.listLocalAlbums()
@@ -135,7 +135,7 @@ class LocalFragment : Fragment() {
         tv.visibility = View.VISIBLE
     }
 
-    /** 更新批次列（選取數量與按鈕）。 */
+    /** Update the batch row (selection count and buttons). */
     private fun updateSelectionBar() {
         val v = rootV ?: return
         val a = adapter ?: return
@@ -149,7 +149,7 @@ class LocalFragment : Fragment() {
             getString(R.string.selected_albums, a.selected.size)
     }
 
-    /** 批次刪除本機相簿（僅刪手機上的副本）。 */
+    /** Batch-delete local albums (only the copies on the phone). */
     private fun confirmBatchDelete() {
         val a = adapter ?: return
         val ids = a.selected.toList()

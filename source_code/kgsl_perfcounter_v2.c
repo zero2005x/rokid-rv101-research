@@ -1,11 +1,11 @@
 /*
- * kgsl_perfcounter_v2.c - 修正結構後重試 perfcounter
+ * kgsl_perfcounter_v2.c - retrying perfcounter with a corrected structure
  *
- * 發現:
- * - sysfs perfcounter=1 後, errno 從 EPERM 變成 EINVAL
- * - 這意味著權限通過了，但結構不對
+ * Findings:
+ * - after sysfs perfcounter=1, errno changed from EPERM to EINVAL
+ * - this means the permission check passed but the structure is wrong
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_perfcounter_v2 kgsl_perfcounter_v2.c
  */
 
@@ -21,7 +21,7 @@
 #include <sys/mman.h>
 #include <stdint.h>
 
-/* 不同版本的結構嘗試 */
+/* different structure versions to try */
 
 void write_sysfs(const char *path, const char *value)
 {
@@ -39,10 +39,10 @@ void try_perfcounter_get_formats(int fd)
 {
     printf("\n=== Trying Different PERFCOUNTER_GET Formats ===\n");
 
-    // 確保 perfcounter 啟用
+    // Make sure perfcounter is enabled
     write_sysfs("/sys/class/kgsl/kgsl-3d0/perfcounter", "1");
 
-    // 格式 1: 只有 groupid 和 countable (8 bytes)
+    // Format 1: only groupid and countable (8 bytes)
     struct
     {
         uint32_t groupid;
@@ -53,7 +53,7 @@ void try_perfcounter_get_formats(int fd)
     int ret = ioctl(fd, 0xc008093b, &fmt1);
     printf("[*] Format 1 (8B): ret=%d, errno=%d\n", ret, errno);
 
-    // 格式 2: groupid, countable, offset (12 bytes)
+    // Format 2: groupid, countable, offset (12 bytes)
     struct
     {
         uint32_t groupid;
@@ -69,7 +69,7 @@ void try_perfcounter_get_formats(int fd)
         printf("    offset=0x%x\n", fmt2.offset);
     }
 
-    // 格式 3: groupid, countable, offset, offset_hi (16 bytes)
+    // Format 3: groupid, countable, offset, offset_hi (16 bytes)
     struct
     {
         uint32_t groupid;
@@ -86,7 +86,7 @@ void try_perfcounter_get_formats(int fd)
         printf("    offset=0x%x, offset_hi=0x%x\n", fmt3.offset, fmt3.offset_hi);
     }
 
-    // 格式 4: 加上 flags (20 bytes)
+    // Format 4: add flags (20 bytes)
     struct
     {
         uint32_t groupid;
@@ -100,7 +100,7 @@ void try_perfcounter_get_formats(int fd)
     ret = ioctl(fd, 0xc014093b, &fmt4);
     printf("[*] Format 4 (20B): ret=%d, errno=%d\n", ret, errno);
 
-    // 嘗試不同的 ioctl 編號變體
+    // Try different ioctl number variants
     printf("\n[*] Trying different ioctl numbers for PERFCOUNTER:\n");
 
     for (int size = 8; size <= 32; size += 4)
@@ -129,9 +129,9 @@ void try_perfcounter_query_formats(int fd)
 {
     printf("\n=== Trying Different PERFCOUNTER_QUERY Formats ===\n");
 
-    // nr=0x46 是 PERFCOUNTER_QUERY
+    // nr=0x46 is PERFCOUNTER_QUERY
 
-    // 格式 1: 只有 groupid
+    // Format 1: only groupid
     struct
     {
         uint32_t groupid;
@@ -141,7 +141,7 @@ void try_perfcounter_query_formats(int fd)
     int ret = ioctl(fd, 0xc0040946, &q1);
     printf("[*] Query format 1 (4B): ret=%d, errno=%d\n", ret, errno);
 
-    // 格式 2: groupid + count 指針
+    // Format 2: groupid + count pointer
     struct
     {
         uint32_t groupid;
@@ -163,7 +163,7 @@ void try_perfcounter_query_formats(int fd)
         printf("    count=%u, max_counters=%u\n", q2.count, q2.max_counters);
     }
 
-    // 格式 3: 不同的結構
+    // Format 3: a different structure
     struct
     {
         uint32_t groupid;
@@ -187,7 +187,7 @@ void explore_all_perfcounter_ioctls(int fd)
     printf("\n=== Exploring All Perfcounter-related ioctls ===\n");
 
     /*
-     * 可能的 perfcounter ioctl:
+     * Possible perfcounter ioctls:
      * 0x3b - PERFCOUNTER_GET
      * 0x3c - PERFCOUNTER_PUT
      * 0x46 - PERFCOUNTER_QUERY
@@ -196,7 +196,7 @@ void explore_all_perfcounter_ioctls(int fd)
 
     uint32_t data[16] = {0};
 
-    // 測試 0x3c (PUT)
+    // Test 0x3c (PUT)
     data[0] = 0; // groupid
     data[1] = 0; // countable
 
@@ -214,7 +214,7 @@ void explore_all_perfcounter_ioctls(int fd)
         }
     }
 
-    // 測試 0x47 (READ?)
+    // Test 0x47 (READ?)
     for (int size = 8; size <= 32; size += 4)
     {
         int cmd = 0xc0000000 | (size << 16) | (0x09 << 8) | 0x47;
@@ -235,7 +235,7 @@ void test_with_different_groupids(int fd)
 {
     printf("\n=== Testing with Different Group IDs ===\n");
 
-    // Adreno 6xx 可能有以下 group:
+    // Adreno 6xx may have the following groups:
     // 0: CP (Command Processor)
     // 1: RBBM
     // 2: PC
@@ -253,7 +253,7 @@ void test_with_different_groupids(int fd)
         uint32_t offset_hi;
     } req = {0};
 
-    // 使用正確的 ioctl 大小
+    // Use the correct ioctl size
     for (int grp = 0; grp < 32; grp++)
     {
         req.groupid = grp;
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
     }
     printf("[+] Opened fd=%d\n", g_fd);
 
-    // 確保 sysfs 啟用
+    // Make sure sysfs is enabled
     write_sysfs("/sys/class/kgsl/kgsl-3d0/perfcounter", "1");
 
     try_perfcounter_get_formats(g_fd);

@@ -1,5 +1,8 @@
 # RV101 拍照/錄影「閃光燈」開啟機制研究
 
+> English: [RV101_CAMERA_LED_FLASH_MECHANISM_EN.md](RV101_CAMERA_LED_FLASH_MECHANISM_EN.md)
+
+
 > 日期：2026-08-23　裝置：<DEVICE_SERIAL>（fw 1.22.009，Android 12，kernel 5.10.209-perf）
 > 方法：韌體映像靜態分析（system/product/vendor.img）+ 實機 sysfs/DTS/logcat/dmesg 驗證。
 > 所有路徑與行號皆可重現。

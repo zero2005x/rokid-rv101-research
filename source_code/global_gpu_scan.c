@@ -1,12 +1,12 @@
 /*
- * global_gpu_scan.c - 全局 GPU 地址空間掃描器
+ * global_gpu_scan.c - global GPU address space scanner
  *
- * CVE-2025-21479 的 offset 基於全局 GPU 頁面索引：
- * - GPU 基址: 0x4000000000
+ * The CVE-2025-21479 offset is based on the global GPU page index:
+ * - GPU base address: 0x4000000000
  * - page_index = (gpuaddr - 0x4000000000) / 0x1000
  * - mmap offset = (page_index + 1) * 0x1000
  *
- * 這個工具大範圍掃描 offset 來尋找其他進程的 GPU 內存
+ * This tool scans a wide offset range to find other processes' GPU memory
  */
 
 #include <stdio.h>

@@ -1,4 +1,6 @@
 # KGSL GPU Exploitation Research Report - Session 11
+
+> English: [KGSL_RESEARCH_SESSION_11_EN.md](KGSL_RESEARCH_SESSION_11_EN.md)
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 

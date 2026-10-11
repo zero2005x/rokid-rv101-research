@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 無封面時的底圖：品牌深藍→青色漸層 -->
+<!-- Placeholder when there is no cover: brand dark blue → cyan gradient -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <gradient

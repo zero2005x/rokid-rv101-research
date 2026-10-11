@@ -20,10 +20,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * 眼鏡端儀表板（顯示為主，操作由手機 App）：
- * 底部橫幅五類資訊（連線 / Root / 相機 / 儲存 / 指示燈），
- * 點按橫幅（觸控板 tap 或 DPAD 中心鍵/Enter）切換展開/摺疊；
- * 顯示內容可由手機端遠端設定（SET_DISPLAY_CONFIG）。
+ * Glasses-side dashboard (display only; interaction is done by the phone app):
+ * five kinds of information in the bottom banner (connection / Root / camera / storage / LED),
+ * tapping the banner (touchpad tap, or the DPAD center key/Enter) toggles expand/collapse;
+ * the displayed content can be configured remotely from the phone (SET_DISPLAY_CONFIG).
  */
 class MainActivity : AppCompatActivity() {
 
@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         refresh()
     }
 
-    /** 配置變更時同步面板狀態：全隱藏→自動摺疊；有任何可見列→自動展開。 */
+    /** Sync the panel state on configuration change: all hidden → auto collapse; any visible row → auto expand. */
     private fun syncPanelToConfig() {
         val cfg = graph.displayConfig.config
         val anyVisible = cfg.conn || cfg.root || cfg.camera || cfg.storage || cfg.led
@@ -50,19 +50,19 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        // 螢幕常亮：避免眼鏡在提權/拍攝期間休眠
+        // keep the screen on: stop the glasses from sleeping during escalation/capture
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         /*
-         * 註：曾嘗試用「全螢幕沉浸」消除畫面底部那層系統 scrim —— **無效**（實測仍存在）。
-         * 該 scrim 是 ROM 對**第三方 App** 額外疊上的一層（~12% 白），系統 App 不會有；
-         * App 端無法移除，因此改用「把儀表板文字上移離開那 48px」的方式處理（見 activity_main.xml
-         * 的 paddingBottom 與 reports/...remote_diagnosis... §12）。
+         * NOTE: we tried removing the system scrim at the bottom of the screen with "full-screen immersive" — **it did not work** (measured: still present).
+         * That scrim is an extra layer (~12% white) the ROM overlays on **third-party apps**; system apps do not get it;
+         * the app cannot remove it, so the workaround is to "move the dashboard text up out of those 48px" (see paddingBottom in
+         * activity_main.xml and reports/...remote_diagnosis... §12).
          */
         window.statusBarColor = android.graphics.Color.TRANSPARENT
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
-        // 點按橫幅切換展開/摺疊（觸控板 tap 即一般 touch）
+        // tap the banner to toggle expand/collapse (a touchpad tap is an ordinary touch)
         findViewById<View>(R.id.panel).setOnClickListener { togglePanel() }
 
         requestPermissions()
@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // activity 進入前景後才啟動 FGS，避免 Background start not allowed
+        // start the FGS only after the activity reaches the foreground, to avoid Background start not allowed
         if (!serviceStarted) {
             serviceStarted = true
             startForegroundService(Intent(this, CaptureService::class.java))
@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         refreshJob = null
     }
 
-    /** 觸控板按鍵（DPAD_CENTER / ENTER）也可切換展開/摺疊。 */
+    /** Touchpad keys (DPAD_CENTER / ENTER) also toggle expand/collapse. */
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
             keyCode == KeyEvent.KEYCODE_ENTER ||
@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         applyPanelState()
     }
 
-    /** DebugReceiver 用（避免 input 注入）。 */
+    /** For DebugReceiver (avoids input injection). */
     fun togglePanelPublic() = togglePanel()
 
     private fun applyPanelState() {
@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         val conn = graph.connection
         val camera = graph.camera
 
-        // 摺疊條：連線圓點
+        // collapsed bar: connection dot
         findViewById<View>(R.id.dotConn).setBackgroundResource(
             if (conn != null) R.drawable.bg_dot_green else R.drawable.bg_dot_gray
         )
@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity() {
                     R.string.dash_v_led_fmt,
                     getString(if (graph.ledOn) R.string.dash_v_on else R.string.dash_v_off)
                 )
-                tv.setTextColor(colorOf(!graph.ledOn)) // 熄=綠（符合隱私需求）
+                tv.setTextColor(colorOf(!graph.ledOn)) // off = green (matches the privacy requirement)
             }
         }
     }

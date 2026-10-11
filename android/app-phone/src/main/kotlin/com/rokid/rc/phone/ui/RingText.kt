@@ -5,14 +5,14 @@ import com.rokid.rc.phone.R
 import com.rokid.rc.shared.protocol.CameraErrors
 
 /**
- * 把眼鏡端送來的**結構化戒指事件**轉成手機語系的文字。
+ * Turns the **structured ring events** sent by the glasses into text in the phone's locale.
  *
- * 眼鏡端只送代碼（例如 `photo_ok`）與參數（檔名／原因／旗標清單），
- * 因此手機換語言、或未來加語言，都不需要動眼鏡端（原本眼鏡直接送中文句子）。
+ * The glasses send only codes (for example `photo_ok`) and arguments (file name / reason / flag list),
+ * so changing the phone's language, or adding a language later, needs no change on the glasses (previously the glasses sent Chinese sentences directly).
  */
 object RingText {
 
-    /** 動作結果；無法對應時回 null（呼叫端可選擇不顯示）。 */
+    /** Action result; returns null when it cannot be mapped (the caller may choose not to display it). */
     fun result(ctx: Context, key: String?, arg: String?): String? = when (key) {
         null, "" -> null
         "photo_ok" -> ctx.getString(R.string.ring_photo_ok, arg.orEmpty())
@@ -30,16 +30,16 @@ object RingText {
         "no_device" -> ctx.getString(R.string.ring_status_no_device, arg.orEmpty())
         "start_failed" -> ctx.getString(R.string.ring_status_start_failed)
         "stopped" -> ctx.getString(R.string.ring_status_stopped)
-        "running" -> null // 執行中/裝置路徑已由狀態欄位呈現，避免重複
+        "running" -> null // running / device path are already shown by the status field, so avoid duplicating them
         else -> ctx.getString(R.string.ring_err_prefix, key)
     }
 
     /**
-     * 把眼鏡端回傳的**錯誤碼**轉成手機語系文字（2026-09-13）。
+     * Turns the **error code** returned by the glasses into text in the phone's locale (2026-09-13).
      *
-     * 先前所有相機失敗都送 `"camera not ready"`，使用者看到「拍照失敗：camera not ready」
-     * 會以為是**戒指連線**問題；實際上「正在錄影」與「服務沒起來」是完全不同的處置。
-     * 未知的碼原樣顯示，方便除錯（不吞掉資訊）。
+     * Previously every camera failure sent `"camera not ready"`, so a user seeing "photo failed: camera not ready"
+     * would think it was a **ring connection** problem; in fact "currently recording" and "the service is not up"
+     * call for completely different handling. An unknown code is shown as-is, for easier debugging (the information is not swallowed).
      */
     fun errorDetail(ctx: Context, code: String?): String {
         val c = code?.trim().orEmpty()
@@ -47,14 +47,14 @@ object RingText {
             CameraErrors.BUSY_RECORDING -> ctx.getString(R.string.ring_err_busy_recording)
             CameraErrors.RECORD_START_TIMEOUT -> ctx.getString(R.string.ring_err_record_timeout)
             CameraErrors.BUSY -> ctx.getString(R.string.ring_err_busy)
-            // 相機未就緒最常見的原因是「眼鏡端的 CaptureService 被系統以 app idle 停掉」
-            // → 明確告訴使用者要做什麼，而不是只說「相機未就緒」
+            // the most common cause of a camera not being ready is "the glasses-side CaptureService was stopped by the system as an idle app"
+            // → tell the user explicitly what to do, instead of only saying "camera not ready"
             CameraErrors.NOT_READY -> ctx.getString(R.string.ring_camera_not_ready)
             else -> c
         }
     }
 
-    /** 顯示配置旗標清單（`conn,led`）→ 以手機語系組字。 */
+    /** Display-config flag list (`conn,led`) → composed in the phone's locale. */
     fun displayList(ctx: Context, tokens: String?): String {
         if (tokens.isNullOrBlank()) return ctx.getString(R.string.ring_display_none)
         return tokens.split(",").mapNotNull { t ->

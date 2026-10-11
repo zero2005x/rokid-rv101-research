@@ -4,12 +4,12 @@ import android.content.Context
 import android.util.Log
 
 /**
- * 靜音拍攝（強制壓制拍照/錄影提示音）狀態管理。
+ * Silent capture (force-suppress the photo/video shutter sound) state management.
  *
- * - 需要 root（bind-mount 掛載靜音檔，見 [SilentPayloads]）；root 未就緒時回報失敗。
- * - 設定持久化於 SharedPreferences（預設 **開啟**，符合「強迫關閉提示音」需求）。
- * - 提權成功後由 CaptureService 自動套用；手機可用 `SET_SILENT` 即時切換。
- * - 不跨 reboot：reboot 後 bind-mount 自動消失，需重新提權後再套用（與 root 同生命週期）。
+ * - Needs root (bind-mounts the silent file, see [SilentPayloads]); reports failure while root is not ready.
+ * - The setting is persisted in SharedPreferences (default **on**, matching the "force the shutter sound off" requirement).
+ * - Applied automatically by CaptureService after escalation; the phone can toggle it live with `SET_SILENT`.
+ * - Does not survive a reboot: the bind-mount disappears on reboot, so it must be re-applied after re-escalating (same lifetime as root).
  */
 class SilentMode(context: Context) {
 
@@ -19,22 +19,22 @@ class SilentMode(context: Context) {
     var enabled: Boolean = prefs.getBoolean("silent_capture", true)
         private set
 
-    /** 目前是否確實已掛載（由 [refreshApplied] 更新）。 */
+    /** Whether it is actually mounted right now (updated by [refreshApplied]). */
     @Volatile
     var applied: Boolean = false
         private set
 
-    /** 設定並立即套用；回傳是否成功。 */
+    /** Set the flag and apply immediately; returns whether it succeeded. */
     suspend fun setEnabled(on: Boolean): Boolean {
         enabled = on
         prefs.edit().putBoolean("silent_capture", on).apply()
         return applyNow()
     }
 
-    /** 若設定為開啟則套用（提權成功後呼叫）。 */
+    /** Apply it when the setting is on (called after escalation succeeds). */
     suspend fun applyIfEnabled(): Boolean = if (enabled) applyNow() else true
 
-    /** 重新讀取實際掛載狀態（供 STATUS 回報）。 */
+    /** Re-read the actual mount state (for the STATUS report). */
     suspend fun refreshApplied(): Boolean {
         val client = RootDaemonClient()
         if (!client.isRoot()) {
@@ -55,7 +55,7 @@ class SilentMode(context: Context) {
         }
         return try {
             if (enabled) {
-                // 一次性寫入靜音檔（已存在則跳過）
+                // write the silent file once (skipped when it already exists)
                 val w = client.exec(SilentPayloads.writeOggCommand(), 15_000L)
                 if (w.contains("SILENT_FILE_ERR")) {
                     Log.e(TAG, "靜音檔寫入失敗")

@@ -1,9 +1,9 @@
 /*
- * kgsl_safe_test.c - 安全版本的 KGSL 測試
+ * kgsl_safe_test.c - safety-focused version of the KGSL test
  *
- * 分步測試，避免 crash
+ * Test step by step to avoid a crash
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_safe_test kgsl_safe_test.c
  */
 
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 
     int test = atoi(argv[1]);
 
-    // 設置信號處理
+    // Install signal handlers
     signal(SIGSEGV, sig_handler);
     signal(SIGBUS, sig_handler);
 
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
         }
         printf("[+] mmap ptr=%p\n", ptr);
 
-        // 安全讀寫
+        // Safe read and write
         *(volatile uint32_t *)ptr = 0xDEADBEEF;
         uint32_t val = *(volatile uint32_t *)ptr;
         printf("[+] Write/Read: 0x%08x\n", val);
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
         printf("\n=== Test 3: FD Close Test ===\n");
         printf("[!] This may crash the system!\n");
 
-        // 新的 fd
+        // The new fd
         int fd2 = open("/dev/kgsl-3d0", O_RDWR);
         if (fd2 < 0)
         {
@@ -166,16 +166,16 @@ int main(int argc, char **argv)
         }
         printf("[+] mmap ptr=%p\n", ptr);
 
-        // 寫入標記
+        // Write a marker
         *(volatile uint64_t *)ptr = 0xCAFEBABE;
         printf("[*] Wrote marker\n");
 
-        // 關閉 fd2
+        // Close fd2
         printf("[*] Closing fd2...\n");
         close(fd2);
         printf("[*] fd2 closed\n");
 
-        // 嘗試讀取
+        // Try to read
         printf("[*] Attempting read...\n");
         uint64_t val;
         if (safe_read(ptr, &val) == 0)
@@ -220,21 +220,21 @@ int main(int argc, char **argv)
     {
         printf("\n=== Test 5: Free ioctl Scan ===\n");
 
-        // 先分配一些
+        // Allocate some first
         struct kgsl_gpumem_alloc req = {0};
         req.size = 0x1000;
         ioctl(fd, IOCTL_GPUMEM_ALLOC, &req);
         printf("[+] Allocated: 0x%lx\n", req.gpuaddr);
 
-        // 掃描可能的 free ioctl (只測試安全的)
+        // Scan possible free ioctls (only the safe ones are tested)
         int found_free = 0;
 
-        // 常見的 free ioctl 編號: 0x30, 0x31, 0x32, 0x34
+        // Common free ioctl numbers: 0x30, 0x31, 0x32, 0x34
         for (int nr = 0x30; nr <= 0x40; nr++)
         {
             uint64_t data[4] = {req.gpuaddr, 0x1000, 0, 0};
 
-            // 只讀 ioctl
+            // Read-only ioctl
             int cmd_r = (0x80 << 24) | (8 << 16) | (0x09 << 8) | nr;
             errno = 0;
             int ret = ioctl(fd, cmd_r, data);
@@ -243,7 +243,7 @@ int main(int argc, char **argv)
                 printf("[+] READ nr=0x%02x: ret=%d, errno=%d\n", nr, ret, errno);
             }
 
-            // 只寫 ioctl
+            // Write-only ioctl
             int cmd_w = (0x40 << 24) | (8 << 16) | (0x09 << 8) | nr;
             errno = 0;
             ret = ioctl(fd, cmd_w, data);

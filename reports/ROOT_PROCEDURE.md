@@ -1,4 +1,7 @@
 # Rokid AR Glasses Root 流程
+
+> English: [ROOT_PROCEDURE_EN.md](ROOT_PROCEDURE_EN.md)
+
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 > ## ⚠ 2026-09-13 現況指引（本檔為 2026-02 的歷史紀錄）

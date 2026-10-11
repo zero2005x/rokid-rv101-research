@@ -1,86 +1,91 @@
 #!/usr/bin/env bash
-# lease.sh — deploy 路徑的共用租約 primitive（補上 deploy 側的租約缺口）。
+# lease.sh — shared lease primitive for the deploy path (closes the deploy-side lease gap).
 #
-# ## 為什麼需要
+# ## Why this exists
 #
-# exploit 本體的三個路徑**寫死在 `ghostlock_rv101` binary 內**，無法像 helper 與信箱
-# 那樣一分為二：
+# The three paths of the exploit itself are **hardcoded inside the `ghostlock_rv101` binary**
+# and cannot be split in two the way the helper and the mailbox are:
 #
-#   /data/local/tmp/.ghostlock_root.sh   （payload；會被對方換掉）
-#   /data/local/tmp/gl_run.log           （會被對方截斷）
-#   /data/local/tmp/ghostlock_rv101      （會被對方 pkill）
+#   /data/local/tmp/.ghostlock_root.sh   (payload; the other side replaces it)
+#   /data/local/tmp/gl_run.log           (the other side truncates it)
+#   /data/local/tmp/ghostlock_rv101      (the other side pkills it)
 #
-# 所以「誰正在跑 exploit」必須全域序列化。目前有**三個**可能的操作者：
+# So "who is running the exploit" must be serialised globally. There are **three** possible
+# operators:
 #
-#   | 操作者                   | owner=    | 取租約的位置                              |
-#   |--------------------------|-----------|-------------------------------------------|
-#   | ZeroLightRokidDesktop    | `desktop` | `zero_light_desktop.c`（30 秒輪詢續約）    |
-#   | 眼鏡 App `RootDaemonKeeper` | `app`  | `RootDaemonKeeper.kt`（`finally` 釋放）    |
-#   | deploy 腳本（本檔）       | `deploy`  | 背景續約 + `EXIT` trap 釋放               |
+#   | operator                       | owner=    | where the lease is taken                      |
+#   |--------------------------------|-----------|-----------------------------------------------|
+#   | ZeroLightRokidDesktop          | `desktop` | `zero_light_desktop.c` (renews on the 30 s poll) |
+#   | glasses App `RootDaemonKeeper` | `app`     | `RootDaemonKeeper.kt` (released in `finally`)  |
+#   | deploy scripts (this file)     | `deploy`  | background renewal + `EXIT` trap release       |
 #
-# ## 契約（三處必須同步；改動時一起改）
+# ## Contract (three places must stay in sync; change them together)
 #
-#   檔案：`/data/local/tmp/ghostlock_op.lease`
-#   內容：`owner=<desktop|app|deploy> pid=<pid> ts=<unix 秒>`
-#   TTL ：900 秒；持有者需在工作期間持續續約
+#   file:    `/data/local/tmp/ghostlock_op.lease`
+#   content: `owner=<desktop|app|deploy> pid=<pid> ts=<unix seconds>`
+#   TTL:     900 seconds; the holder must keep renewing while it works
 #
-# ## 為什麼新增 `owner=deploy` 不必改動另外兩邊
+# ## Why adding `owner=deploy` needs no change on the other two sides
 #
-# 兩邊的判斷都是 **deny-by-default** —— 只有 owner 等於「自己」才算自己人：
+# Both sides decide **deny-by-default** — only an owner equal to "itself" counts as its own:
 #
 #   desktop: `mine = strstr(txt, "owner=desktop")`
 #   app    : `mine = txt.contains("owner=app")`
 #
-# 因此任何未知的 owner（包含 `deploy`）都會被視為「別人持有」而正確讓開。
-# 這點已在實機驗證（見下方 `lease_selftest`）。
+# So any unknown owner (including `deploy`) is treated as "held by someone else" and yields
+# correctly. This was verified on the device (see `lease_selftest` below).
 #
-# ## 用法
+# ## Usage
 #
 #   source "$(dirname "$0")/lease.sh"
-#   lease_take deploy || exit 2      # 取不到就讓開
-#   lease_autorenew_start deploy     # 背景續約（長流程必備）
+#   lease_take deploy || exit 2      # yield if the lease cannot be taken
+#   lease_autorenew_start deploy     # background renewal (required for long flows)
 #   trap 'lease_cleanup deploy' EXIT INT TERM
 #   ...
-#   lease_is_mine deploy || abort    # 迴圈中定期確認沒被搶走
+#   lease_is_mine deploy || abort    # periodically confirm it was not stolen
 #
-# 需要 `env.sh` 已提供 `ADB`／`SERIAL`（本檔會自行 source，重複 source 無害）。
+# Requires `ADB` / `SERIAL` from `env.sh` (this file sources it; sourcing twice is harmless).
 set -u
 
 _LEASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=env.sh
 [ -n "${ADB:-}" ] && [ -n "${SERIAL:-}" ] || source "$_LEASE_DIR/env.sh"
 
-# 租約檔路徑。**三處必須完全一致**（deploy/lease.sh、RootDaemonKeeper.kt、
-# zero_light_desktop.c）；`deploy/test_lease.sh` 有一項跨檔一致性檢查會擋住漂移。
+# Lease file path. **All three sites must match exactly** (deploy/lease.sh, RootDaemonKeeper.kt,
+# zero_light_desktop.c); `deploy/test_lease.sh` has a cross-file consistency check that blocks drift.
 #
-# ## 為什麼放在 `ghostlock_bridge/` 子目錄，而不是 `/data/local/tmp` 本身
+# ## Why it lives in the `ghostlock_bridge/` subdirectory and not in `/data/local/tmp` itself
 #
-# `/data/local/tmp` 是 `drwxrwx--x shell shell` → 眼鏡 App（uid 10053）屬 "other"，
-# 只有 `--x`（可穿越）**沒有目錄寫入權**，實測**既不能建立也不能刪除**其中的檔案。
-# 這讓 App 側的租約長期失效：`takeLease()` 在檔案不存在時必然失敗
-# （→ App 沒持租約就跑 exploit）、`dropLease()` 永遠無效（→ 殘留租約卡住別人）。
+# `/data/local/tmp` is `drwxrwx--x shell shell` -> the glasses App (uid 10053) is "other" and
+# has only `--x` (traverse) with **no directory write permission**, so it was measured to be
+# **unable to create or delete** files there. That broke the App-side lease for good:
+# `takeLease()` always fails when the file is missing (-> the App runs the exploit without a
+# lease) and `dropLease()` never works (-> a leftover lease blocks everyone else).
 #
-# `ghostlock_bridge/` 是 **777**，實測 App 在其中 `CREATE_OK` / `RM_OK`。
-# 把租約移到這裡就**從根本移除權限陷阱**，不必再依賴「只重設、不刪除」的約定。
+# `ghostlock_bridge/` is **777**, and the App measured `CREATE_OK` / `RM_OK` inside it.
+# Moving the lease here **removes the permission trap at the root** and drops the reliance on
+# the "reset only, never delete" convention.
 LEASE_DIR="/data/local/tmp/ghostlock_bridge"
-# 路徑**刻意寫成完整字面值**（不用 "$LEASE_DIR/..." 串接）：
-# 這是一份三方契約，`deploy/test_lease.sh` 的 T9 會直接比對三個檔案裡的**字面值**
-# 來擋住漂移。用變數串接會讓比對不到而失去保護作用。
+# The path is **deliberately written as a full literal** (not concatenated from "$LEASE_DIR/..."):
+# this is a three-way contract and T9 in `deploy/test_lease.sh` compares the **literal value** in
+# all three files to stop drift. Concatenating a variable would break that comparison and lose
+# the protection.
 LEASE_PATH="/data/local/tmp/ghostlock_bridge/ghostlock_op.lease"
-# 舊路徑（在 /data/local/tmp 下）：僅用於遷移清理
+# legacy path (under /data/local/tmp): used only for migration cleanup
 LEASE_PATH_LEGACY="/data/local/tmp/ghostlock_op.lease"
-LEASE_TTL_SEC="${LEASE_TTL_SEC:-900}"      # 與 desktop / app 一致，勿隨意改
-LEASE_RENEW_S="${LEASE_RENEW_S:-30}"       # 續約間隔（desktop 為 30 秒）
+LEASE_TTL_SEC="${LEASE_TTL_SEC:-900}"      # same as desktop / app; do not change casually
+LEASE_RENEW_S="${LEASE_RENEW_S:-30}"       # renewal interval (desktop uses 30 s)
 
-# 續約子程序 pid 與「租約被搶走」旗標（主程序據此中止）
+# renewal child pid and the "lease stolen" flag (the main process aborts on it)
 LEASE_RENEW_PID=""
 LEASE_LOST_FLAG="${TMPDIR:-/tmp}/ghostlock_lease_lost.${SERIAL:-none}"
 
 _adb() { "$ADB" -s "$SERIAL" "$@"; }
 
-# 讀租約。回傳 1 = **adb 失敗**（無法判斷），0 = 讀到（可能為空 = 檔案不存在）。
-# 用哨兵字串區分「adb 掛掉」與「檔案不存在」——這兩者對續約的意義完全不同：
-# 前者是暫時性（例如 reboot 期間），後者代表租約已被釋放／搶走。
+# Read the lease. Returns 1 = **adb failed** (cannot tell), 0 = read (may be empty = no file).
+# Sentinels distinguish "adb is down" from "the file does not exist" — the two mean completely
+# different things for renewal: the former is transient (e.g. during a reboot), the latter
+# means the lease was released or stolen.
 lease_read() {
   local raw
   raw=$(_adb shell "echo __LB__; cat $LEASE_PATH 2>/dev/null; echo __LE__" 2>/dev/null | tr -d '\r')
@@ -90,10 +95,10 @@ lease_read() {
   esac
 }
 
-# 目前持有者（空字串 = 無人或 adb 失敗；請自行用 lease_read 判別）
+# current holder (empty string = nobody or adb failed; use lease_read to tell which)
 lease_owner() { lease_read 2>/dev/null | sed -n 's/.*owner=\([A-Za-z][A-Za-z]*\).*/\1/p' | head -1; }
 
-# 租約年齡（秒）。-1 = 無法判斷／欄位不合法（與 desktop 的 lease_age_sec 同語意）
+# lease age (seconds). -1 = cannot tell / invalid field (same semantics as desktop's lease_age_sec)
 lease_age() {
   local ts
   ts=$(lease_read 2>/dev/null | sed -n 's/.*ts=\([0-9][0-9]*\).*/\1/p' | head -1)
@@ -102,13 +107,13 @@ lease_age() {
   echo $(( $(date +%s) - ts ))
 }
 
-# 0 = 租約新鮮（有人有效持有）
+# 0 = the lease is fresh (someone holds it validly)
 lease_fresh() {
   local age; age=$(lease_age)
   [ "$age" -ge 0 ] 2>/dev/null && [ "$age" -le "$LEASE_TTL_SEC" ]
 }
 
-# 0 = 被「別人」有效持有（自己持有／過期／無人 → 1）
+# 0 = validly held by "someone else" (held by me / expired / nobody -> 1)
 lease_held_by_other() {
   local me="${1:?lease_held_by_other <me>}" pid="${2:-}" owner
   lease_fresh || return 1
@@ -118,19 +123,21 @@ lease_held_by_other() {
   return 0
 }
 
-# 租約的 pid 欄位
+# the lease's pid field
 lease_pid() { lease_read 2>/dev/null | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' | head -1; }
 
-# 0 = 租約是我的。
+# 0 = the lease is mine.
 #
-# **身分 = (owner, pid)**，不是只有 owner。原因：deploy 是唯一「同一種 owner
-# 可能同時有多個實例」的操作者——`get_root_now.sh` 是命令列腳本，可以被同時跑兩次，
-# 兩者都寫 `owner=deploy`，只比 owner 的話會互相認為是自己人而**完全不互斥**
-# （本專案的 test_lease.sh T3 就是靠這點抓到這個缺口）。
-# desktop（單一 GUI 行程，`g_busy` 守衛）與 app（單一 keeper，`rearming` 守衛）
-# 本身是 singleton，不依賴 pid 就能互斥。
+# **Identity = (owner, pid)**, not owner alone. Reason: deploy is the only operator where
+# several instances of one owner can run at once — `get_root_now.sh` is a command-line script
+# that can be started twice, both write `owner=deploy`, and comparing owner alone would make
+# them treat each other as their own and **not exclude each other at all** (T3 in this
+# project's test_lease.sh caught exactly that gap).
+# desktop (a single GUI process, guarded by `g_busy`) and app (a single keeper, guarded by
+# `rearming`) are singletons and exclude each other without the pid.
 #
-# pid 省略時只比 owner —— 供「模擬 desktop／app 視角」的跨側檢查使用。
+# When pid is omitted only the owner is compared — used by the cross-side checks that
+# "simulate the desktop / app view".
 lease_is_mine() {
   local me="${1:?lease_is_mine <me>}" pid="${2:-}" lpid
   [ "$(lease_owner 2>/dev/null)" = "$me" ] || return 1
@@ -139,9 +146,10 @@ lease_is_mine() {
   [ "$lpid" = "$pid" ]
 }
 
-# 寫入租約。**先寫暫存檔再 mv**：`mv` 在同目錄為原子操作，
-# 避免讀者看到半截內容（截斷的 `ts=` 會讓對方誤判為「過期」而搶進）。
-# chmod 666 是必要的：App 是不同 uid，預設 umask 可能讓它讀不到。
+# Write the lease. **Write a temp file first, then mv**: mv within one directory is atomic and
+# keeps readers from seeing half the content (a truncated `ts=` would be misread as "expired"
+# and let the other side grab it).
+# chmod 666 is required: the App runs as a different uid and the default umask may hide the file.
 _lease_write() {
   local me="$1" pid="$2"
   _adb shell "mkdir -p $LEASE_DIR 2>/dev/null; chmod 777 $LEASE_DIR 2>/dev/null; \
@@ -149,16 +157,17 @@ _lease_write() {
     && mv $LEASE_PATH.tmp $LEASE_PATH && chmod 666 $LEASE_PATH" >/dev/null 2>&1
 }
 
-# 取租約。0 = 取得；1 = 被別人（含**另一個同 owner 的實例**）有效持有。
+# Take the lease. 0 = taken; 1 = validly held by someone else (including **another instance of the same owner**).
 lease_take() {
   local me="${1:?lease_take <me>}" pid="${2:-$$}"
   lease_held_by_other "$me" "$pid" && return 1
   _lease_write "$me" "$pid" || return 1
-  # 預檢後仍可能被搶（TOCTOU）→ 回讀確認真的是我（owner 與 pid 都要相同）
+  # It can still be stolen after the pre-check (TOCTOU) -> read back to confirm it is really mine
+  # (owner and pid must both match)
   lease_is_mine "$me" "$pid"
 }
 
-# 等待租約空出來（最多 timeout 秒）。0 = 已取得；1 = 逾時仍被持有。
+# Wait for the lease to free up (at most timeout seconds). 0 = taken; 1 = still held at timeout.
 lease_wait_free() {
   local me="${1:?}" timeout="${2:-300}" waited=0 owner
   while [ "$waited" -lt "$timeout" ]; do
@@ -170,41 +179,47 @@ lease_wait_free() {
   return 1
 }
 
-# 續約。**只在自己仍持有時續約，不搶別人的。**
-# 回傳 0 = 續約成功；1 = 租約已非我（被搶走／被刪）；2 = 暫時性失敗（adb 不可用，例如 reboot 中）
+# Renew. **Only renew while I still hold it; never steal someone else's.**
+# Returns 0 = renewed; 1 = the lease is no longer mine (stolen / deleted); 2 = transient
+# failure (adb unavailable, e.g. during a reboot)
 #
-# 注意：`case` 比對必須「owner 且 pid 都相同」才續約 —— 否則另一個 owner=deploy
-# 的實例接手後，本實例會把它續約成自己（互相搶）。
+# NOTE: the `case` match must see **both** the same owner and the same pid before renewing —
+# otherwise, after another `owner=deploy` instance takes over, this instance would renew it
+# back to itself (mutual stealing).
 lease_renew() {
   local me="${1:?lease_renew <me>}" pid="${2:-$$}" txt
-  txt=$(lease_read) || return 2                 # adb 失敗 → 暫時性，不要誤判為被搶
+  txt=$(lease_read) || return 2                 # adb failed -> transient, do not misread as stolen
   case "$txt" in
-    "") return 1 ;;                             # 檔案不存在 → 視為失去
+    "") return 1 ;;                             # file does not exist -> treat as lost
   esac
   case "$txt" in
     *"owner=$me"*"pid=$pid"*) _lease_write "$me" "$pid" && return 0 || return 2 ;;
   esac
-  # owner 相同但 pid 不同 → 是另一個同類實例，不是我的
+  # same owner but a different pid -> another instance of the same kind, not mine
   return 1
 }
 
-# 重設為「已釋放」狀態：**寫入過期標記，不刪除檔案**。
+# Reset to the "released" state: **write an expired marker, do not delete the file**.
 #
-# 為什麼仍然「不刪除」（即使新路徑已可寫）：
-#   1. **一致性**：三方用同一套約定，不必各自判斷自己有沒有刪除權。
-#   2. **避免空窗**：刪除與重建之間，讀者會看到「檔案不存在」＝無租約＝可搶，
-#      那正是 TOCTOU 的溫床；寫標記則是單一原子 `mv`，沒有空窗。
-#   3. 舊路徑（`/data/local/tmp`）本來就刪不掉，保留此約定讓遷移前後行為一致。
-#   釋放＝寫 `owner=none pid=0 ts=0`（三方都視為無效）。
+# Why still "no delete" (even though the new path is writable):
+#   1. **Consistency**: all three sides share one convention instead of each deciding whether it
+#      has delete permission.
+#   2. **No gap**: between delete and recreate a reader would see "file does not exist" = no
+#      lease = up for grabs, exactly the TOCTOU breeding ground; writing a marker is a single
+#      atomic `mv` with no gap.
+#   3. The legacy path (`/data/local/tmp`) could never be deleted anyway, so keeping this
+#      convention makes behaviour identical before and after the migration.
+#   Released = write `owner=none pid=0 ts=0` (all three sides treat it as invalid).
 lease_reset() {
   _adb shell "mkdir -p $LEASE_DIR 2>/dev/null; chmod 777 $LEASE_DIR 2>/dev/null; \
     printf 'owner=none pid=0 ts=0\n' > $LEASE_PATH 2>/dev/null; \
     chmod 666 $LEASE_PATH 2>/dev/null; true" >/dev/null 2>&1
 }
 
-# 確保租約目錄與檔案存在、權限正確（目錄 777、檔案 666）。
-# 目錄必須是 777，App 才能自行建立租約檔（否則又回到權限陷阱）。
-# 已存在則只修權限，不動內容。
+# Ensure the lease directory and file exist with correct permissions (directory 777, file 666).
+# The directory must be 777 so the App can create the lease file itself (otherwise the
+# permission trap is back). If it already exists only the permissions are fixed, content
+# untouched.
 lease_ensure_file() {
   _adb shell "mkdir -p $LEASE_DIR 2>/dev/null; chmod 777 $LEASE_DIR 2>/dev/null; \
     if [ ! -e $LEASE_PATH ]; then \
@@ -212,20 +227,21 @@ lease_ensure_file() {
     fi; chmod 666 $LEASE_PATH 2>/dev/null; true" >/dev/null 2>&1
 }
 
-# 遷移：清掉舊路徑（`/data/local/tmp/ghostlock_op.lease`）留下的租約檔，
-# 避免「舊檔還新鮮」造成兩份租約並存的誤判。
+# Migration: remove the lease file left at the legacy path
+# (`/data/local/tmp/ghostlock_op.lease`) so a still-fresh old file cannot make it look like two
+# leases exist at once.
 lease_migrate_legacy() {
   _adb shell "rm -f $LEASE_PATH_LEGACY 2>/dev/null; true" >/dev/null 2>&1
 }
 
-# 釋放（只在仍持有時重設，避免清掉別人的租約）
+# Release (reset only while still holding it, so someone else's lease is not cleared)
 lease_drop() {
   local me="${1:?lease_drop <me>}" pid="${2:-$$}"
   lease_is_mine "$me" "$pid" || return 0
   lease_reset
 }
 
-# 背景續約。失去租約時寫入旗標檔，主程序用 lease_lost 檢查。
+# Background renewal. Writes a flag file when the lease is lost; the main process checks it with lease_lost.
 lease_autorenew_start() {
   local me="${1:?lease_autorenew_start <me>}" pid="${2:-$$}" interval="${3:-$LEASE_RENEW_S}"
   rm -f "$LEASE_LOST_FLAG"
@@ -237,7 +253,7 @@ lease_autorenew_start() {
         printf 'lost at %s (owner=%s)\n' "$(date '+%F %T')" "$(lease_owner 2>/dev/null)" > "$LEASE_LOST_FLAG"
         exit 0
       fi
-      # rc=2（adb 暫時失敗）→ 繼續重試，不寫旗標
+      # rc=2 (transient adb failure) -> keep retrying, do not write the flag
     done
   ) &
   LEASE_RENEW_PID=$!
@@ -248,16 +264,16 @@ lease_autorenew_stop() {
   LEASE_RENEW_PID=""
 }
 
-# 主程序在迴圈中定期呼叫：0 = 仍安全持有
+# Called periodically by the main process in its loop: 0 = still safely held
 lease_lost() { [ -f "$LEASE_LOST_FLAG" ]; }
 
-# 一行狀態（給 log 用）
+# one-line status (for logs)
 lease_status() {
   local owner age; owner=$(lease_owner 2>/dev/null); age=$(lease_age)
   echo "owner=${owner:-（無）} age=${age}s ttl=${LEASE_TTL_SEC}s"
 }
 
-# 收尾：停續約 → 釋放 → 清旗標。掛在 EXIT trap 上可重複呼叫。
+# Teardown: stop renewal -> release -> clear the flag. Safe to call repeatedly from an EXIT trap.
 lease_cleanup() {
   local me="${1:?lease_cleanup <me>}"
   lease_autorenew_stop
@@ -265,7 +281,7 @@ lease_cleanup() {
   rm -f "$LEASE_LOST_FLAG"
 }
 
-# 自我測試：驗證 deny-by-default 契約（兩邊都把未知 owner 視為別人）
+# Self-test: verify the deny-by-default contract (both sides treat an unknown owner as someone else)
 #   lease_selftest deploy
 lease_selftest() {
   local me="${1:-deploy}" rc=0
@@ -278,7 +294,7 @@ lease_selftest() {
   lease_take "$me"       || { echo "[selftest] ✗ 取租約失敗"; rc=1; }
   lease_is_mine "$me"    || { echo "[selftest] ✗ 取得後回讀不是自己"; rc=1; }
   lease_held_by_other "$me" && { echo "[selftest] ✗ 自己持有卻被判為別人"; rc=1; }
-  # 換一個 owner 名稱模擬「對方程式的視角」：必須看到 deploy 是別人
+  # Take a different owner name to simulate "the other side's view": it must see deploy as someone else
   if lease_held_by_other desktop; then
     echo "[selftest] ✓ 以 desktop 視角看 deploy → 判定為『別人持有』（deny-by-default 成立）"
   else
@@ -289,7 +305,7 @@ lease_selftest() {
   return "$rc"
 }
 
-# 直接執行本檔時跑自我測試：bash deploy/lease.sh [owner]
+# Run the self-test when this file is executed directly: bash deploy/lease.sh [owner]
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
   case "${1:-selftest}" in
     selftest) lease_selftest "${2:-deploy}" ;;

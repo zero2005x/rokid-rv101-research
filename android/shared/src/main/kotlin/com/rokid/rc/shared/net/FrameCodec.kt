@@ -5,17 +5,17 @@ import java.io.DataOutputStream
 import java.io.IOException
 
 /**
- * 長度前綴 frame 編解碼（藍牙 RFCOMM 串流之上，傳輸無關）。
+ * Length-prefixed frame codec (on top of a Bluetooth RFCOMM stream, transport-agnostic).
  *
  * Frame: [payloadLength: 4B big-endian][opcode: 1B][payload: N B]
  *   payloadLength = 1 + N
- *   opcode 0x01 = JSON 控制訊息；0x02 = 二進位資料塊。
+ *   opcode 0x01 = JSON control message; 0x02 = binary data chunk.
  */
 object FrameCodec {
     const val OP_JSON = 0x01
     const val OP_BINARY = 0x02
-    const val MAX_FRAME = 256 * 1024 * 1024 // 256 MiB 上限，防呆
-    const val CHUNK_SIZE = 256 * 1024       // 二進位分塊大小
+    const val MAX_FRAME = 256 * 1024 * 1024 // 256 MiB cap, sanity guard
+    const val CHUNK_SIZE = 256 * 1024       // binary chunk size
 
     data class Frame(val opcode: Int, val payload: ByteArray)
 

@@ -7,10 +7,10 @@ import com.rokid.rc.shared.protocol.DisplayConfig
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * 眼鏡端儀表板顯示配置（手機可遠端設定，持久化於 SharedPreferences）。
- * 預設五類全顯示；允許全隱藏（僅剩摺疊條）。
- * 變更通知一律在主執行緒派發（UI 重繪安全；觸發源可能是 BT 指令的 IO 執行緒
- * 或廣播接收執行緒）。
+ * Glasses-side dashboard display configuration (settable remotely from the phone, persisted in SharedPreferences).
+ * All five categories are shown by default; hiding everything is allowed (leaving only the collapsed bar).
+ * Change notifications are always dispatched on the main thread (safe for UI redraw; the trigger may be the
+ * IO thread of a BT command or a broadcast receiver thread).
  */
 class DisplayConfigStore(context: Context) {
 
@@ -30,7 +30,7 @@ class DisplayConfigStore(context: Context) {
         led = prefs.getBoolean("led", true)
     )
 
-    /** 更新配置（任一欄位變化才持久化並通知；通知在主執行緒）。 */
+    /** Update the configuration (persist and notify only when a field actually changes; notification is on the main thread). */
     fun update(new: DisplayConfig) {
         if (new == config) return
         config = new
@@ -46,7 +46,7 @@ class DisplayConfigStore(context: Context) {
         }
     }
 
-    /** 配置變更時觸發（MainActivity 重繪用）。 */
+    /** Fired when the configuration changes (used by MainActivity to redraw). */
     fun addListener(l: () -> Unit) {
         listeners.add(l)
     }

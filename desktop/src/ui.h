@@ -1,39 +1,39 @@
 /*
- * ui.h — ZeroLightRokid Desktop v3.0 自繪元件庫
+ * ui.h — ZeroLightRokid Desktop v3.0 custom-drawn widget library
  *
- * 提供卡片、按鈕、開關、狀態面板、chip、圖示文字等元件。
- * 只負責「畫」，不做版面與命中測試（那在 zero_light_desktop.c）。
+ * Provides cards, buttons, switches, a status panel, chips and icon+text widgets.
+ * It only draws; layout and hit testing live in zero_light_desktop.c.
  *
- * 文字一律走 GDI（DrawTextW），沿用 i18n.h 的語系字型鏈，
- * 因此中日韓泰阿拉伯文都能正確顯示。
+ * All text goes through GDI (DrawTextW) and reuses i18n.h's per-locale font chains, so CJK,
+ * Thai and Arabic all render correctly.
  */
 #ifndef ZL_UI_H
 #define ZL_UI_H
 
 #include "theme.h"
 
-/* 按鈕外觀 */
+/* button appearance */
 typedef enum {
-    BTN_PRIMARY,   /* 填色品牌主色：畫面上唯一的視覺重心 */
-    BTN_GHOST,     /* 外框：次要動作 */
-    BTN_SOFT,      /* 淡底：卡片內的次要動作 */
-    BTN_DANGER,    /* 紅框：取消／破壞性 */
-    BTN_SUCCESS    /* 綠底：狀態顯示（非動作） */
+    BTN_PRIMARY,   /* filled with the brand primary: the single visual focal point */
+    BTN_GHOST,     /* outline: secondary action */
+    BTN_SOFT,      /* tinted fill: a secondary action inside a card */
+    BTN_DANGER,    /* red outline: cancel / destructive */
+    BTN_SUCCESS    /* green fill: status display (not an action) */
 } ui_btnkind;
 
-/* 互動狀態 */
+/* interaction state */
 typedef enum { ST_NORMAL = 0, ST_HOVER, ST_PRESSED, ST_DISABLED } ui_state;
 
 typedef struct {
     HDC        dc;
     zl_canvas  cv;
-    HFONT      font;      /* 一般 */
-    HFONT      font_b;    /* 粗體 */
-    HFONT      font_s;    /* 小字 */
+    HFONT      font;      /* regular */
+    HFONT      font_b;    /* bold */
+    HFONT      font_s;    /* small */
     int        dpi;
 } zl_ui;
 
-/* ---- 文字 ---- */
+/* ---- text ---- */
 
 static int ui_text_w(zl_ui *u, HFONT f, const wchar_t *s) {
     if (!s || !*s) return 0;
@@ -44,7 +44,7 @@ static int ui_text_w(zl_ui *u, HFONT f, const wchar_t *s) {
     return sz.cx;
 }
 
-/* 在矩形內繪製文字；fmt 為 DT_* 旗標（預設單行、垂直置中、左靠） */
+/* draw text inside a rectangle; fmt holds DT_* flags (defaults: single line, v-centred, left) */
 static void ui_text(zl_ui *u, HFONT f, const wchar_t *s, int x, int y,
                     int w, int h, COLORREF col, UINT fmt) {
     if (!s || !*s) return;
@@ -58,23 +58,23 @@ static void ui_text(zl_ui *u, HFONT f, const wchar_t *s, int x, int y,
     SelectObject(u->dc, old);
 }
 
-/* 置中單行 */
+/* centred single line */
 static void ui_text_c(zl_ui *u, HFONT f, const wchar_t *s, int x, int y,
                       int w, int h, COLORREF col) {
     ui_text(u, f, s, x, y, w, h, col, DT_SINGLELINE | DT_VCENTER | DT_CENTER | DT_END_ELLIPSIS);
 }
-/* 左靠單行垂直置中 */
+/* left-aligned single line, vertically centred */
 static void ui_text_l(zl_ui *u, HFONT f, const wchar_t *s, int x, int y,
                       int w, int h, COLORREF col) {
     ui_text(u, f, s, x, y, w, h, col, DT_SINGLELINE | DT_VCENTER | DT_LEFT | DT_END_ELLIPSIS);
 }
-/* 右靠單行垂直置中 */
+/* right-aligned single line, vertically centred */
 static void ui_text_r(zl_ui *u, HFONT f, const wchar_t *s, int x, int y,
                       int w, int h, COLORREF col) {
     ui_text(u, f, s, x, y, w, h, col, DT_SINGLELINE | DT_VCENTER | DT_RIGHT);
 }
 
-/* ---- 卡片 ---- */
+/* ---- card ---- */
 
 #define UI_CARD_R 12
 
@@ -83,15 +83,15 @@ static void ui_card(zl_ui *u, int x, int y, int w, int h) {
     stroke_round(&u->cv, x, y, w, h, UI_CARD_R, TH(TC_LINE), 1.0f);
 }
 
-/* 卡片標題（左上）。尺寸必須依 DPI 縮放，否則高 DPI 下字被裁掉 */
+/* card title (top-left). Sizes must scale with DPI or the text is clipped at high DPI */
 static void ui_card_title(zl_ui *u, const wchar_t *s, int x, int y) {
     ui_text_l(u, u->font_s, s, x, y, MulDiv(260, u->dpi, 96), MulDiv(22, u->dpi, 96),
               TH(TC_TEXT2));
 }
 
-/* ---- 按鈕 ---- */
+/* ---- button ---- */
 
-/* 依比例調整亮度（f < 1 變暗、f > 1 變亮） */
+/* scale brightness by a factor (f < 1 darkens, f > 1 lightens) */
 static COLORREF ui_shade(COLORREF c, double f) {
     int r = (int)(GetRValue(c) * f), g = (int)(GetGValue(c) * f), b = (int)(GetBValue(c) * f);
     if (r > 255) r = 255;
@@ -141,14 +141,14 @@ static void ui_button(zl_ui *u, int x, int y, int w, int h, const wchar_t *label
     ui_text_l(u, u->font, label, sx, y, tw_ + 2, h, fg);
 }
 
-/* ---- 開關（含標題與狀態副標） ---- */
+/* ---- switch (with label and status sub-line) ---- */
 
-/* 回傳整個元件的高度 */
+/* returns the height of the whole widget */
 static void ui_switch(zl_ui *u, int x, int y, int on, const wchar_t *label,
                       const wchar_t *sub, int hovered, int disabled) {
-    int tw_ = MulDiv(44, u->dpi, 96);       /* 軌道寬 */
-    int th_ = MulDiv(24, u->dpi, 96);       /* 軌道高 */
-    int kn  = MulDiv(18, u->dpi, 96);       /* 旋鈕直徑 */
+    int tw_ = MulDiv(44, u->dpi, 96);       /* track width */
+    int th_ = MulDiv(24, u->dpi, 96);       /* track height */
+    int kn  = MulDiv(18, u->dpi, 96);       /* knob diameter */
 
     COLORREF track = on ? TH(TC_PRI) : TH(TC_SW_OFF);
     if (disabled) track = TH(TC_CHIP);
@@ -164,9 +164,11 @@ static void ui_switch(zl_ui *u, int x, int y, int on, const wchar_t *label,
     fill_circle(&u->cv, kx + kn / 2, y + th_ / 2, kn / 2, knob);
 
     /*
-     * 標題與副標的垂直間距：兩行中心相隔 24 邏輯像素。
-     * 先前只隔 15，在 200% 縮放下 26px 與 24px 的字幾乎貼在一起。
-     * 文字區寬度必須依 DPI 縮放，否則長副標（如 Not running）會被截斷。
+     * Vertical spacing between the label and the sub-line: the two line centres are 24 logical
+     * pixels apart. They used to be only 15 apart, which at 200% scaling made the 26px and 24px
+     * text nearly touch.
+     * The text-area width must scale with DPI, otherwise a long sub-line (e.g. "Not running")
+     * is truncated.
      */
     int tx  = x + tw_ + MulDiv(14, u->dpi, 96);
     int twx = MulDiv(230, u->dpi, 96);
@@ -178,13 +180,13 @@ static void ui_switch(zl_ui *u, int x, int y, int on, const wchar_t *label,
     }
 }
 
-/* ---- 狀態面板（已 root 時取代大按鈕） ---- */
+/* ---- status panel (replaces the big button once rooted) ---- */
 
 static void ui_status_panel(zl_ui *u, int x, int y, int w, int h,
                             const wchar_t *title, const wchar_t *sub, int ok) {
     int r = MulDiv(10, u->dpi, 96);
     COLORREF accent = ok ? TH(TC_OK) : TH(TC_SEC);
-    /* 淡色底：以卡片色與強調色混合 */
+    /* tinted background: card colour blended with the accent */
     fill_round(&u->cv, x, y, w, h, r, TH(TC_CHIP));
     stroke_round(&u->cv, x, y, w, h, r, accent, 1.0f);
 
@@ -202,7 +204,7 @@ static void ui_status_panel(zl_ui *u, int x, int y, int w, int h,
     }
 }
 
-/* ---- chip（裝置狀態小標籤） ---- */
+/* ---- chip (small device-status label) ---- */
 
 static int ui_chip_w(zl_ui *u, const wchar_t *s) {
     return ui_text_w(u, u->font_s, s) + MulDiv(18, u->dpi, 96);
@@ -213,12 +215,12 @@ static void ui_chip(zl_ui *u, int x, int y, const wchar_t *s, COLORREF fg) {
     ui_text_c(u, u->font_s, s, x, y, w, h, fg);
 }
 
-/* ---- 小圓點 ---- */
+/* ---- small dot ---- */
 static void ui_dot(zl_ui *u, int cx, int cy, int r, COLORREF col) {
     fill_circle(&u->cv, cx, cy, r, col);
 }
 
-/* ---- 進度條 ---- */
+/* ---- progress bar ---- */
 static void ui_progress(zl_ui *u, int x, int y, int w, int h, double frac) {
     if (frac < 0) frac = 0;
     if (frac > 1) frac = 1;

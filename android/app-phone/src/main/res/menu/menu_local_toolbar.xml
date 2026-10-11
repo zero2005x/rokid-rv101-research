@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 本機頁工具列：只有重新整理（搜尋／排序不適用於本機相簿） -->
+<!-- Local page toolbar: refresh only (search/sort do not apply to the local album) -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item

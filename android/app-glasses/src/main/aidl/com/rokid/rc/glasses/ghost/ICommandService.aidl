@@ -1,21 +1,21 @@
-// ICommandService.aidl — 眼鏡端 App 的 Shizuku UserService 介面。
-// 在 Shizuku server（adb 啟動 = shell uid 2000）的進程內執行 sh -c，
-// 提供「shell 身份」給 App：跑 exploit（runCommandStream）與寫 payload（writeFile）。
-// destroy 的 transaction code 16777114 為 Shizuku server 保留碼。
+// ICommandService.aidl — Shizuku UserService interface of the glasses-side app.
+// Runs sh -c inside the Shizuku server process (started over adb = shell uid 2000),
+// giving the app a "shell identity": run the exploit (runCommandStream) and write payloads (writeFile).
+// destroy's transaction code 16777114 is a Shizuku server reserved code.
 package com.rokid.rc.glasses.ghost;
 
 import com.rokid.rc.glasses.ghost.ICommandCallback;
 
 interface ICommandService {
-    /** 流式執行指令：服務端另起 Thread 跑、逐行回呼、結束回 onExit。 */
+    /** Run a command in streaming mode: the service starts a Thread, calls back line by line, and ends with onExit. */
     void runCommandStream(String cmd, ICommandCallback callback) = 1;
 
-    /** 同步執行指令，回傳合併 stdout/stderr（小指令用，如 id）。 */
+    /** Run a command synchronously, returning merged stdout/stderr (for small commands such as id). */
     String runCommand(String cmd) = 2;
 
-    /** 以 shell 身份寫檔；executable=true 時 chmod 755。 */
+    /** Write a file as shell; when executable=true, chmod 755. */
     boolean writeFile(String path, in byte[] data, boolean executable) = 3;
 
-    /** Shizuku server 保留碼：由 server 呼叫以銷毀本 UserService。 */
+    /** Shizuku server reserved code: called by the server to destroy this UserService. */
     void destroy() = 16777114;
 }

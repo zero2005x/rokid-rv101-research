@@ -4,9 +4,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * 訊息信封建構/解析工具。
- * 信封：{ "t": type, "id": requestId, ...fields }
- * 回應：{ "t": type, "replyTo": requestId, ...fields }
+ * Message envelope build/parse helpers.
+ * Envelope: { "t": type, "id": requestId, ...fields }
+ * Response: { "t": type, "replyTo": requestId, ...fields }
  */
 object Msg {
     const val KEY_TYPE = "t"

@@ -1,7 +1,7 @@
-/* debugdetectprobe.c — native 偵測途徑（Java hook 打不到的那一半）
+/* debugdetectprobe.c — native detection paths (the half Java hooks cannot reach)
  *
- * 1. __system_property_get()：繞過 android.os.SystemProperties 的 Java hook。
- * 2. /proc/net/tcp{,6} 直讀：看 adb-over-TCP（5555 = 0x15B3）是否監聽中。
+ * 1. __system_property_get(): bypasses Java hooks on android.os.SystemProperties.
+ * 2. Direct read of /proc/net/tcp{,6}: see whether adb-over-TCP (5555 = 0x15B3) is listening.
  */
 #include <jni.h>
 #include <stdio.h>
@@ -24,7 +24,7 @@ Java_com_rokid_rc_debugdetectprobe_NativeProps_getProp(JNIEnv *env, jclass clazz
     return (*env)->NewStringUTF(env, value);
 }
 
-/* 掃 /proc/net/tcp 與 tcp6，回傳 "port1,port2,..."（十六進位 local_port 中 adb 預設 5555=0x15B3） */
+/* Scan /proc/net/tcp and tcp6, return "port1,port2,..." (hex local_port; adb defaults to 5555=0x15B3) */
 JNIEXPORT jstring JNICALL
 Java_com_rokid_rc_debugdetectprobe_NativeProps_listenPorts(JNIEnv *env, jclass clazz) {
     static const char *files[] = {"/proc/net/tcp", "/proc/net/tcp6"};
@@ -40,7 +40,7 @@ Java_com_rokid_rc_debugdetectprobe_NativeProps_listenPorts(JNIEnv *env, jclass c
         char line[512];
         int first = 1;
         while (fgets(line, sizeof(line), fp) != NULL) {
-            if (first) { /* 表頭 */ first = 0; continue; }
+            if (first) { /* header */ first = 0; continue; }
             unsigned int lport = 0, state = 0;
             /* sl local_address rem_address st ... */
             if (sscanf(line, " %*d: %*[0-9A-Fa-f]:%x %*[0-9A-Fa-f]:%*x %x", &lport, &state) != 2) {

@@ -30,6 +30,9 @@ style: |
 
 # 📱 Rokid Glasses 設備系統資料報告
 
+> English: [Rokid_Glasses_系統資料報告_Marp_EN.md](Rokid_Glasses_%E7%B3%BB%E7%B5%B1%E8%B3%87%E6%96%99%E5%A0%B1%E5%91%8A_Marp_EN.md)
+
+
 **收集日期：** 2026年1月30日  
 **設備序號：** <DEVICE_SERIAL>
 

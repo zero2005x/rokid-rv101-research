@@ -15,7 +15,7 @@
         app:title="@string/toolbar_local"
         app:titleTextColor="@color/text_primary" />
 
-    <!-- 容量摘要 -->
+    <!-- Storage summary -->
     <TextView
         android:id="@+id/tvLocalSummary"
         style="@style/Widget.RokidPhone.Hint"
@@ -25,7 +25,7 @@
         android:paddingBottom="6dp"
         android:visibility="gone" />
 
-    <!-- 批次列（長按進入多選時顯示） -->
+    <!-- Batch bar (shown when a long press enters multi-select) -->
     <LinearLayout
         android:id="@+id/llSelection"
         android:layout_width="match_parent"

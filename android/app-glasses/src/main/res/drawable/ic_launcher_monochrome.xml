@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 品牌標誌單色版（Android 13+ themed icon 的 monochrome layer；系統以 alpha 上色）。 -->
+<!-- Monochrome version of the brand mark (the monochrome layer of the Android 13+ themed icon; the system tints it through alpha). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- 鏡腿 -->
+    <!-- temple arm -->
     <path
         android:pathData="M22,48 Q20,44 26,39 M86,48 Q88,44 82,39"
         android:strokeColor="#000000"
         android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
-    <!-- 鏡橋 -->
+    <!-- nose bridge -->
     <path
         android:pathData="M46,50 Q54,44 62,50"
         android:strokeColor="#000000"
         android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:fillColor="#00000000" />
-    <!-- 鏡片（描邊：外框填滿 + 內框挖空，evenOdd） -->
+    <!-- lens (outline: outer frame filled + inner frame cut out, evenOdd) -->
     <path
         android:pathData="M28,46 H40 A6,6 0 0 1 46,52 V60 A6,6 0 0 1 40,66 H28 A6,6 0 0 1 22,60 V52 A6,6 0 0 1 28,46 Z M30,48.5 H38 A3.5,3.5 0 0 1 41.5,52 V60 A3.5,3.5 0 0 1 38,63.5 H30 A3.5,3.5 0 0 1 26.5,60 V52 A3.5,3.5 0 0 1 30,48.5 Z"
         android:fillColor="#000000"
@@ -29,12 +29,12 @@
         android:pathData="M68,46 H80 A6,6 0 0 1 86,52 V60 A6,6 0 0 1 80,66 H68 A6,6 0 0 1 62,60 V52 A6,6 0 0 1 68,46 Z M70,48.5 H78 A3.5,3.5 0 0 1 81.5,52 V60 A3.5,3.5 0 0 1 78,63.5 H70 A3.5,3.5 0 0 1 66.5,60 V52 A3.5,3.5 0 0 1 70,48.5 Z"
         android:fillColor="#000000"
         android:fillType="evenOdd" />
-    <!-- 光圈外環（evenOdd 挖空） -->
+    <!-- aperture outer ring (evenOdd cut-out) -->
     <path
         android:pathData="M34,48.5 A7.5,7.5 0 1 0 34,63.5 A7.5,7.5 0 1 0 34,48.5 Z M34,51.5 A4.5,4.5 0 1 0 34,60.5 A4.5,4.5 0 1 0 34,51.5 Z"
         android:fillColor="#000000"
         android:fillType="evenOdd" />
-    <!-- 隱私點與斜線 -->
+    <!-- privacy dot and slash -->
     <path
         android:pathData="M74,54 A2,2 0 1 0 74,58 A2,2 0 1 0 74,54 Z"
         android:fillColor="#000000" />

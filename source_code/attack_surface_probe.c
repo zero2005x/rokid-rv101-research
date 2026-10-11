@@ -1,10 +1,10 @@
 /*
- * attack_surface_probe.c — 驗證 §5.3 攻擊向量可達性
+ * attack_surface_probe.c — verify the reachability of the §5.3 attack vectors
  *
- * 對每個裝置節點做 O_RDONLY / O_RDWR open 測試，並對 I2C / Binder 做
- * ioctl 權限測試，最後驗證 BPF socket filter 的 load + SO_ATTACH_BPF。
+ * Open every device node O_RDONLY / O_RDWR, run ioctl permission tests against
+ * I2C / Binder, and finally verify BPF socket filter load + SO_ATTACH_BPF.
  *
- * 編譯 (動態連結):
+ * Build (dynamic linking):
  *   aarch64-linux-android24-clang -O2 -o attack_surface_probe attack_surface_probe.c
  */
 #define _GNU_SOURCE
@@ -68,13 +68,13 @@ static void test_i2c(void)
     }
     printf("  open O_RDWR OK (fd=%d)\n", fd);
 
-    /* 0x3f = mp2724 電池充電 IC；只設 slave 位址，不做寫入 */
+    /* 0x3f = mp2724 battery charger IC; only sets the slave address, no write */
     errno = 0;
     int ret = ioctl(fd, I2C_SLAVE, 0x3f);
     printf("  ioctl(I2C_SLAVE, 0x3f mp2724): ret=%d errno=%d (%s)\n",
            ret, errno, strerror(errno));
 
-    /* 0x64 = cw221x 電量計；只設 slave 位址 */
+    /* 0x64 = cw221x fuel gauge; only sets the slave address */
     errno = 0;
     ret = ioctl(fd, I2C_SLAVE, 0x64);
     printf("  ioctl(I2C_SLAVE, 0x64 cw221x): ret=%d errno=%d (%s)\n",

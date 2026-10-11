@@ -1,26 +1,32 @@
 #!/usr/bin/env bash
-# verify_index_resilience.sh — 眼鏡端媒體索引「雙向自我修復＋逐筆容錯」實機驗證。
+# verify_index_resilience.sh — on-device verification of the glasses media index's two-way
+# self-repair and per-entry fault tolerance.
 #
-# 驗證項目（對應 reports/wifi_transfer_fix_2026-09-13.md §24）：
-#   A. 壞 album 不再拖垮 media（逐筆容錯）
-#   B. 磁碟有、索引沒有 → 自動補登（正向）
-#   C. 索引有、磁碟沒有 → 自動移除（反向；外部刪檔不再留幽靈項目）
-#   D. WiFi 為當前通道時，眼鏡端 push 仍送達手機（onPush 對稱）
-#   E. 關閉 WiFi 通道時 UI 立即更新（disconnect 通知；截圖供人工確認）
+# Checks (matching reports/wifi_transfer_fix_2026-09-13.md §24):
+#   A. a broken album no longer drags media down (per-entry fault tolerance)
+#   B. on disk but not in the index -> automatically registered (forward)
+#   C. in the index but not on disk -> automatically removed (reverse; external deletions leave
+#      no ghost entries)
+#   D. with WiFi as the current channel, a glasses-side push still reaches the phone (onPush is
+#      symmetric)
+#   E. closing the WiFi channel updates the UI immediately (disconnect notification; a screenshot
+#      is taken for manual confirmation)
 #
-# 特性：**只動自己建立的測試檔**（TEST_reconcile.jpg）與索引 JSON（每次先備份、結束還原）；
-#       不刪除任何既有媒體。可重複執行。
+# Properties: it **only touches the test file it creates** (TEST_reconcile.jpg) and the index
+#       JSON (backed up first, restored at the end); no existing media is deleted. Rerunnable.
 #
-# 踩過的坑（寫在這裡避免重蹈）：
-#   1. `adb pull /sdcard/Android/data/<pkg>/...` 在 Android 11+ 會被 scoped storage 擋掉
-#      → 改用 `adb exec-out cat`（`adb shell cat` 亦可）。
-#   2. 眼鏡 App 每次重啟都會關閉既有 socket → 取清單前必須先重連手機，否則假失敗。
+# Pitfalls already hit (recorded here so they are not repeated):
+#   1. `adb pull /sdcard/Android/data/<pkg>/...` is blocked by scoped storage on Android 11+
+#      -> use `adb exec-out cat` (`adb shell cat` also works).
+#   2. Every glasses app restart closes the existing socket -> reconnect the phone before
+#      fetching the list, otherwise the failure is spurious.
 #
-# 用法：bash scripts/verify_index_resilience.sh [APK路徑]
+# Usage: bash scripts/verify_index_resilience.sh [APK path]
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/../deploy/env.sh"
-# env.sh 會取 adb devices 的「第一台」，兩台同時在線時可能抓到手機 → 這裡強制眼鏡序號
+# env.sh takes the "first" adb devices entry, which may be the phone when both are online ->
+# force the glasses serial here
 SERIAL="${GLASSES_SERIAL:-<DEVICE_SERIAL>}"
 export SERIAL
 
@@ -41,14 +47,14 @@ note() { say "     $1"; }
 
 sh_()  { "$ADB" -s "$SERIAL" shell "$@" 2>&1 | tr -d '\r'; }
 ph_()  { "$ADB" -s "$PHONE_SERIAL" shell "$@" 2>&1 | tr -d '\r'; }
-# Android 11+ 不能 adb pull /sdcard/Android/data → 用 exec-out
+# Android 11+ cannot adb pull /sdcard/Android/data -> use exec-out
 grab() { "$ADB" -s "$SERIAL" exec-out cat "$1" 2>/dev/null; }
 put()  { "$ADB" -s "$SERIAL" shell "cat > $1" < "$2" 2>/dev/null; }
 
 idx_media_count() { grab "$IDX" | python3 -c "import sys,json;print(len(json.load(sys.stdin)['media']))" 2>/dev/null || echo ""; }
 disk_count()      { sh_ "ls $ALB/ 2>/dev/null | wc -l" | tr -d ' '; }
 
-# 眼鏡 App 重啟並回傳 MediaRepository 的 log（只回傳，不直接印）
+# restart the glasses app and return the MediaRepository log (returned, not printed)
 restart() {
   sh_ "input keyevent KEYCODE_WAKEUP; am force-stop com.rokid.rc.glasses" >/dev/null
   sleep 2
@@ -58,8 +64,9 @@ restart() {
   "$ADB" -s "$SERIAL" logcat -d 2>/dev/null | grep "MediaRepository" | tr -d '\r'
 }
 
-# 每次眼鏡 App 重啟都會關閉既有 socket ⇒ 取清單前必須先重建手機↔眼鏡連線，
-# 否則 LIST_MEDIA_INFO 會因「未連線」拿到空值（假失敗）。
+# Every glasses app restart closes the existing socket => rebuild the phone<->glasses connection
+# before fetching the list, otherwise LIST_MEDIA_INFO returns empty because "not connected"
+# (a spurious failure).
 count_phone() {
   local try n
   for try in 1 2 3; do
@@ -78,7 +85,7 @@ count_phone() {
 say "=== 眼鏡媒體索引驗證（$(date '+%F %T')）==="
 say "APK: $APK"
 
-# ---------- 0. 前置 ----------
+# ---------- 0. preconditions ----------
 "$ADB" -s "$SERIAL" get-state >/dev/null 2>&1 || { say "❌ 眼鏡 $SERIAL 不在 adb 上，中止。"; exit 2; }
 say ""; say "--- 0. 安裝與基準 ---"
 "$ADB" -s "$SERIAL" install -r "$APK" 2>&1 | tail -1 | sed 's/^/  /' | tee -a "$OUT"
@@ -95,13 +102,13 @@ say "  手機端基準：total=${PHONE_BASE:-（取不到）}"
 restart >/dev/null
 say "  （基準啟動無 reconcile 訊息＝磁碟與索引一致）"
 
-# ---------- A. 壞 album 不拖垮 media ----------
+# ---------- A. a broken album does not drag media down ----------
 say ""; say "--- A. 壞 album 逐筆容錯 ---"
 python3 - "$TMP/index_orig.json" "$TMP/index_badalbum.json" <<'PY'
 import json,sys
 d=json.load(open(sys.argv[1]))
 if d.get('albums'):
-    d['albums'][0].pop('name', None)   # Album.fromJson 用 getString("name") → JSONException
+    d['albums'][0].pop('name', None)   # Album.fromJson uses getString("name") -> JSONException
 json.dump(d, open(sys.argv[2],'w'), ensure_ascii=False)
 PY
 put /data/local/tmp/idx_badalbum.json "$TMP/index_badalbum.json"
@@ -112,7 +119,7 @@ echo "$LOG" | grep -q "album entry #0 skipped" && ok "逐筆跳過（album entry
 N_A="$(count_phone)"
 if [ -n "$N_A" ] && [ "$N_A" = "$BASE_N" ]; then ok "media 未受影響（total=$N_A）"; else bad "media 數量異常：$BASE_N → ${N_A:-取不到}"; fi
 
-# ---------- B. 正向：磁碟有、索引沒有 → 補登 ----------
+# ---------- B. forward: on disk but not indexed -> register ----------
 say ""; say "--- B. 正向自我修復（磁碟有、索引沒有）---"
 sh_ "cp $ALB/CameraXeb9697ea-c289-4e6d-b224-66a6ffda4335.jpg $ALB/TEST_reconcile.jpg" >/dev/null
 LOG="$(restart)"
@@ -121,7 +128,7 @@ echo "$LOG" | grep -qE '\+1 re-registered' && ok "自動補登（+1 re-registere
 N_B="$(count_phone)"
 if [ -n "$N_B" ] && [ "$N_B" = "$((BASE_N+1))" ]; then ok "手機清單 +1（total=$N_B）"; else bad "手機清單未 +1：${N_B:-取不到}（預期 $((BASE_N+1))）"; fi
 
-# ---------- C. 反向：索引有、磁碟沒有 → 移除 ----------
+# ---------- C. reverse: indexed but not on disk -> remove ----------
 say ""; say "--- C. 反向自我修復（索引有、磁碟沒有）---"
 sh_ "rm -f $ALB/TEST_reconcile.jpg" >/dev/null
 LOG="$(restart)"
@@ -130,16 +137,18 @@ echo "$LOG" | grep -qE '\-1 removed' && ok "自動移除（-1 removed）" || bad
 N_C="$(count_phone)"
 if [ -n "$N_C" ] && [ "$N_C" = "$BASE_N" ]; then ok "手機清單回到基準（total=$N_C）"; else bad "手機清單異常：${N_C:-取不到}（預期 $BASE_N）"; fi
 
-# ---------- D. WiFi/TCP 為當前通道時的 push ----------
+# ---------- D. push while WiFi/TCP is the current channel ----------
 say ""; say "--- D. TCP 通道下的控制與推播 ---"
-# 先確保控制鏈路（SoftAP 協商要靠藍牙；沒連線時 WIFI_CONNECT 只會回 hotspot not ready）
+# make sure the control link is up first (SoftAP negotiation needs Bluetooth; without a
+# connection WIFI_CONNECT only returns hotspot not ready)
 ph_ "am broadcast -a com.rokid.rc.phone.DEBUG -n com.rokid.rc.phone/.DebugReceiver --es cmd CONNECT" >/dev/null
 sleep 5
 "$ADB" -s "$PHONE_SERIAL" logcat -c >/dev/null 2>&1
 ph_ "am broadcast -a com.rokid.rc.phone.DEBUG -n com.rokid.rc.phone/.DebugReceiver --es cmd WIFI_CONNECT" >/dev/null
 sleep 20
-# 真 SoftAP 需要 root；沒有 root 時改用 adb tunnel 造出**同一條** WifiServer/CommandRouter 路徑
-# （眼鏡 WifiServer 綁 [::]:8555 → PC:8555 → 手機:8555），免 root 也能驗證 TCP 通道行為。
+# A real SoftAP needs root; without root, use an adb tunnel to create **the same**
+# WifiServer/CommandRouter path (the glasses WifiServer binds [::]:8555 -> PC:8555 -> phone:8555),
+# which verifies TCP-channel behaviour without root.
 if ! "$ADB" -s "$PHONE_SERIAL" logcat -d -s Remote:I 2>/dev/null | grep -q '媒體通道：WiFi'; then
   note "（SoftAP 不可用，改用 adb tunnel 建立 TCP 通道）"
   "$ADB" -s "$SERIAL" forward tcp:8555 tcp:8555 >/dev/null
@@ -163,19 +172,20 @@ if [ "${TCP_OK:-0}" -ge 1 ]; then
 else
   bad "TCP 通道未能建立（推播路徑無法在 TCP 下驗證）"
 fi
-# 收掉 tunnel
+# tear down the tunnel
 if [ "${USED_TUNNEL:-0}" = "1" ]; then
   "$ADB" -s "$SERIAL" forward --remove-all >/dev/null 2>&1
   "$ADB" -s "$PHONE_SERIAL" reverse --remove-all >/dev/null 2>&1
 fi
 
-# ---------- E. 關閉 WiFi 通道 → UI 更新 ----------
+# ---------- E. closing the WiFi channel -> UI update ----------
 say ""; say "--- E. 關閉 WiFi 通道的通知 ---"
 "$ADB" -s "$PHONE_SERIAL" logcat -c >/dev/null 2>&1
 ph_ "am broadcast -a com.rokid.rc.phone.DEBUG -n com.rokid.rc.phone/.DebugReceiver --es cmd WIFI_DISCONNECT" >/dev/null
 sleep 6
 SHOT="$HERE/../reports/ui_transport_2026-09-13/05_after_wifi_disconnect.png"
-# ⚠ 截圖前必須確認前景是本 App：手機是使用者私人裝置，隨手截圖可能拍到無關的私人畫面
+# ⚠ Confirm this app is in the foreground before taking a screenshot: the phone is the user's
+# private device and a careless screenshot may capture unrelated private content
 FG="$(ph_ "dumpsys activity activities | grep -m1 topResumedActivity" | grep -c 'com.rokid.rc.phone')"
 if [ "$FG" = "1" ]; then
   ph_ "screencap -p /sdcard/after_wifi_off.png" >/dev/null
@@ -188,7 +198,7 @@ fi
 ph_ "rm -f /sdcard/after_wifi_off.png" >/dev/null
 ph_ "am broadcast -a com.rokid.rc.phone.DEBUG -n com.rokid.rc.phone/.DebugReceiver --es cmd WIFI_CONNECT" >/dev/null
 
-# ---------- 收尾：還原索引 ----------
+# ---------- teardown: restore the index ----------
 say ""; say "--- 還原索引 ---"
 put /data/local/tmp/idx_restore.json "$TMP/index_orig.json"
 sh_ "cp /data/local/tmp/idx_restore.json $IDX" >/dev/null

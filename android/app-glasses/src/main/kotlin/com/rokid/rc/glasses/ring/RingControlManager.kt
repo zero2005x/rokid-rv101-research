@@ -19,11 +19,11 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
- * 戒指動作結果：**代碼 + 參數**（不是翻譯後的字串）。手機端以 `ui/RingText.kt` 對到自己的字串。
+ * Ring action result: **code + arguments** (not a translated string). The phone maps it to its own strings in `ui/RingText.kt`.
  */
 data class RingOutcome(val key: String, val arg: String? = null)
 
-/** 戒指控制相關的 SharedPreferences 名稱（RingControlManager 與 RingEvdevReader 共用）。 */
+/** SharedPreferences name for ring control (shared by RingControlManager and RingEvdevReader). */
 object RingPrefs {
     const val NAME = "ring_ctrl"
     const val KEY_READER_OFFSET = "reader_offset"
@@ -31,12 +31,12 @@ object RingPrefs {
 }
 
 /**
- * 路徑 B：眼鏡端戒指/觸控板控制（**root 直讀 evdev，背景也能用**）。
+ * Path B: glasses-side ring/touchpad control (**root reads evdev directly, so it works in the background too**).
  *
- * 流程：root daemon 背景跑 `getevent` → [RingEvdevReader] 輪詢增量 → 手勢辨識 →
- * 直接在本機觸發拍照／錄影／靜音／顯示切換（不經手機）。
+ * Flow: the root daemon runs `getevent` in the background → [RingEvdevReader] polls the increments → gesture recognition →
+ * triggers photo/video/silent/display toggle locally (without going through the phone).
  *
- * 手勢預設與手機端一致：單擊=拍照、雙擊=錄影切換、長按=靜音切換、滾輪=顯示循環。
+ * The gesture defaults match the phone side: single tap=photo, double tap=video toggle, long press=silent toggle, wheel=display cycle.
  */
 class RingControlManager(
     private val context: Context,
@@ -70,18 +70,18 @@ class RingControlManager(
         }
 
     /**
-     * 最近一次動作的結構化結果（代碼＋參數），供手機端以**自己的語系**組字。
-     * 眼鏡端不再組中文句子送出去（見 shared `Status.ringLastKey`）。
+     * Structured result of the latest action (code + argument), so the phone can compose the text in **its own locale**.
+     * The glasses side no longer composes Chinese sentences to send out (see shared `Status.ringLastKey`).
      */
     @Volatile var lastKey: String? = null
     @Volatile var lastArg: String? = null
 
-    /** 產生結構化結果。 */
+    /** Build a structured result. */
     private fun outcome(key: String, arg: String? = null): RingOutcome = RingOutcome(key, arg)
 
     private val detector = RingGestureDetector(onGesture = { g -> onGesture(g) })
 
-    /** 啟動：挑裝置（已設定優先，否則自動偵測）→ 背景 getevent → 輪詢。 */
+    /** Start: pick a device (the configured one takes priority, otherwise auto-detect) → background getevent → poll. */
     fun start(
         namePattern: String = prefs.getString(KEY_PATTERN, RingIdentity.DEFAULT_NAME_PATTERN)
             ?: RingIdentity.DEFAULT_NAME_PATTERN,
@@ -96,12 +96,13 @@ class RingControlManager(
         var ok = false
         kotlinx.coroutines.runBlocking {
             /*
-             * 已設定的裝置若**不存在**就回退到自動偵測。
+             * If the configured device **does not exist**, fall back to auto-detection.
              *
-             * 為什麼需要（2026-09-13 實測踩到）：`devicePath` 一旦寫入 prefs 就會一直被沿用，
-             * 先前為了測 RGR06 把它設成 `/dev/input/event4`，之後戒指解除配對／關機，
-             * 這個路徑就變成**指向不存在的裝置**——但程式照用不誤，
-             * 結果「眼鏡觸控板怎麼按都不會拍照」，而且**沒有任何錯誤訊息**。
+             * Why this is needed (measured 2026-09-13): once `devicePath` is written to prefs it is reused forever;
+             * it had been set to `/dev/input/event4` in order to test an RGR06, and after the ring was unpaired /
+             * powered off that path became **a pointer to a nonexistent device** — yet the code kept using it
+             * regardless, so "no matter how the glasses touchpad was pressed, no photo was taken", with **no error
+             * message at all**.
              */
             val stored = devicePath?.takeIf { it.isNotBlank() }
             val storedOk = stored != null && reader.deviceExists(stored)
@@ -131,11 +132,11 @@ class RingControlManager(
     }
 
     /**
-     * root 端 keep-alive：Rokid 會積極回收背景 App（實測切到 Launcher 後程序被殺），
-     * 程序一死，evdev 的「消費者」就沒了 → 背景手勢失效。
-     * 這裡由 root daemon 起一個 shell 迴圈，發現 App 程序不在就以
-     * `am start-foreground-service`（root 身份不受背景啟動限制）把它拉回來，
-     * App 的 `App.onCreate` 再恢復戒指控制。
+     * root-side keep-alive: Rokid aggressively reclaims background apps (measured: the process was killed after
+     * switching to the Launcher), and once the process dies the evdev "consumer" is gone → background gestures stop working.
+     * Here the root daemon starts a shell loop that, when the app process is missing, pulls it back with
+     * `am start-foreground-service` (as root, which is not subject to background-start restrictions),
+     * and the app's `App.onCreate` then restores ring control.
      */
     private suspend fun startKeepAlive() {
         val script = KEEPALIVE_PATH
@@ -147,7 +148,7 @@ class RingControlManager(
             "  sleep 15\n" +
             "done\n"
         val client = RootDaemonClient()
-        // 停止舊的（獨立指令，避免 pkill 自我比對）→ 寫入腳本 → 背景啟動
+        // stop the old one (a separate command, so pkill does not match itself) → write the script → start it in the background
         client.exec("kill \$(cat $KEEPALIVE_PID) 2>/dev/null ; pkill -f '[r]ing_keepalive' ; rm -f $KEEPALIVE_PID", 10_000L)
         client.exec("printf '$body' > $script ; chmod 755 $script", 10_000L)
         client.exec("setsid sh $script >/dev/null 2>&1 & echo \$! > $KEEPALIVE_PID", 10_000L)
@@ -164,8 +165,9 @@ class RingControlManager(
     }
 
     /**
-     * 看門狗：App 被系統重啟、getevent 被殺、輪詢意外結束時自動恢復。
-     * （Rokid 在切換前景 App 時相當積極回收資源，沒有看門狗會讓背景控制失效。）
+     * Watchdog: recovers automatically when the app is restarted by the system, getevent is killed, or the poll
+     * loop ends unexpectedly. (Rokid reclaims resources quite aggressively when the foreground app changes; without
+     * a watchdog, background control would stop working.)
      */
     private fun startWatchdog() {
         if (watchdogJob?.isActive == true) return
@@ -192,7 +194,7 @@ class RingControlManager(
         }
     }
 
-    /** 由 CaptureService 呼叫：確保戒指控制有在跑（未啟動就啟動）。 */
+    /** Called by CaptureService: make sure ring control is running (start it if it is not). */
     fun ensureRunning(skipExisting: Boolean = true) {
         if (!enabled) return
         if (isRunning() && watchdogJob?.isActive == true) return
@@ -201,8 +203,8 @@ class RingControlManager(
     }
 
     /**
-     * 確保 CaptureService（相機的擁有者）在跑。
-     * 顯示器休眠時 Android 12 會擋「背景啟動 FGS」，此時退回用 root 啟動。
+     * Make sure CaptureService (the owner of the camera) is running.
+     * While the display is asleep Android 12 blocks a "background FGS start", in which case this falls back to starting it as root.
      */
     private fun ensureCaptureService() {
         if (graph.camera != null) return
@@ -242,20 +244,20 @@ class RingControlManager(
         while (running) {
             val lines = runCatching { reader.pollNew() }.getOrElse { emptyList() }
             if (lines.isNotEmpty()) lines.forEach { parseLine(it) }
-            // 每輪都要 tick：單擊需等「雙擊視窗」過後才成立（只在有事件時 tick 會永遠等不到）
+            // tick every round: a single tap only settles after the "double-tap window" has passed (ticking only on events would wait forever)
             detector.tick()
             delay(POLL_MS)
         }
         Log.i(TAG, "輪詢結束")
     }
 
-    /** 解析一行 `getevent -lt` 輸出並餵進手勢辨識（含**事件時間戳**，避免批次解析壓縮時序）。 */
+    /** Parse one line of `getevent -lt` output and feed it to gesture recognition (including the **event timestamp**, so batch parsing does not compress the timing). */
     private fun parseLine(line: String) {
         if (!line.contains("EV_")) return
         val label = line.substringAfter(":").trim().split(Regex("\\s+")).getOrNull(1) ?: return
         val value = line.trim().split(Regex("\\s+")).lastOrNull() ?: ""
-        // 防護：事件時間戳若超過現在（時鐘來源不一致/人為注入），夾到 now+1s，
-        // 否則 lastTapAt 會在未來 → tick() 永遠不成立（實測踩到）。
+        // guard: if the event timestamp is beyond now (inconsistent clock source / manual injection), clamp it to now+1s,
+        // otherwise lastTapAt ends up in the future → tick() never settles (hit this in practice).
         val atMs = eventTimeMs(line).coerceAtMost(android.os.SystemClock.uptimeMillis() + 1000L)
         when {
             line.contains("EV_KEY") -> {
@@ -273,7 +275,7 @@ class RingControlManager(
         }
     }
 
-    /** 從 `[   12345.678901] …` 取出事件時間（毫秒）；解析不到時用目前 uptime。 */
+    /** Extract the event time (ms) from `[   12345.678901] …`; when it cannot be parsed, use the current uptime. */
     private fun eventTimeMs(line: String): Long {
         val m = Regex("\\[\\s*([0-9]+)\\.([0-9]+)\\]").find(line) ?: return android.os.SystemClock.uptimeMillis()
         val sec = m.groupValues[1].toLongOrNull() ?: return android.os.SystemClock.uptimeMillis()
@@ -346,7 +348,7 @@ class RingControlManager(
         val idx = presets.indexOfFirst { it == cur }.let { if (it < 0) 0 else it }
         val next = presets[((idx + dir) % presets.size + presets.size) % presets.size]
         display.update(next)
-        // 參數用**機器可讀**的旗標清單（非翻譯字串），由手機端翻成自己的語言
+        // the argument is a **machine-readable** flag list (not translated strings); the phone renders it into its own language
         val flags = buildList {
             if (next.conn) add("conn")
             if (next.root) add("root")

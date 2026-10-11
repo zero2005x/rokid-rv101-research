@@ -4,7 +4,7 @@ import org.json.JSONObject
 
 enum class MediaType { PHOTO, VIDEO }
 
-/** root 取得模式：AUTO=開啟即自動跑 LPE；MANUAL=等手機下指令才跑。 */
+/** Root acquisition mode: AUTO=run the LPE automatically on start; MANUAL=run only on a phone command. */
 enum class RootMode { AUTO, MANUAL }
 
 data class Album(
@@ -84,25 +84,26 @@ data class Status(
     val ledOn: Boolean,
     val silentEnabled: Boolean = false,
     val silentApplied: Boolean = false,
-    // 路徑 B：眼鏡端戒指／觸控板控制狀態
+    // Path B: ring/touchpad control state on the glasses side
     val ringEnabled: Boolean = true,
     val ringRunning: Boolean = false,
     val ringDevice: String? = null,
     /**
-     * 戒指最近一次動作的**結構化結果**（不是已翻譯文字）。
+     * The **structured result** of the ring's most recent action (not pre-translated text).
      *
-     * 眼鏡端只送代碼與參數（例如 `ringLastKey="photo_ok"`, `ringLastArg="IMG_123.jpg"`），
-     * 由手機端用自己的語系組字 → 兩端語言可各自獨立（原本眼鏡送中文，手機設英文時會混語系）。
-     * 代碼與手機字串的對應見 `app-phone` 的 `ui/RingText.kt`。
+     * The glasses side sends only a code and arguments (e.g. `ringLastKey="photo_ok"`,
+     * `ringLastArg="IMG_123.jpg"`), and the phone side renders the text in its own locale -> the two
+     * sides can differ in language (previously the glasses sent Chinese, so an English phone mixed locales).
+     * The code-to-phone-string mapping lives in `app-phone`'s `ui/RingText.kt`.
      */
     val ringLastKey: String? = null,
     val ringLastArg: String? = null,
-    // ---- P0/P2：root 狀態與提權度量（結構化；手機端以自己語系顯示）----
-    /** 見 `RootStates`：root_ok／root_rearming／root_rearmed／root_lost_need_arm／root_lost_cooldown。 */
+    // ---- P0/P2: root state and escalation metrics (structured; the phone displays them in its own locale) ----
+    /** See `RootStates`: root_ok / root_rearming / root_rearmed / root_lost_need_arm / root_lost_cooldown. */
     val rootState: String? = null,
-    /** 附加資訊：建議執行的腳本（多個以 `|` 分隔）或引擎名稱。 */
+    /** Extra information: the script suggested for execution (several separated by `|`) or the engine name. */
     val rootHint: String? = null,
-    /** 最近一次提權使用的引擎（shizuku／bridge／direct／none）。 */
+    /** The engine used by the most recent escalation (shizuku / bridge / direct / none). */
     val suEngine: String? = null,
     val suLastOk: Boolean = false,
     val suLastMs: Long = 0L,
@@ -172,7 +173,7 @@ data class Status(
     }
 }
 
-/** 檔案傳輸開始宣告（MEDIA_META）與結束（TRANSFER_END）共用的後設資料。 */
+/** Metadata shared by the file-transfer start announcement (MEDIA_META) and end (TRANSFER_END). */
 data class TransferMeta(
     val mediaId: String,
     val transferId: String,

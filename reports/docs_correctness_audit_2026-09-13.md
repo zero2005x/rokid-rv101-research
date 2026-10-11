@@ -1,5 +1,8 @@
 # 文件正確性稽核報告（全工作區，2026-09-13）
 
+> English: [docs_correctness_audit_2026-09-13_EN.md](docs_correctness_audit_2026-09-13_EN.md)
+
+
 - 範圍：`README.md`、`MANIFEST.md`、`README_ORGANIZED.md`、`docs/*.md`（15）、`reports/*.md`（97）
 - 方法：4 個子代理分片深查 70 份歷史研究報告 ＋ 2 個子代理查核權威文件的路徑／指令／數字／結構 ＋
   本人對核心文件與實作做自動化一致性檢查。

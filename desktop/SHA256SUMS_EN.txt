@@ -1,0 +1,24 @@
+# > 中文版：[SHA256SUMS.txt](SHA256SUMS.txt)
+
+# ZeroLightRokid Desktop — hashes of the delivered files
+#
+# Verification (checks only the files still under version control):
+#   grep -v '^#EXCLUDED' SHA256SUMS.txt | sha256sum -c -
+#
+# Reproducible build: build_mingw.sh uses -Wl,--no-insert-timestamp,
+#       so the same source produces a byte-identical executable.
+#
+# --- 2026-10-11 monorepo release notes -------------------------------------
+# zero_light_desktop.exe is a build artifact and is not included in this repo (it can be rebuilt with build_mingw.sh).
+# The two binaries under assets/ are "runtime necessities" for this tool: it pushes them to the
+# glasses' /data/local/tmp/ and then executes them, so they must be distributed with the tool and are therefore retained.
+# Their source is in source_code/ghostlock_rv101/ and deploy/root_daemon.c;
+# the original hashes at the time of delivery are in ../EXCLUDED.md.
+# -------------------------------------------------------------------------
+#EXCLUDED 2c8470998dad7ba74473fb8c4766bdf97fb331ee52f09004e3e35c29295cca20  zero_light_desktop.exe
+# Updated: 2026-10-11 — re-hashed after the English-edition work: 0 entries changed, 3 unchanged, 0 English editions appended, 0 entries left as-is for files intentionally not present in this repository.
+# Updated: 2026-10-11 — re-hashed after the English-edition work: 0 entries changed, 3 unchanged, 0 English editions appended, 0 entries left as-is for files intentionally not present in this repository.
+
+26575a724704aaee3b5c40a883a58b0a032f51b18738d121ec06cd859177ffce  assets/ghostlock_rv101
+c24f9bb9a85b67d647c3be13eadcd13664d811f9e24fee8ef51e08dd5b1d6e9d  assets/root_daemon
+fff7d96a058e2edbe114dc03b43c62c00165525a4588654c24be90bdd7ef5636  assets/silent_camera.ogg

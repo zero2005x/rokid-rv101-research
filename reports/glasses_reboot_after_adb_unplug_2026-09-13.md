@@ -1,5 +1,7 @@
 # 眼鏡「拔掉 adb 後過沒多久就重開機」— 原因分析與可修正範圍
 
+> English: [glasses_reboot_after_adb_unplug_2026-09-13_EN.md](glasses_reboot_after_adb_unplug_2026-09-13_EN.md)
+
 - **日期**：2026-09-13
 - **裝置**：Rokid RV101 `<DEVICE_SERIAL>`（Android 12 / API 32，kernel `5.10.209-perf`，韌體 `1.22.009`）
 - **現象**：與 PC／手機斷開 adb 後，眼鏡過一段時間自行重開機

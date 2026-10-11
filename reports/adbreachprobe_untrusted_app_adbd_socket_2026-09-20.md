@@ -1,5 +1,7 @@
 # adbreachprobe — 一般第三方 App 能否 connect `/dev/socket/adbd`？（2026-09-20）
 
+> English: [adbreachprobe_untrusted_app_adbd_socket_2026-09-20_EN.md](adbreachprobe_untrusted_app_adbd_socket_2026-09-20_EN.md)
+
 ## 問題
 
 Rokid RV101（Android 12 / SDK 32，serial `<DEVICE_SERIAL>`）的 `adbd` 在

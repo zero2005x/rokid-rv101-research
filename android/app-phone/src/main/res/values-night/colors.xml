@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 品牌色系 — **深色模式**：深藍底＋亮青 primary＋琥珀 accent（與 launcher icon 一致） -->
+<!-- Brand palette — **dark mode**: dark blue background + bright cyan primary + amber accent
+     (consistent with the launcher icon) -->
 <resources>
     <color name="primary">#22D3EE</color>
     <color name="primary_dark">#06B6D4</color>

@@ -1,14 +1,14 @@
 /*
- * CVE-2023-40094 測試程式
+ * CVE-2023-40094 test program
  *
- * 漏洞描述：
- * ActivityTaskManagerService.java 中的 keyguardGoingAway 方法缺少權限檢查，
- * 允許任何應用程式繞過鎖屏。
+ * Vulnerability description:
+ * The keyguardGoingAway method in ActivityTaskManagerService.java lacks a permission check,
+ * allowing any application to bypass the lock screen.
  *
- * 影響版本：Android 11, 12, 12L, 13, 14
- * 修補日期：2023-12-01
+ * Affected versions: Android 11, 12, 12L, 13, 14
+ * Patch date: 2023-12-01
  *
- * 此測試透過 service call 來測試 IActivityTaskManager 介面
+ * This test uses service call to test the IActivityTaskManager interface
  */
 
 #include <stdio.h>
@@ -33,7 +33,7 @@ int main()
     system("echo -n '    安全補丁: '; getprop ro.build.version.security_patch");
     printf("\n");
 
-    // 檢查安全補丁日期
+    // Check the security patch date
     FILE *fp = popen("getprop ro.build.version.security_patch", "r");
     char patch_date[32];
     if (fp)
@@ -41,10 +41,10 @@ int main()
         fgets(patch_date, sizeof(patch_date), fp);
         pclose(fp);
 
-        // 移除換行符
+        // Remove the trailing newline character
         patch_date[strcspn(patch_date, "\n")] = 0;
 
-        // 比較日期 (簡單字串比較，因為格式是 YYYY-MM-DD)
+        // Compare dates (a simple string comparison, since the format is YYYY-MM-DD)
         if (strcmp(patch_date, "2023-12-01") >= 0)
         {
             printf("[+] 安全補丁 >= 2023-12-01，漏洞應已修補\n\n");
@@ -58,8 +58,8 @@ int main()
     printf("[*] 測試 keyguardGoingAway 呼叫...\n");
     printf("    嘗試透過 service call 測試 activity_task 服務\n\n");
 
-    // 嘗試列出 activity_task 服務的交易碼
-    // keyguardGoingAway 通常是交易碼之一
+    // Try to list the transaction codes of the activity_task service
+    // keyguardGoingAway is usually one of the transaction codes
     printf("[*] 檢查 activity_task 服務:\n");
     int ret = system("service check activity_task");
 

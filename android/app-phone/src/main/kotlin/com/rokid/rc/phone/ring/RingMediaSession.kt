@@ -7,28 +7,31 @@ import android.util.Log
 import android.view.KeyEvent
 
 /**
- * 路徑 A 的**背景**支援：MediaSession 媒體鍵攔截。
+ * **Background** support for path A: MediaSession media-button interception.
  *
- * 為什麼需要：戒指的按鍵事件在前景時由 `MainActivity.dispatchKeyEvent` 收到；但手機放口袋／
- * 其他 App 在前景時，Android 只會把**媒體鍵**派送給「作用中的 MediaSession」。
- * 戒指（BLE HID）的報告描述元本來就含 `KEY_PLAYPAUSE / KEY_NEXTSONG / KEY_PREVIOUSSONG`，
- * 因此建立一個常駐 MediaSession 就能在背景收到這些鍵並觸發拍照／錄影／顯示切換。
+ * Why it is needed: while in the foreground the ring's key events are received by `MainActivity.dispatchKeyEvent`; but
+ * when the phone is in a pocket / another app is in the foreground, Android delivers only **media keys** to the "active
+ * MediaSession". The ring's (BLE HID) report descriptor already contains
+ * `KEY_PLAYPAUSE / KEY_NEXTSONG / KEY_PREVIOUSSONG`, so keeping a resident MediaSession is enough to receive those keys
+ * in the background and trigger photo/video/display toggle.
  *
- * **實測限制（重要）**：Android 會把媒體鍵派送給「media button session」，其優先序由
- * PlaybackState 決定；裝置上有音樂 App 時（實測 YouTube Music 即使暫停仍勝出，
- * `dumpsys media_session` 顯示 `Media button session is yt.morphe.noname.exe`），
- * 我們的 session 收不到媒體鍵。硬搶（假裝 STATE_PLAYING）會蓋掉使用者的音樂控制，
- * 因此本專案**不做搶佔**：MediaSession 只是「沒有其他媒體工作階段時」的盡力而為。
- * 背景控制的可靠解是**眼鏡端路徑 B**（root 直讀 evdev，不依賴手機前景/媒體鍵）。
+ * **Measured limitation (important)**: Android delivers media keys to the "media button session", whose priority is
+ * decided by PlaybackState; when a music app is present on the device (measured: YouTube Music wins even while paused,
+ * `dumpsys media_session` showed `Media button session is yt.morphe.noname.exe`), our session does not receive the media
+ * keys. Forcibly taking over (pretending STATE_PLAYING) would override the user's music controls, so this project
+ * **does not preempt**: the MediaSession is only a best effort for "when no other media session exists".
+ * The reliable solution for background control is **glasses-side path B** (root reads evdev directly, independent of the
+ * phone being in the foreground or of media keys).
  *
- * 非媒體鍵（滑鼠點擊、ENTER）在手機背景同樣無法攔截——需要 AccessibilityService 或 root。
+ * Non-media keys (mouse clicks, ENTER) likewise cannot be intercepted while the phone is in the background — that needs
+ * an AccessibilityService or root.
  */
 object RingMediaSession {
 
     private const val TAG = "RingMediaSession"
     private var session: MediaSession? = null
 
-    /** 建立並啟用（冪等；由 MainActivity 在啟動時呼叫）。 */
+    /** Create and enable (idempotent; called by MainActivity at startup). */
     fun ensureStarted(context: Context) {
         if (session != null) return
         val ctx = context.applicationContext

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 品牌主題（淺色）：白底＋青色 primary＋琥珀 accent；深色模式見 values-night -->
+    <!-- Brand theme (light): white background + cyan primary + amber accent; dark mode is in values-night -->
     <style name="Theme.RokidPhone" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorOnPrimary">@color/on_primary</item>
@@ -23,7 +23,7 @@
         <item name="android:navigationBarColor">@color/bg</item>
     </style>
 
-    <!-- 統一卡片樣式：14dp 圓角、1dp 描邊、無陰影（顏色隨日夜模式） -->
+    <!-- Unified card style: 14dp corners, 1dp stroke, no shadow (colours follow day/night mode) -->
     <style name="Widget.RokidPhone.Card" parent="Widget.Material3.CardView.Elevated">
         <item name="cardBackgroundColor">@color/surface_card</item>
         <item name="cardCornerRadius">14dp</item>
@@ -32,19 +32,19 @@
         <item name="strokeWidth">1dp</item>
     </style>
 
-    <!-- 區塊標題（設定頁卡片標題） -->
+    <!-- Section title (settings page card title) -->
     <style name="Widget.RokidPhone.SectionTitle" parent="TextAppearance.Material3.TitleSmall">
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">13sp</item>
     </style>
 
-    <!-- 次要說明文字 -->
+    <!-- Secondary explanatory text -->
     <style name="Widget.RokidPhone.Hint" parent="TextAppearance.Material3.BodySmall">
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">12sp</item>
     </style>
 
-    <!-- 全螢幕深色檢視器 -->
+    <!-- Full-screen dark viewer -->
     <style name="Theme.RokidViewer" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorOnPrimary">@color/on_primary</item>

@@ -1,5 +1,7 @@
 # ADB 即時蒐證嘗試 — 2026-08-22
 
+> English: [ADB_Collection_Attempt_20260822_EN.md](ADB_Collection_Attempt_20260822_EN.md)
+
 > 此檔為內部狀態紀錄，不建議作為 HITCON 證據附件。
 
 ## 觀察

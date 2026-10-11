@@ -1,6 +1,6 @@
 /*
- * GateServiced 命令枚舉測試
- * 嘗試不同的 cmd_id 來尋找有效命令
+ * GateServiced command enumeration test
+ * Try different cmd_id values to find valid commands
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +35,7 @@ int test_cmd(uint32_t cmd_id, uint8_t *payload, size_t payload_len)
         return -1;
     }
 
-    // 構建包
+    // Build the packet
     size_t total_len = 8 + payload_len;
     uint8_t *pkt = malloc(total_len);
     memcpy(pkt, &cmd_id, 4);
@@ -74,7 +74,7 @@ int main()
     printf("[*] Target: %s:%d\n\n", HOST, PORT);
     fflush(stdout);
 
-    // 嘗試常見的 TrustZone 命令
+    // Try common TrustZone commands
     uint32_t tz_cmds[] = {
         0x0001, 0x0002, 0x0003, 0x0004, 0x0005,
         0x0100, 0x0101, 0x0102, 0x0103,
@@ -82,7 +82,7 @@ int main()
         0x0300, 0x0301, 0x0302, 0x0303,
         0x1000, 0x1001, 0x1002,
         0x2000, 0x2001,
-        0x3000, 0x3001, 0x300c, // 0x300c 是已知的錯誤碼
+        0x3000, 0x3001, 0x300c, // 0x300c is a known error code
         0x4000, 0x4001,
         0x5000, 0x5001,
         0x6000, 0x6001,
@@ -103,13 +103,13 @@ int main()
 
     printf("\n[*] Testing with TA class IDs from whitelist...\n\n");
 
-    // 使用 TZ whitelist 中的 class IDs
+    // Use the class IDs from the TZ whitelist
     uint32_t class_ids[] = {3, 34, 62, 70, 71, 78, 101, 102, 119, 120, 146};
     uint8_t payload[64];
 
     for (int i = 0; i < sizeof(class_ids) / sizeof(class_ids[0]); i++)
     {
-        // cmd = 0x0100 (可能是 load TA), payload = class_id
+        // cmd = 0x0100 (possibly load TA), payload = class_id
         memset(payload, 0, sizeof(payload));
         memcpy(payload, &class_ids[i], 4);
 

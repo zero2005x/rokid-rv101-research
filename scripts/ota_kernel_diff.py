@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-# ota_kernel_diff.py — 比較兩個 kernel Image（vmlinux-to-elf 產出的 ELF）中 remove_waiter() 的實作。
+# ota_kernel_diff.py — compare the remove_waiter() implementation in two kernel Images (ELFs
+# produced by vmlinux-to-elf).
 #
-# 用途：驗證 CVE-2026-43499（GhostLock）的 backport。輸出
-#   1. 函式位址、大小
-#   2. 是否含 `mrs …, sp_el0`（取 current）
-#   3. `+0x040` 的來源指令（mrs sp_el0 = 漏洞版；ldr [x23,#0x30] = 修補版）
-#   4. 函式機器碼**逐位元組比對**：列出所有相異處（偏移＋兩側指令）
-#   5. 去址化清單（函式相對偏移、呼叫目標以符號名表示）
+# Purpose: verify the backport of CVE-2026-43499 (GhostLock). Output:
+#   1. function address and size
+#   2. whether it contains `mrs ..., sp_el0` (reading current)
+#   3. the source instruction at `+0x040` (mrs sp_el0 = vulnerable; ldr [x23,#0x30] = patched)
+#   4. a **byte-by-byte comparison** of the function's machine code: every difference (offset plus
+#      the instruction on each side)
+#   5. a de-addressed listing (function-relative offsets, call targets shown as symbol names)
 #
-# 依賴：capstone（pip install capstone）、binutils 的 nm／readelf。
-# 用法：
+# Depends on: capstone (pip install capstone) and binutils' nm / readelf.
+# Usage:
 #   python3 scripts/ota_kernel_diff.py --elf A.elf --elf B.elf
-#   python3 scripts/ota_kernel_diff.py --elf A.elf --listing      # 只印某一版的清單
+#   python3 scripts/ota_kernel_diff.py --elf A.elf --listing      # print one version's listing only
 import argparse, bisect, re, struct, subprocess, sys
 
 try:
@@ -34,7 +36,7 @@ def nm_symbols(elf):
 
 
 def load_segments(elf):
-    """回傳 [(vaddr, file_off, filesz)]，用於把 vaddr 映射到檔案位移。"""
+    """Return [(vaddr, file_off, filesz)] to map a vaddr to a file offset."""
     out = subprocess.run(["readelf", "-lW", elf], capture_output=True, text=True).stdout
     segs = []
     for line in out.splitlines():
@@ -96,7 +98,7 @@ def analyse(elf, fname="remove_waiter", listing=False):
                        if m == "mrs" and "sp_el0" in o]
     r["ldr_0x30"] = [(a - start, a, o) for a, m, o in insns
                      if m.startswith("ldr") and "#0x30]" in o]
-    # +0x040 那條
+    # the instruction at +0x040
     at40 = [(a - start, m, o) for a, m, o in insns if (a - start) == 0x40]
     r["at_0x40"] = at40[0][1:] if at40 else None
     r["key"] = {}

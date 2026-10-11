@@ -16,8 +16,8 @@ import com.rokid.rc.shared.protocol.RootMode
 import kotlinx.coroutines.launch
 
 /**
- * 眼鏡端核心前台服務：同時擁有藍牙 RFCOMM server 與 CameraX 相機。
- * MainActivity 只是本機狀態/除錯介面，啟動本服務即開始對外服務。
+ * Glasses-side core foreground service: owns both the Bluetooth RFCOMM server and the CameraX camera.
+ * MainActivity is only the local status/debug interface; starting this service starts serving the outside world.
  */
 class CaptureService : LifecycleService() {
 
@@ -31,8 +31,8 @@ class CaptureService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         startForeground(NOTIF_ID, buildNotification())
-        // 持有 wake lock：partial（CPU）+ screen bright（螢幕），
-        // 防止 Rokid 激進休眠（screen_offTimeout=5）在跑 LPE 期間把服務/app 殺掉。
+        // hold a wake lock: partial (CPU) + screen bright (screen),
+        // to stop Rokid's aggressive sleep (screen_offTimeout=5) from killing the service/app while the LPE runs.
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "rokid:capture:cpu")
         wakeLock?.acquire()
@@ -62,7 +62,7 @@ class CaptureService : LifecycleService() {
             onError = { e -> Log.e(TAG, "bluetooth server error: $e") }
         )
 
-        // WiFi 媒體通道（TCP 8555，經 SoftAP 192.168.43.1；控制指令仍走藍牙）
+        // WiFi media channel (TCP 8555, through the SoftAP 192.168.43.1; control commands still go over Bluetooth)
         wifiServer = WifiServer(graph)
         wifiServer.start(
             onStarted = { Log.i(TAG, "WiFi media server ready (:8555)") },
@@ -76,19 +76,19 @@ class CaptureService : LifecycleService() {
             onError = { e -> Log.e(TAG, "camera error: $e") }
         )
 
-        // 路徑 B：戒指/觸控板控制（root 直讀 evdev）。getevent 需要 root，
-        // 尚未提權時 start() 會失敗，看門狗會持續重試直到 root 就緒。
+        // Path B: ring/touchpad control (root reads evdev directly). getevent needs root,
+        // so start() fails before escalation and the watchdog keeps retrying until root is ready.
         graph.scope.launch {
             if (graph.ringControl.enabled) graph.ringControl.ensureRunning()
         }
 
-        // root daemon 存活看守（P0）：無論 root 模式都啟動（MANUAL 模式只觀察與回報，不自動重建）
+        // root daemon liveness watchdog (P0): started in either root mode (in MANUAL mode it only observes and reports, it does not auto-rebuild)
         graph.rootKeeper.start()
 
-        // root 取得模式：AUTO = 開啟即自動跑一次 LPE
+        // root acquisition mode: AUTO = run the LPE once automatically on start
         /*
-         * AUTO 提權同樣受安全武裝政策約束（開機迴圈斷路器／重試上限＋退避／僅充電時／開機後延遲）。
-         * 不套用的話，App 每次被喚起都會重新賭一次 ~50% 的 kernel panic。
+         * AUTO escalation is likewise bound by the safe arming policy (boot-loop breaker / retry cap + backoff / charging only / delay after boot).
+         * Without it, every time the app is brought up it would gamble again on that ~50% kernel panic.
          */
         val armBlock = if (graph.rootMode == RootMode.AUTO) {
             com.rokid.rc.glasses.ghost.ArmPolicy.blockReason(this, graph.prefs)
@@ -100,13 +100,13 @@ class CaptureService : LifecycleService() {
             graph.scope.launch {
                 val result = graph.acquireRootMetered()
                 Log.i(TAG, "auto acquireRoot: success=${result.success} stage=${result.stage}")
-                // 提權成功後自動開 WiFi 熱點（媒體通道）；失敗不阻斷藍牙功能
+                // after a successful escalation, start the WiFi hotspot automatically (media channel); a failure does not break the Bluetooth functionality
                 if (result.success || graph.ghostlock.rootAcquired) {
                     val apOk = graph.wifiHotspot.ensureStarted()
                     val silentOk = graph.silentMode.applyIfEnabled()
                     Log.i(TAG, "auto wifi ap: up=$apOk, silent capture: $silentOk")
-                    // 路徑 B：戒指/觸控板控制（root 直讀 evdev）——提權成功後自動啟動；
-                    // App 程序被系統重啟時也會跟著 CaptureService 一起恢復。
+                    // Path B: ring/touchpad control (root reads evdev directly) — started automatically after a successful escalation;
+                    // it also comes back together with CaptureService when the app process is restarted by the system.
                     if (graph.ringControl.enabled && !graph.ringControl.isRunning()) {
                         val ringOk = graph.ringControl.start()
                         Log.i(TAG, "auto ring control: running=$ringOk device=${graph.ringControl.devicePath}")
@@ -131,12 +131,13 @@ class CaptureService : LifecycleService() {
     override fun onBind(intent: Intent): IBinder? = super.onBind(intent)
 
     /**
-     * 前景服務通知（Android 規定 FGS 必須有通知，無法完全移除）。
+     * Foreground service notification (Android requires an FGS to have one; it cannot be removed entirely).
      *
-     * ⚠ 2026-09-13：AR 眼鏡上任何「彈出式卡片」都會擋住視線，而通知卡在系統預設是
-     * **圓角深灰底**。原本通道是 `IMPORTANCE_LOW`，但 OEM 對 FGS 通知仍可能顯示為浮動卡片。
-     * 改為 **`IMPORTANCE_MIN`＋靜音**：只留在通知抽屜、**永不彈出**。
-     * （通道 importance 建立後無法由程式調降，故改用新的 channel id `capture_quiet`。）
+     * ⚠ 2026-09-13: on AR glasses any "pop-up card" blocks the view, and notification cards are **dark grey with
+     * rounded corners** by default in the system. The channel used to be `IMPORTANCE_LOW`, but an OEM may still show
+     * FGS notifications as floating cards. Changed to **`IMPORTANCE_MIN` + silent**: it stays in the notification
+     * drawer and **never pops up**. (A channel's importance cannot be lowered programmatically after creation, hence
+     * the new channel id `capture_quiet`.)
      */
     private fun buildNotification(): Notification {
         val channelId = "capture_quiet"

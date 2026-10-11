@@ -1,5 +1,7 @@
 # 眼鏡媒體索引修復 — A/B 實驗樣本（2026-09-13）
 
+> English: [README_EN.md](README_EN.md)
+
 ## 對應報告
 `reports/wifi_transfer_fix_2026-09-13.md` Rev.3 §13–§16、Rev.5 §17–§18（FACTS.md §7 P29、P30）。
 

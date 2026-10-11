@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 
-# ===================== 依你的環境調整 =====================
+# ===================== adjust to your environment =====================
 SERIAL="${SERIAL:?請設定 SERIAL 或讓 env.sh 自動偵測}"
 BIN="/data/local/tmp/ghostlock_rv101"
 BRIDGE="/data/local/tmp/ghostlock_bridge"
@@ -11,12 +11,14 @@ HELPER="/data/local/tmp/ghostlock_bridge_helper.sh"
 
 adb_s() { "$ADB" -s "$SERIAL" "$@"; }
 
-# 安全殺程序 + 信箱清理（見 proc_util.sh 對「不可用 pkill -f」的實測說明）。
-# 特別是 HELPER_PAT 用 `helpe` 結尾才能同時涵蓋 App 與桌面工具兩個 helper 變體：
-# 舊寫法 `ghostlock_bridge_helper.sh` 實測**漏殺** `_desktop` 變體。
+# Safe process killing + mailbox cleanup (see proc_util.sh for the measured notes on why
+# `pkill -f` cannot be used). In particular HELPER_PAT must end at `helpe` to cover both the
+# App and desktop-tool helper variants: the old `ghostlock_bridge_helper.sh` was measured to
+# **miss** the `_desktop` variant.
 source "$(dirname "$0")/proc_util.sh"
-# 租約檔的可寫性必須由 shell 側保證：App 對 /data/local/tmp 沒有目錄寫入權，
-# 無法自行建立租約檔（實測 Permission denied）。這裡確保它以 666 存在。
+# Lease-file writability must be guaranteed by the shell side: the App has no directory
+# write permission on /data/local/tmp and cannot create the lease file itself (measured
+# Permission denied). This makes sure it exists with mode 666.
 source "$(dirname "$0")/lease.sh"
 lease_ensure_file
 
@@ -57,8 +59,9 @@ OUT="$BRIDGE/last.out"
 DONE="$BRIDGE/last.done"
 PROG="$BRIDGE/last.progress"
 MAX_TRY=3
-# 心跳：App 端無法用 ps 看到別的 process（Android 限制），
-# 因此由 helper 每秒寫入時間戳，App 讀檔判斷「觸發管線是否常駐」。
+# Heartbeat: the App side cannot see other processes with ps (Android restriction), so the
+# helper writes a timestamp every second and the App reads the file to decide whether the
+# trigger pipeline is resident.
 HEARTBEAT="$BRIDGE/helper.alive"
 PIDFILE="$BRIDGE/helper.pid"
 echo $$ > "$PIDFILE" 2>/dev/null; chmod 666 "$PIDFILE" 2>/dev/null
@@ -76,7 +79,7 @@ while true; do
       echo "exploit-attempt-$t" > "$PROG"
       rm -f "$ROOT" "$RUNLOG"
       sh -c "$ENV $BIN > $RUNLOG 2>&1" &
-      # 等 ready：exploit 啟動初期會寫出預設 .ghostlock_root.sh
+      # wait for ready: early in startup the exploit writes the default .ghostlock_root.sh
       ready=0; i=0
       while [ $i -lt 120 ]; do
         if grep -q "dropping to root shell" "$ROOT" 2>/dev/null; then ready=1; break; fi
@@ -89,10 +92,10 @@ while true; do
         continue
       fi
       echo "ready" > "$PROG"
-      # 置換 payload（用 cp 保留 last.cmd 供重試）
+      # swap in the payload (cp keeps last.cmd for retries)
       cp "$STAGE" "$ROOT" && chmod 755 "$ROOT"
       echo "installed" > "$PROG"
-      # 等 done：payload(root) 已 echo DONE
+      # wait for done: the payload (root) has echoed DONE
       echo "waiting-done" > "$PROG"
       dd=0; i=0
       while [ $i -lt 200 ]; do
@@ -116,15 +119,17 @@ adb_s shell "chmod 755 $HELPER" || exit 1
 
 echo "[4/4] 啟動 helper（背景常駐，先清舊實例）"
 
-# (a) 安全殺掉**兩個變體**的舊 helper。
-#     舊寫法 `pkill -f ghostlock_bridge_helper.sh` 實測**漏殺** `_desktop` 變體
-#     （pattern 在 "helper" 之後要求 ".sh"，而該變體是 "_desktop.sh"），
-#     導致桌面板 helper 整場存活並與本 helper 同時搶共用檔案。
+# (a) Safely kill the old helper of **both variants**.
+#     The old `pkill -f ghostlock_bridge_helper.sh` was measured to **miss** the `_desktop`
+#     variant (the pattern requires ".sh" right after "helper", but that variant is
+#     "_desktop.sh"), so the desktop helper survived the whole run and fought this helper
+#     over the shared files.
 kill_all_helpers
 
-# (b) 清掉信箱殘留的觸發檔——**這必須在啟動 helper 之前**。
-#     裝置重開機後 helper 被重新拉起，若看到殘留的 last.cmd 就會立刻再跑一次
-#     exploit（實測衍生 994 個子程序、load 75.8、adb 指令逾時）。
+# (b) Clear the trigger files left in the mailbox — **this must happen before starting the
+#     helper**. After a device reboot the helper is restarted, and a leftover last.cmd makes
+#     it run the exploit again at once (measured: 994 child processes, load 75.8, adb
+#     commands timing out).
 clear_trigger_mailboxes
 
 sleep 1

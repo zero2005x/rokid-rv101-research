@@ -1264,7 +1264,7 @@ uintptr_t prepare_good_kernel_page(void) {
   }
   /* v9.54: poll 10x faster (300us vs 3000us) so the dip is detected within
    * ~300us of the leak slab's discard — the old 3ms poll left a 3ms window for a
-   * concurrent order-2 allocation to steal the leak slab (the "SKB 搶頭" flake).
+   * concurrent order-2 allocation to steal the leak slab (the "SKB grabs it first" flake).
    * Iteration counts scaled up to keep the same ~180ms/~900ms coverage. */
   for (int q = 0; q < 600; q++) {
     usleep(300);

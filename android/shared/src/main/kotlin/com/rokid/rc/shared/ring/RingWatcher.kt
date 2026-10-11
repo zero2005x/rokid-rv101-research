@@ -6,13 +6,14 @@ import android.os.Looper
 import android.util.Log
 
 /**
- * 戒指監看器：週期性「掃描 → 嘗試 GATT 連線 → 記錄結果」。
+ * Ring watcher: periodically "scan → attempt a GATT connection → record the result".
  *
- * 用途：戒指若仍綁在舊 host，會拒絕新連線（GATT status 133）。使用者依說明書做
- * 重置（長按/多擊）時，本監看器可即時看出「戒指已鬆綁、可被新 host 連上」的瞬間，
- * 也能當作配對精靈的背景偵測。
+ * Use: if the ring is still bound to an old host it refuses new connections (GATT status 133). When the user
+ * performs the reset described in the manual (long press / multiple clicks), this watcher can spot the moment
+ * "the ring has been released and can be connected by a new host", and it can also act as background detection for
+ * the pairing wizard.
  *
- * 注意：Android 12+ 背景掃描會被限制，**呼叫端需讓 App 處於前景**。
+ * NOTE: on Android 12+ background scanning is restricted, so **the caller must keep the app in the foreground**.
  */
 class RingWatcher(private val context: Context) {
 
@@ -21,8 +22,8 @@ class RingWatcher(private val context: Context) {
     @Volatile private var stopped = false
 
     /**
-     * 進行 [rounds] 輪監看，每輪：掃描 [scanMs] → 對符合 [namePattern] 的裝置嘗試 GATT 連線。
-     * [onRound] 回呼 (第幾輪, 結果摘要)；[onConnectable] 在連線成功時回呼（可用於自動配對）。
+     * Run [rounds] rounds of watching; each round: scan [scanMs] → attempt a GATT connection to devices matching [namePattern].
+     * [onRound] calls back (round number, result summary); [onConnectable] calls back on a successful connection (usable for auto-pairing).
      */
     fun watch(
         rounds: Int = 10,
@@ -43,7 +44,7 @@ class RingWatcher(private val context: Context) {
             }
             RingScanner(context).scan(scanMs, namePattern) { list ->
                 if (stopped) return@scan
-                // 指定名稱時**絕不退而求其次**（避免誤配對其他 BLE 裝置，例如智慧音箱）
+                // when a name is given, **never settle for second best** (avoid mis-pairing other BLE devices, such as a smart speaker)
                 val target = if (namePattern.isBlank()) {
                     list.filter { it.connectable != false }.maxByOrNull { it.rssi }
                 } else {

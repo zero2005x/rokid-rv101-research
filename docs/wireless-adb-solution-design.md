@@ -1,5 +1,7 @@
 # 通用無線 ADB 方案設計（RV101 眼鏡 × 開發者筆電）
 
+> English: [wireless-adb-solution-design_EN.md](wireless-adb-solution-design_EN.md)
+
 > 目標：**開發者不需要插線**就能對眼鏡做 `adb connect` / `adb install` / `logcat` / 提權武裝。
 > 使用者決策（2026-09-20）：①優先「PC 保有網際網路」②可接受**首次一次 USB/OTG** ③對象是
 > **沒有 root、不跑 exploit 的外部開發者** ④眼鏡端 App 可自由修改。

@@ -8,28 +8,28 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * Root Daemon 的 socket client。
+ * Socket client for the Root Daemon.
  *
- * Root Daemon（由 exploit 提權後啟動）監聽 UNIX domain socket，
- * 此 client 連上後送出純文字指令、讀回 stdout。取代「每次指令重跑 LPE」。
+ * The Root Daemon (started after the exploit escalates) listens on a UNIX domain socket;
+ * this client connects, sends plain-text commands and reads back stdout. It replaces "re-run the LPE for every command".
  */
 class RootDaemonClient(
     private val socketPath: String = GlassesPaths.ROOT_DAEMON_SOCK
 ) {
 
-    /** socket 檔存在即視為 daemon 存活（可能為 reboot 後的 stale 檔）。 */
+    /** The daemon counts as alive when the socket file exists (it may be a stale file from before a reboot). */
     fun isAvailable(): Boolean = File(socketPath).exists()
 
-    /** 真的以 root 執行一次 `id`，確認 daemon 活著且是 root。 */
+    /** Really run `id` once as root, to confirm the daemon is alive and is root. */
     suspend fun isRoot(): Boolean {
         if (!isAvailable()) return false
         return runCatching { exec("id").contains("uid=0") }.getOrDefault(false)
     }
 
     /**
-     * 執行指令並讀回輸出。長指令（如 wifi 服務轉換）可能掛住，加逾時保護。
-     * 永不拋出：reboot 後 socket 檔可能殘留但無 listener（Connection refused），
-     * 或 daemon 忙碌/逾時——失敗一律回傳空字串（呼叫端自行判讀）。
+     * Run a command and read back the output. Long commands (such as a wifi service transition) can hang, so a
+     * timeout guards them. It never throws: after a reboot the socket file may linger with no listener
+     * (Connection refused), or the daemon may be busy / time out — failures always return an empty string (the caller interprets it).
      */
     suspend fun exec(cmd: String, timeoutMs: Long = 30_000L): String =
         kotlinx.coroutines.withTimeoutOrNull(timeoutMs) {

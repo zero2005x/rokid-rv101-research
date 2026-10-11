@@ -1,4 +1,7 @@
 # Rokid Glasses 設備系統資料報告
+
+> English: [Rokid_Glasses_系統資料報告_EN.md](Rokid_Glasses_%E7%B3%BB%E7%B5%B1%E8%B3%87%E6%96%99%E5%A0%B1%E5%91%8A_EN.md)
+
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 

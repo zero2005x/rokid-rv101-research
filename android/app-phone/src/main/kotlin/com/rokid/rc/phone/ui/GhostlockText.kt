@@ -6,14 +6,14 @@ import com.rokid.rc.shared.protocol.GhostlockCodes
 import com.rokid.rc.shared.protocol.ProgressCodec
 
 /**
- * 把眼鏡端送來的 **ghostlock／LPE 進度代碼** 轉成手機語系的文字。
+ * Turns the **ghostlock/LPE progress codes** sent by the glasses into text in the phone's locale.
  *
- * 眼鏡端只送代碼（`GhostlockCodes`）與參數（路徑／原因／次數），
- * 因此手機換語言不需要動眼鏡端（原本眼鏡直接送中文句子）。
+ * The glasses send only codes (`GhostlockCodes`) and arguments (path/reason/count),
+ * so changing the phone's language needs no change on the glasses (previously the glasses sent Chinese sentences directly).
  */
 object GhostlockText {
 
-    /** 進度事件 → 文字；未知代碼回 null（呼叫端可改用原始 message）。 */
+    /** Progress event → text; an unknown code returns null (the caller can fall back to the raw message). */
     fun progress(ctx: Context, code: String?, arg: String?): String? {
         if (code.isNullOrEmpty()) return null
         val a = arg.orEmpty()
@@ -61,8 +61,8 @@ object GhostlockText {
     }
 
     /**
-     * 失敗訊息（`ExecResult.fail` → ack error）→ 手機語系文字。
-     * 眼鏡端以 `code|arg` 形式傳遞；不是已知代碼時原樣回傳（例如第三方或舊版訊息）。
+     * Failure message (`ExecResult.fail` → ack error) → text in the phone's locale.
+     * The glasses pass it as `code|arg`; anything that is not a known code is returned unchanged (for example a third-party or older message).
      */
     fun error(ctx: Context, raw: String?): String {
         if (raw.isNullOrBlank()) return ""

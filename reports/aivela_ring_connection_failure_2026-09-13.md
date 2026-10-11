@@ -1,5 +1,8 @@
 # AIVELA 戒指「連接失敗」— log 取證與處置
 
+> English: [aivela_ring_connection_failure_2026-09-13_EN.md](aivela_ring_connection_failure_2026-09-13_EN.md)
+
+
 - **日期**：2026-09-13 15:5x–16:0x
 - **裝置**：眼鏡 RV101 `<DEVICE_SERIAL>`（Android 12 / API 32）· 手機 `<PHONE_SERIAL>`（Android 13 / API 33, MIUI V816）
 - **戒指**：`AIVELA_RP13EJ37` = `BB:C3:13:73:8A:32`（[ DUAL ]，已配對）

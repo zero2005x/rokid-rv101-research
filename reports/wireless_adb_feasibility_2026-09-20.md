@@ -1,5 +1,8 @@
 # 無線 adb（adb-over-TCP）可行性實測報告 — RV101 眼鏡
 
+> English: [wireless_adb_feasibility_2026-09-20_EN.md](wireless_adb_feasibility_2026-09-20_EN.md)
+
+
 > **一句話結論**：**可行，而且不必自製任何東西。** 眼鏡的 adbd **本來就會綁 TCP 5555**
 > （IPv6 wildcard），PC 加入眼鏡 SoftAP `RokidCam` 後，標準 `adb connect 192.168.43.1:5555`
 > 直接得到 `device` 與 shell。

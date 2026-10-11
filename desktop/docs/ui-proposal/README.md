@@ -1,5 +1,7 @@
 # ZeroLightRokid Desktop v3.0 — 自繪介面
 
+> English: [README_EN.md](README_EN.md)
+
 v3.0 把 UI 從「堆疊原生 Win32 控制項」改寫為**自繪的品牌介面**，
 對應手機板的設計語彙。功能協調層（adb 流程）完全未動。
 

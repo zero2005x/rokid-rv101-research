@@ -12,7 +12,7 @@ import java.io.DataOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-/** 單一手機連線的讀寫處理（串流導向，藍牙 RFCOMM）。 */
+/** Read/write handling for a single phone connection (stream-oriented, Bluetooth RFCOMM). */
 class ConnectionHandler(
     private val input: InputStream,
     private val output: OutputStream,
@@ -31,10 +31,10 @@ class ConnectionHandler(
                     val json = String(frame.payload, Charsets.UTF_8)
                     router.handle(this, json)
                 }
-                // 眼鏡端不收二進位，忽略其他 opcode
+                // the glasses side does not accept binary, so ignore other opcodes
             }
         } catch (e: Exception) {
-            // EOF / 連線中斷
+            // EOF / connection lost
         } finally {
             close()
             onClosed()

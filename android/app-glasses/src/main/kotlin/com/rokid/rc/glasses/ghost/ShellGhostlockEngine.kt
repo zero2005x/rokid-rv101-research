@@ -12,21 +12,21 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
- * ghostlock LPE 觸發層（直連版）。
+ * ghostlock LPE trigger layer (direct version).
  *
- * 在 App 內以 ProcessBuilder 執行 [ExploitConfig.binaryPath]，並完整重現
- * run_*_orchestrator.sh 的既有流程：
+ * Runs [ExploitConfig.binaryPath] inside the app through ProcessBuilder and reproduces the whole existing
+ * run_*_orchestrator.sh flow:
  *
- *   1. launch  — 啟動 exploit（帶 env，輸出重導到 app cache 的 exploitLog）
- *   2. ready   — 輪詢 rootScriptPath 出現 readyMarker（證明 write_root_script() 已跑）
- *   3. install — 以原子 rename 把自訂 payload 置換進 rootScriptPath
- *   4. done    — 輪詢 payloadLog 出現 doneMarker（payload 已以 root 執行完畢）
- *   5. cleanup — 回收 exploit 行程
+ *   1. launch  — start the exploit (with env, output redirected to the exploitLog in the app cache)
+ *   2. ready   — poll rootScriptPath for the readyMarker (proving write_root_script() has run)
+ *   3. install — atomically rename the custom payload into rootScriptPath
+ *   4. done    — poll payloadLog for the doneMarker (the payload has finished running as root)
+ *   5. cleanup — reap the exploit process
  *
- * 前置條件：App 需能 read/exec `binaryPath`，且能寫 `rootScriptPath`（即對
- * `/data/local/tmp` 的存取權）。若 App 身分（`u:r:untrusted_app`）不具此權限，
- * 會在 READY / INSTALL 階段明確回報；屆時需改走「root 橋接 daemon」方案
- * （見 docs/architecture.md §5）。
+ * Preconditions: the app must be able to read/exec `binaryPath` and write `rootScriptPath` (that is, it needs
+ * access to `/data/local/tmp`). If the app identity (`u:r:untrusted_app`) lacks that permission, it reports this
+ * explicitly at the READY / INSTALL stage; the "root bridge daemon" approach is then required
+ * (see docs/architecture.md §5).
  */
 class ShellGhostlockEngine(
     private val context: Context,
@@ -53,7 +53,7 @@ class ShellGhostlockEngine(
         private set
 
     override suspend fun acquireRoot(): ExecResult {
-        // 若已有常駐 root daemon（uid=0），跳過重跑 exploit，避免無謂的 reboot 風險
+        // if a resident root daemon (uid=0) already exists, skip re-running the exploit to avoid a pointless reboot risk
         val client = RootDaemonClient()
         if (client.isRoot()) {
             rootAcquired = true
@@ -145,8 +145,8 @@ class ShellGhostlockEngine(
 
     private fun installPayload(payload: RootScript): Boolean = try {
         val target = File(config.rootScriptPath)
-        // 直接寫入（若 rootScriptPath 是 symlink 到可寫目錄，會 follow symlink 寫入目標，
-        // 這樣 untrusted_app 也能置換 payload，無需 shell helper）
+        // write directly (if rootScriptPath is a symlink into a writable directory, the write follows the symlink to the target,
+        // so untrusted_app can replace the payload too, with no shell helper needed)
         target.writeText(payload.content)
         target.setExecutable(true, false)
         true
@@ -164,7 +164,7 @@ class ShellGhostlockEngine(
             if (cond()) return true
             Thread.sleep(config.pollIntervalMs)
         }
-        return cond() // 最後一次機會
+        return cond() // last chance
     }
 
     private fun destroy(proc: Process) {

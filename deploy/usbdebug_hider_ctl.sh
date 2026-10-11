@@ -1,34 +1,34 @@
 #!/usr/bin/env bash
-# usbdebug_hider_ctl.sh — USB 偵錯防偵測模組（自建 LSPosed/Vector 模組）控制腳本
+# usbdebug_hider_ctl.sh — control script for the USB-debug anti-detection module (a homegrown LSPosed/Vector module)
 #
-# 對應報告：reports/usbdebug_antidetect_module_2026-09-30.md
-# 模組原始碼：android/usbdebug-hider/（Java hook + native PLT/GOT hook）
-# 對照組偵測器：android/debugdetectprobe/
+# Companion report: reports/usbdebug_antidetect_module_2026-09-30.md
+# Module source: android/usbdebug-hider/ (Java hook + native PLT/GOT hook)
+# Control-group detector: android/debugdetectprobe/
 #
-# 一次性前提（安裝框架，需重開機兩次；已於 2026-09-30 在本機 Redmi Note 11 Pro+ 5G 完成）：
+# One-time prerequisites (install the framework, two reboots needed; done on 2026-09-30 on this Redmi Note 11 Pro+ 5G):
 #   1) apd module install NeoZygisk-v2.4-289-release.zip   → reboot
 #   2) apd module install Vector-v2.2-3080-Release.zip      → reboot
-#   框架 zip 存放於 tools/framework/
+#   framework zips live in tools/framework/
 #
-# 用法：
+# Usage:
 #   ./deploy/usbdebug_hider_ctl.sh <command> [args]
 #
-#   build              編譯 native 層 + 兩個 APK
-#   install            安裝模組與探針 APK、推送設定檔、啟用模組
-#   scope-all          把 scope 設為「所有第三方 App」（排除模組自己與 APatch 管理器）
-#   scope-set PKG...   只注入指定 App（白名單）
-#   scope-from-file F  由清單檔設定 scope（例：deploy/usbdebug_hider_scope.txt）
-#   scope-list         列出目前 scope
-#   conf               推送 deploy/usbdebug_hider.conf 到裝置
-#   enable / disable   啟用 / 停用模組
-#   status             框架、模組、scope、設定檔與裝置真實狀態
-#   verify             跑對照組偵測器，列出被遮蔽與真實值
-#   panic              救援：停用所有 APatch 模組（卡開機時用）
-#   uninstall          移除模組與探針 APK（框架保留）
-#   remove-all         完整移除：App ＋ 框架模組（NeoZygisk/Vector）＋ 暫存檔，並重開機驗證
+#   build              compile the native layer + both APKs
+#   install            install the module and probe APKs, push the config, enable the module
+#   scope-all          set scope to all third-party apps (excluding the module itself and the APatch manager)
+#   scope-set PKG...   inject only the given apps (allowlist)
+#   scope-from-file F  set scope from a list file (e.g. deploy/usbdebug_hider_scope.txt)
+#   scope-list         list the current scope
+#   conf               push deploy/usbdebug_hider.conf to the device
+#   enable / disable   enable / disable the module
+#   status             framework, module, scope, config and the device's real state
+#   verify             run the control-group detector and list masked and real values
+#   panic              rescue: disable every APatch module (for a boot loop)
+#   uninstall          remove the module and probe APKs (framework kept)
+#   remove-all         full removal: apps + framework modules (NeoZygisk/Vector) + temp files, then reboot to verify
 set -u
 
-source "$(dirname "$0")/env.sh"   # ADB / WIN_ADB_DIR / SERIAL（眼鏡）
+source "$(dirname "$0")/env.sh"   # ADB / WIN_ADB_DIR / SERIAL (glasses)
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 MODULE_PKG="com.rokid.rc.usbdebughider"
@@ -39,7 +39,7 @@ STAGE="${STAGE:-/mnt/c/Users/<USER>/rokid_stage}"
 HIDER_APK="$ROOT_DIR/android/usbdebug-hider/build/outputs/apk/debug/usbdebug-hider-debug.apk"
 PROBE_APK="$ROOT_DIR/android/debugdetectprobe/build/outputs/apk/debug/debugdetectprobe-debug.apk"
 
-# 手機序號：優先用 PHONE_SERIAL，否則挑一台「不是眼鏡」的裝置
+# phone serial: prefer PHONE_SERIAL, otherwise pick a device that is "not the glasses"
 pick_device() {
   if [ -n "${PHONE_SERIAL:-}" ]; then
     echo "$PHONE_SERIAL"
@@ -48,15 +48,16 @@ pick_device() {
   local d model
   for d in $("$ADB" devices 2>/dev/null | tr -d '\r' | awk 'NR>1 && $2=="device" {print $1}'); do
     model="$("$ADB" -s "$d" shell getprop ro.product.model 2>/dev/null | tr -d '\r')"
-    # 排除 Rokid 眼鏡（型號如 RG-glasses / RV101 …）
+    # exclude Rokid glasses (models like RG-glasses / RV101 ...)
     case "$model" in
       *[Gg]lasses*|*Rokid*|*ROKID*|*RV101*|*RG-*) continue ;;
     esac
     echo "$d"
     return
   done
-  # 绝不回退到「隨便一台裝置」：2026-09-30 曾因此在眼鏡上誤下指令（並多餘重開機一次）。
-  # 找不到手機就回空字串，由 need_device 大聲失敗。
+  # Never fall back to "any device": on 2026-09-30 that sent commands to the glasses by
+  # mistake (plus one extra reboot). If no phone is found, return an empty string and let
+  # need_device fail loudly.
   echo ""
 }
 
@@ -65,7 +66,7 @@ A() { "$ADB" -s "$SERIAL_PHONE" "$@"; }
 SU() { A shell "su -c '$*'"; }
 CLI_() { SU "$CLI $*"; }
 
-# WSL 路徑 → Windows 路徑（adb.exe 讀不到 /home/... 或 /mnt/c/... 的 Linux 形式）
+# WSL path -> Windows path (adb.exe cannot read the Linux form of /home/... or /mnt/c/...)
 winpath() {
   case "$1" in
     /mnt/[a-z]/*) echo "$(echo "${1#/mnt/}" | cut -c1 | tr 'a-z' 'A-Z'):$(echo "${1#/mnt/?}" | tr '/' '\\')" ;;
@@ -80,12 +81,12 @@ need_device() {
     "$ADB" devices | tr -d '\r' >&2
     exit 1
   fi
-  # 安全檢查：序號若與眼鏡相同就拒絕執行
+  # safety check: refuse to run if the serial is the glasses'
   if [ "$SERIAL_PHONE" = "${SERIAL:-}" ]; then
     echo "拒絕執行：挑到的序號與眼鏡（$SERIAL）相同。" >&2
     exit 1
   fi
-  # 安全檢查：該序號必須真的在線且狀態為 device
+  # safety check: that serial must really be online with state device
   local st
   st="$("$ADB" -s "$SERIAL_PHONE" get-state 2>/dev/null | tr -d '\r')"
   if [ "$st" != "device" ]; then

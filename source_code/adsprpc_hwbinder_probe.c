@@ -1,9 +1,9 @@
 /*
- * adsprpc_hwbinder_probe.c - 探測通過 HWBinder 獲取 ADSPRPC fd 的可能性
+ * adsprpc_hwbinder_probe.c - probing the possibility of obtaining an ADSPRPC fd through HWBinder
  *
- * 目標: 測試 vendor.qti.hardware.dsp@1.0::IDspService 介面
+ * Goal: test the vendor.qti.hardware.dsp@1.0::IDspService interface
  *
- * 編譯:
+ * Build:
  * $CC -static -O2 -o adsprpc_probe adsprpc_hwbinder_probe.c
  */
 
@@ -24,7 +24,7 @@
 
 #include "adsprpc_probe_common.h"
 
-// 嘗試直接打開設備
+// Try to open the device directly
 void test_direct_open(void)
 {
     printf("\n[*] Testing direct open of /dev/adsprpc-smd...\n");
@@ -58,7 +58,7 @@ void test_direct_open(void)
     }
 }
 
-// 檢查 /dev 下的 adsprpc 相關設備
+// Check adsprpc-related devices under /dev
 void enumerate_adsprpc_devices(void)
 {
     printf("\n[*] Enumerating ADSPRPC-related devices...\n");
@@ -75,7 +75,7 @@ void enumerate_adsprpc_devices(void)
     }
 }
 
-// 嘗試連接 HWBinder
+// Try to connect to HWBinder
 void test_hwbinder_access(void)
 {
     printf("\n[*] Testing HWBinder access...\n");
@@ -97,7 +97,7 @@ void test_hwbinder_access(void)
     }
 }
 
-// 檢查進程的 fd 情況
+// Check the process fd situation
 void check_process_fds(pid_t pid)
 {
     printf("\n[*] Checking fds of dspservice (pid=%d)...\n", pid);
@@ -110,7 +110,7 @@ void check_process_fds(pid_t pid)
         return;
     }
 
-    // 這需要 root 或相同 UID
+    // This requires root or the same UID
     if (access(path, R_OK) != 0)
     {
         printf("[-] Cannot access %s: %s\n", path, probe_strerror(errno, errbuf, sizeof(errbuf)));
@@ -118,12 +118,12 @@ void check_process_fds(pid_t pid)
     }
 }
 
-// 嘗試通過 abstract socket 連接
+// Try connecting through an abstract socket
 void test_socket_access(void)
 {
     printf("\n[*] Testing socket-based access paths...\n");
 
-    // 檢查常見的 Android socket
+    // Check common Android sockets
     for (int i = 0; ADSPRPC_SOCKET_PATHS[i] != NULL; i++)
     {
         struct stat st;
@@ -203,7 +203,7 @@ void show_device_contexts(void)
     closedir(dir);
 }
 
-// 檢查 SELinux 上下文
+// Check the SELinux context
 void check_selinux_context(void)
 {
     printf("\n[*] Checking SELinux context...\n");
@@ -232,12 +232,12 @@ void check_selinux_context(void)
                 probe_strerror(errno, errbuf, sizeof(errbuf)));
     }
 
-    // 檢查設備的上下文
+    // Check the device contexts
     printf("  Device contexts:\n");
     show_device_contexts();
 }
 
-// 檢查 /vendor/etc/selinux 相關檔案
+// Check files related to /vendor/etc/selinux
 void check_vendor_selinux(void)
 {
     printf("\n[*] Checking vendor SELinux policy hints...\n");
@@ -296,19 +296,19 @@ int main(int argc, char **argv)
     printf("Reference: Google Project Zero report\n");
     printf("============================\n");
 
-    // 基本信息
+    // Basic information
     printf("\n[*] Process info:\n");
     printf("  UID: %d, GID: %d\n", getuid(), getgid());
     printf("  PID: %d\n", getpid());
 
-    // 運行測試
+    // Run the tests
     enumerate_adsprpc_devices();
     test_direct_open();
     test_hwbinder_access();
     check_selinux_context();
     test_socket_access();
 
-    // 總結
+    // Summary
     printf("\n=== Summary ===\n");
     printf("To exploit CVE-2024-49848/43047, we need:\n");
     printf("1. Access to /dev/adsprpc-smd (via HWBinder IDspService)\n");

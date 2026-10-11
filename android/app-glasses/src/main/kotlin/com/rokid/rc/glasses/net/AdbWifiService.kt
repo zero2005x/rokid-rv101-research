@@ -20,25 +20,25 @@ import java.net.Socket
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * AdbWifiService — 在**不取得 root** 的前提下，把裝置的 adbd 接上 TCP。
+ * AdbWifiService — puts the device's adbd onto TCP **without acquiring root**.
  *
- * 原理：
+ * Principle:
  * ```
- *  開發者 PC  ──TCP:5555──▶  本服務（App 行程）  ──AF_UNIX──▶  /dev/socket/adbd
+ *  developer PC  ──TCP:5555──▶  this service (app process)  ──AF_UNIX──▶  /dev/socket/adbd
  *                                                                   │
- *                                                             原廠 adbd（金鑰認證、shell、sync、
- *                                                             forward 全由它處理）
+ *                                                             stock adbd (key authentication, shell, sync,
+ *                                                             forward are all handled by it)
  * ```
- * 本服務只是**位元搬運工**：不做任何 ADB 協定解析，因此 `adb connect` / `adb install` /
- * `logcat` / `push` 等全部與 USB 連線行為一致；認證仍由 adbd 以 RSA 金鑰把關
- * （`ro.adb.secure=1`），本服務不降低安全性。
+ * This service is only a **byte mover**: it does no ADB protocol parsing at all, so `adb connect` / `adb install` /
+ * `logcat` / `push` and the rest behave exactly as they do over USB; authentication is still enforced by adbd with
+ * RSA keys (`ro.adb.secure=1`), so this service does not weaken security.
  *
- * ⚠ 前提（實測決定成敗）：SELinux 必須允許 App domain 連 `adbd_socket`。
- *   若不允許，本服務會回報 `denied`，此時改用 root 版（`setprop persist.adb.tcp.port 5555`
- *   讓 adbd 自己聽 TCP，開發者端仍免 root）。判定結果見
- *   `reports/adb_app_socket_reach_2026-09-20.md`。
+ * ⚠ Precondition (measured, and it decides success or failure): SELinux must allow the app domain to connect to
+ *   `adbd_socket`. If it does not, this service reports `denied`, and the root version is used instead
+ *   (`setprop persist.adb.tcp.port 5555` makes adbd listen on TCP itself, still needing no root on the developer
+ *   side). See `reports/adb_app_socket_reach_2026-09-20.md` for the verdict.
  *
- * 生命週期：前景服務（避免被 LMK 回收；本專案有 LMK 殺 App 的前例）。
+ * Lifecycle: a foreground service (to avoid being reclaimed by the LMK; this project has seen the LMK kill the app).
  */
 class AdbWifiService : Service() {
 
@@ -73,10 +73,10 @@ class AdbWifiService : Service() {
         super.onDestroy()
     }
 
-    // ---- relay 本體 ----
+    // ---- the relay itself ----
 
     private fun startRelay(port: Int) {
-        // 先確認 adbd socket 可連（早失敗、給出可行動的錯誤）
+        // first confirm the adbd socket is connectable (fail early, with an actionable error)
         val probe = try {
             LocalSocket().apply {
                 connect(LocalSocketAddress(SOCKET_PATH, LocalSocketAddress.Namespace.FILESYSTEM))
@@ -131,7 +131,7 @@ class AdbWifiService : Service() {
         Log.i(TAG, "relay stopped ($why)")
     }
 
-    /** 一條連線：雙向搬運直到任一邊結束。 */
+    /** One connection: move bytes in both directions until either side ends. */
     private fun bridge(client: Socket, id: Int) {
         val peer = client.inetAddress?.hostAddress ?: "?"
         var up: LocalSocket? = null
@@ -172,13 +172,13 @@ class AdbWifiService : Service() {
         } catch (e: Exception) {
             Log.d(TAG, "$tag pipe end: ${e.message}")
         } finally {
-            // 單邊結束 → 關閉對邊寫入，讓 adbd／client 看到 EOF（TIME_WAIT 由 TCP 處理）
+            // one side ended → close the other side's write end so adbd/client see EOF (TIME_WAIT is handled by TCP)
             runCatching { to.close() }
             runCatching { from.close() }
         }
     }
 
-    // ---- 對外狀態（給 App／手機端讀） ----
+    // ---- external state (read by the app/phone) ----
 
     data class Status(
         val running: Boolean,
@@ -199,11 +199,11 @@ class AdbWifiService : Service() {
         private const val NOTIF_ID = 4711
         private const val CHANNEL = "adb_wifi"
 
-        /** 最近一次狀態（App 內查詢用；行程重啟即失效）。 */
+        /** Latest status (queried inside the app; lost when the process restarts). */
         @Volatile var last: Status = Status(false, DEFAULT_PORT, null, null, 0, "never-started")
             private set
 
-        /** 狀態變更廣播（供手機 App／PC 工具追蹤開發模式）。 */
+        /** State-change broadcast (lets the phone app/PC tools track dev mode). */
         const val ACTION_STATE = "com.rokid.rc.glasses.ADB_WIFI_STATE"
 
         fun notifyStatus(ctx: Context, dev: DevModeController.Status) {
@@ -228,7 +228,7 @@ class AdbWifiService : Service() {
             ctx.startService(Intent(ctx, AdbWifiService::class.java).setAction(ACTION_STOP))
         }
 
-        /** 對外入口 IP（STA wlan0 優先，SoftAP wlan2 次之）。 */
+        /** External entry IP (STA wlan0 first, SoftAP wlan2 second). */
         fun localIp(): String? {        return try {
             var ap: String? = null
             val nifs = NetworkInterface.getNetworkInterfaces()
@@ -252,7 +252,7 @@ class AdbWifiService : Service() {
         }
     }
 
-    // ---- 通知（前景服務必要） ----
+    // ---- notification (required by a foreground service) ----
 
     private fun buildNotification(text: String): Notification {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

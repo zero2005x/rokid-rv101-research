@@ -2,10 +2,10 @@
  * KGSL Massive Spray - Force GPU Address Reuse
  * =============================================
  *
- * 策略：
- * 1. 大量分配/釋放循環
- * 2. 保留 dangling mmap
- * 3. 等待地址重用
+ * Strategy:
+ * 1. Heavy allocate/free cycles
+ * 2. Keep dangling mmaps
+ * 3. Wait for address reuse
  */
 
 #define _GNU_SOURCE

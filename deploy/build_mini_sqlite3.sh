@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# build_mini_sqlite3.sh — 交叉編譯 mini_sqlite3（aarch64 Android）
-# 用途：裝置端沒有 sqlite3 CLI 時，用來讀寫 LSPosed/Vector 的設定 DB（模組 scope）。
+# build_mini_sqlite3.sh — cross-compile mini_sqlite3 (aarch64 Android)
+# Purpose: read/write the LSPosed/Vector config DB (module scope) when the device
+# has no sqlite3 CLI.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

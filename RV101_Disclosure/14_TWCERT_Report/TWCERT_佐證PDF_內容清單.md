@@ -1,5 +1,7 @@
 # TWCERT 上傳用「去識別化佐證 PDF」內容清單
 
+> English: [TWCERT_%E4%BD%90%E8%AD%89PDF_%E5%85%A7%E5%AE%B9%E6%B8%85%E5%96%AE_EN.md](TWCERT_%E4%BD%90%E8%AD%89PDF_%E5%85%A7%E5%AE%B9%E6%B8%85%E5%96%AE_EN.md)
+
 > 目的：整理出一份**可直接上傳 TWCERT/CC CVE 通報表單**的佐證 PDF（或 ZIP）。
 > 對應表單欄位：「4. 佐證資料上傳」——**檔案限 10MB 以下，格式限 PDF、ZIP**。
 > 本清單與 `Evidence_Index.md`、`Evidence_Checklist.md`、`Redaction_Checklist.md` 一致，

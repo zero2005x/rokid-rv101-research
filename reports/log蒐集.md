@@ -1,5 +1,8 @@
 # Rokid Glasses ADB 命令蒐集記錄
 
+> English: [log蒐集_EN.md](log%E8%92%90%E9%9B%86_EN.md)
+
+
 **蒐集日期：** 2026年1月30日  
 **設備序號：** <DEVICE_SERIAL>  
 **用途：** 系統資料報告 & 資安漏洞報告

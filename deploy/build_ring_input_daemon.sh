@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
-# 與 build_root_daemon.sh 相同工具鏈（NDK r27d clang wrapper）
+# same toolchain as build_root_daemon.sh (NDK r27d clang wrapper)
 NDK_BIN="${NDK_BIN:-/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/ndk/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin}"
 API="${API:-24}"
 CC="$NDK_BIN/aarch64-linux-android${API}-clang"

@@ -1,5 +1,7 @@
 # KernelSnitch mm leak 失敗 → 乾淨重開機後成功（2026-09-13）
 
+> English: [kernelsnitch_mm_leak_clean_boot_2026-09-13_EN.md](kernelsnitch_mm_leak_clean_boot_2026-09-13_EN.md)
+
 > **結論**：連續卡在 `KernelSnitch mm_struct leak failed` 的原因**不是**引擎選擇，
 > 而是**核心狀態**。乾淨重開機後同一個 `ghostlock_rv101`、同一條 bridge 路徑即成功取得 root。
 > 「改用 Shizuku」對此故障點**無效**（證據見 §4）。

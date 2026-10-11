@@ -1,5 +1,7 @@
 # TWCERT/CC CVE 漏洞通報 — 填寫內容（Rokid RV101）
 
+> English: [TWCERT_CVE%E9%80%9A%E5%A0%B1_%E5%A1%AB%E5%AF%AB%E5%85%A7%E5%AE%B9_EN.md](TWCERT_CVE%E9%80%9A%E5%A0%B1_%E5%A1%AB%E5%AF%AB%E5%85%A7%E5%AE%B9_EN.md)
+
 > 對應表單：https://www.twcert.org.tw/tw/sp-cve-declare-1.html
 > 文件狀態：**草稿，尚未提交**
 > 機密等級：Restricted（送出的佐證資料應為去識別化版本，不含 exploit source / offsets / raw kernel 位址）

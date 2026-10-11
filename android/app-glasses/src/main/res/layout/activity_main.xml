@@ -3,8 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 底部橫幅資訊儀表板：點按（觸控板/按鍵）切換展開/摺疊。
-         全透明（無底色、無面板背景）——文字直接浮在視線上，不遮蔽視野。 -->
+    <!-- Bottom banner information dashboard: tap (touchpad/key) toggles expand/collapse.
+         Fully transparent (no background colour, no panel background) — the text floats directly in the field of view without blocking it. -->
     <LinearLayout
         android:id="@+id/panel"
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         android:paddingTop="6dp"
         android:paddingBottom="8dp">
 
-        <!-- 摺疊條（面板收起時顯示） -->
+        <!-- collapsed bar (shown while the panel is collapsed) -->
         <LinearLayout
             android:id="@+id/collapsedBar"
             android:layout_width="match_parent"
@@ -42,7 +42,7 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 展開面板 -->
+        <!-- expanded panel -->
         <LinearLayout
             android:id="@+id/expandedPanel"
             android:layout_width="match_parent"

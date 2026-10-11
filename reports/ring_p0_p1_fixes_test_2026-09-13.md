@@ -1,5 +1,7 @@
 # 戒指／相機 P0＋P1 修正 — 實作與實機測試紀錄
 
+> English: [ring_p0_p1_fixes_test_2026-09-13_EN.md](ring_p0_p1_fixes_test_2026-09-13_EN.md)
+
 - **日期**：2026-09-13 16:3x–16:4x
 - **依據**：`reports/aivela_ring_connection_failure_2026-09-13.md` 的建議清單
 - **產出**：`android/app-glasses/build/outputs/apk/debug/app-glasses-debug.apk`、

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Rokid Capture</string>
 
-    <!-- 儀表板 -->
+    <!-- dashboard -->
     <string name="dash_title">Rokid Capture</string>
     <string name="dash_collapsed">Rokid Capture</string>
     <string name="dash_hint_collapse">點按收起</string>
@@ -11,7 +11,7 @@
     <string name="dash_row_storage">儲存</string>
     <string name="dash_row_led">指示燈</string>
 
-    <!-- 狀態值 -->
+    <!-- status values -->
     <string name="dash_v_none">未連線</string>
     <string name="dash_v_bt">藍牙</string>
     <string name="dash_v_wifi">WiFi</string>

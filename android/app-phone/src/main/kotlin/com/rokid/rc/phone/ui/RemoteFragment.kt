@@ -17,12 +17,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
- * 遙控分頁（重設計）：只放「拍攝當下必需」的東西，一屏可見不需要滾動。
+ * Remote tab (redesigned): holds only what is "needed at capture time", visible on one screen without scrolling.
  *
- * 內容：連線狀態卡（唯一狀態來源）／拍攝（拍照・錄影）／快速開關（靜音・隱私指示燈）／
- * 固定在下方且可捲動的操作紀錄。
- * 其餘設定類（WiFi、ghostlock、root、顯示配置、指示燈顏色、戒指、語言、裝置資訊）
- * 已移到「設定」分頁（[SettingsFragment]）。
+ * Contents: connection status card (the single source of status)/capture (photo, video)/quick switches (silent, privacy LED)/
+ * an operation log pinned at the bottom and scrollable.
+ * The remaining settings-type items (WiFi, ghostlock, root, display config, LED colour, ring, language, device info)
+ * have moved to the "Settings" tab ([SettingsFragment]).
  */
 class RemoteFragment : Fragment() {
 
@@ -31,7 +31,7 @@ class RemoteFragment : Fragment() {
     private var syncing = false
     private var refreshJob: Job? = null
 
-    /** 長按/放大檢視用的完整紀錄視窗。 */
+    /** Full log window for long-press/zoom viewing. */
     private var dialogLogView: TextView? = null
     private var logDialog: androidx.appcompat.app.AlertDialog? = null
 
@@ -42,7 +42,7 @@ class RemoteFragment : Fragment() {
         rootV = v
         current = this
 
-        // 連線：選擇眼鏡 / 斷線
+        // connection: pick glasses / disconnect
         v.findViewById<View>(R.id.btnConnect).setOnClickListener {
             (activity as? MainActivity)?.pickDevice()
         }
@@ -51,7 +51,7 @@ class RemoteFragment : Fragment() {
             log(getString(R.string.log_disconnected))
         }
 
-        // 拍照
+        // take a photo
         v.findViewById<View>(R.id.btnPhoto).setOnClickListener {
             if (!Remote.isConnected) {
                 toast(getString(R.string.toast_not_connected))
@@ -66,7 +66,7 @@ class RemoteFragment : Fragment() {
             }
         }
 
-        // 錄影（開始／停止）
+        // record video (start/stop)
         v.findViewById<View>(R.id.btnVideo).setOnClickListener {
             if (!Remote.isConnected) {
                 toast(getString(R.string.toast_not_connected))
@@ -102,7 +102,7 @@ class RemoteFragment : Fragment() {
             }
         }
 
-        // 靜音拍攝（快速開關）
+        // silent capture (quick switch)
         v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swSilent)
             .setOnCheckedChangeListener { _, checked ->
                 if (syncing) return@setOnCheckedChangeListener
@@ -128,7 +128,7 @@ class RemoteFragment : Fragment() {
                 }
             }
 
-        // 隱私指示燈（快速開關；顏色選擇在設定分頁）
+        // privacy indicator LED (quick switch; the colour choice is on the settings tab)
         v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swLed)
             .setOnCheckedChangeListener { _, checked ->
                 if (syncing) return@setOnCheckedChangeListener
@@ -147,10 +147,10 @@ class RemoteFragment : Fragment() {
                 }
             }
 
-        // 操作紀錄：常駐面板（可捲動）＋放大/長按檢視完整紀錄
+        // operation log: a permanent panel (scrollable) plus zoom/long-press to view the full log
         val tvLog = v.findViewById<TextView>(R.id.tvLog)
         tvLog.movementMethod = ScrollingMovementMethod.getInstance()
-        // 回呼可能來自背景執行緒（例如媒體前自動建立 WiFi 的紀錄）→ 一律 post 到主執行緒
+        // the callback may come from a background thread (e.g. the record of auto-establishing WiFi before media) → always post to the main thread
         LogStore.onChanged = { text ->
             view?.let { rv ->
                 rv.post {
@@ -172,18 +172,18 @@ class RemoteFragment : Fragment() {
             LogStore.clear()
         }
 
-        // 連線事件 → 更新 UI（連上／斷線皆由 MainActivity 統一接收 Remote.onTransportChanged；
-        // 這裡不再自行指定 onDisconnected，否則會蓋掉那個集中註冊）
-        // 眼鏡主動推送的進度（例如 LPE 階段）；Remote.onPush 會同時掛到藍牙與 WiFi 兩條通道
+        // connection events → update the UI (both connect and disconnect are received centrally by MainActivity through Remote.onTransportChanged;
+        // do not set onDisconnected here, or it would override that central registration)
+        // progress pushed proactively by the glasses (e.g. LPE stages); Remote.onPush is attached to both the Bluetooth and the WiFi channel
         Remote.onPush = { o ->
             if (com.rokid.rc.shared.protocol.Msg.type(o) == com.rokid.rc.shared.protocol.MsgType.PROGRESS) {
                 val code = com.rokid.rc.shared.protocol.Msg.string(o, "code")
                 val arg = com.rokid.rc.shared.protocol.Msg.string(o, "arg")
                 val raw = com.rokid.rc.shared.protocol.Msg.string(o, "message")
-                // 寫進 logcat 才能自動驗證「推播走哪條通道都送得到」（原本只進 App 內紀錄）
+                // log to logcat so that "a push arrives over either channel" can be verified automatically (previously it only went into the in-app log)
                 android.util.Log.i("RemotePush", "progress code=$code arg=$arg")
                 activity?.runOnUiThread {
-                    // 眼鏡端只送代碼；以手機語系組字（未知代碼才退回原始 message）
+                    // the glasses send only codes; compose the text in the phone's locale (fall back to the raw message only for unknown codes)
                     val text = GhostlockText.progress(requireContext(), code, arg) ?: raw
                     log(getString(R.string.log_progress, text))
                 }
@@ -212,7 +212,7 @@ class RemoteFragment : Fragment() {
 
     fun onConnectionChanged() = refresh()
 
-    /** 切到本分頁／連線狀態改變時呼叫：更新連線卡與開關狀態。 */
+    /** Called when switching to this tab / when the connection state changes: update the connection card and switch states. */
     @Suppress("MissingPermission")
     fun refresh() {
         val v = rootV ?: return
@@ -239,12 +239,12 @@ class RemoteFragment : Fragment() {
                 v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swLed).isChecked = s.ledOn
                 v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swSilent).isChecked = s.silentEnabled
                 syncing = false
-                // 唯一狀態來源：裝置摘要（相簿／媒體／root／ghostlock）＋傳輸方式
+                // single source of status: device summary (albums/media/root/ghostlock) plus transport
                 val transport = when {
                     Remote.wifiMode -> getString(
                         R.string.transport_wifi, Remote.wifiLink.apInfo.ip, Remote.wifiLink.apInfo.port
                     )
-                    // 正在建立 WiFi（幾秒）：不要顯示成藍牙，否則傳輸很快但標示相反
+                    // WiFi is being established (a few seconds): do not show Bluetooth, otherwise the transfer is fast but the label says the opposite
                     Remote.wifiNegotiating -> getString(R.string.transport_wifi_connecting)
                     else -> getString(R.string.transport_bt)
                 }
@@ -265,7 +265,7 @@ class RemoteFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch { block() }
     }
 
-    /** 放大檢視完整紀錄（可捲動、可選取複製、可清除）。 */
+    /** Zoomed view of the full log (scrollable, selectable for copying, clearable). */
     private fun showLogDialog() {
         if (logDialog?.isShowing == true) return
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_log, null, false)
@@ -305,7 +305,7 @@ class RemoteFragment : Fragment() {
         (activity as? MainActivity)?.toast(msg)
     }
 
-    /** DebugReceiver 測試用：外部灌入 log 行。 */
+    /** For DebugReceiver testing: inject a log line from outside. */
     fun logPublic(msg: String) = log(msg)
 
     companion object {

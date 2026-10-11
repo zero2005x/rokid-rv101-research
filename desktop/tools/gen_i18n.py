@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-gen_i18n.py — 由 tools/i18n_master.json 產生 src/i18n_strings.h
+gen_i18n.py — generate src/i18n_strings.h from tools/i18n_master.json
 
-用途：ZeroLightRokid Desktop 的多國語系字串表產生器 / 驗證器。
+Purpose: string-table generator / validator for ZeroLightRokid Desktop's locales.
 
-  python3 tools/gen_i18n.py            # 驗證 + 產生 src/i18n_strings.h
-  python3 tools/gen_i18n.py --check    # 只驗證（CI 用，不寫檔）
+  python3 tools/gen_i18n.py            # validate + generate src/i18n_strings.h
+  python3 tools/gen_i18n.py --check    # validate only (for CI; writes nothing)
 
-驗證項目：
-  1. 每個 key 在每個 locale 都有非空字串
-  2. 同一個 key 的 printf 格式符（%s/%d/%ls…）在所有 locale 完全一致（順序與數量）
-  3. locale 代碼 / win_primary 唯一且合法
-  4. 不含 C 字串無法安全表示的控制字元
-  5. 每個 locale 都有 name / font
+Checks:
+  1. every key has a non-empty string in every locale
+  2. a key's printf specifiers (%s/%d/%ls...) are identical across all locales (order and count)
+  3. locale codes / win_primary are unique and valid
+  4. no control characters that a C string cannot represent safely
+  5. every locale has a name / font
 
-產出：src/i18n_strings.h（UTF-8，供 MinGW 與 MSVC 以 /utf-8 編譯）
+Output: src/i18n_strings.h (UTF-8, compiled by MinGW and MSVC with /utf-8)
 """
 
 import json
@@ -27,8 +27,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MASTER = os.path.join(ROOT, "tools", "i18n_master.json")
 OUT = os.path.join(ROOT, "src", "i18n_strings.h")
 
-# printf 格式符：%[flags][width][.prec][length]conv
-# 以「完整比對」方式逐一掃描，而非 finditer —— 這樣才能抓出落單的 '%'。
+# printf specifiers: %[flags][width][.prec][length]conv
+# Scan one by one with full matches instead of finditer — only that catches a stray '%'.
 FMT_RE = re.compile(
     r"%(?:[-+ #0]*)(?:\*|\d+)?(?:\.(?:\*|\d+))?(?:hh|h|ll|l|L|z|j|t|I64|I32)?([diouxXeEfgGaAcspn%])"
 )
@@ -36,10 +36,12 @@ FMT_RE = re.compile(
 
 def scan_fmt(s):
     """
-    掃描格式字串，回傳 token 序列；每個 token 是規格化後的格式符，或 '%%'。
+    Scan a format string and return the token sequence; each token is a normalised format
+    specifier, or '%%'.
 
-    落單的 '%'（既非合法格式符也非 '%%'）會拋出 ValueError —— 這在執行期會導致
-    swprintf 讀取不存在的引數，是很危險的錯誤，必須在產生階段就擋下。
+    A stray '%' (neither a valid specifier nor '%%') raises ValueError — at runtime that makes
+    swprintf read a non-existent argument, which is a dangerous bug and must be caught at
+    generation time.
     """
     toks = []
     i = 0
@@ -54,7 +56,7 @@ def scan_fmt(s):
         if m.group(1) == "%":
             toks.append("%%")
         else:
-            # 去掉空白、保留長度修飾詞（%s 與 %ls 必須區分）
+            # drop spaces but keep the length modifier (%s and %ls must stay distinct)
             toks.append(m.group(0).replace(" ", ""))
         i = m.end()
     return toks
@@ -66,7 +68,7 @@ def die(msg):
 
 
 def c_escape(s):
-    """把字串轉成 C 寬字串字面值的內容（不含外層 L"..."）。"""
+    """Convert a string into the contents of a C wide-string literal (without the outer L"...")."""
     out = []
     for ch in s:
         if ch == "\\":
@@ -87,7 +89,7 @@ def c_escape(s):
 
 
 def c_ident(key):
-    """key → C 識別字（STR_ 前綴在產生時加）。"""
+    """key -> C identifier (the STR_ prefix is added at generation time)."""
     ident = re.sub(r"[^0-9A-Za-z_]", "_", key)
     if ident and ident[0].isdigit():
         ident = "_" + ident
@@ -107,7 +109,7 @@ def main():
     if not locales or not strings:
         die("i18n_master.json 必須有 locales 與 strings")
 
-    # ---- 驗證 locale 定義 ----
+    # ---- validate the locale definitions ----
     codes = []
     primaries = []
     for loc in locales:
@@ -125,7 +127,7 @@ def main():
             die("win_primary/sublang 重複：%r" % (key,))
         primaries.append(key)
 
-    # ---- 驗證字串 ----
+    # ---- validate the strings ----
     errors = []
     n_keys = 0
     for key, entry in strings.items():
@@ -133,11 +135,11 @@ def main():
         if not isinstance(entry, dict):
             errors.append("key %s 的值必須是 {locale: string}" % key)
             continue
-        # 未知 locale
+        # unknown locale
         for lc in entry:
             if lc not in codes:
                 errors.append("key %s 有未知 locale %r" % (key, lc))
-        # 基準格式符（以 zh-TW 或第一個有值的 locale 為準）
+        # baseline specifiers (from zh-TW or the first locale that has a value)
         base = None
         base_code = None
         for lc in codes:
@@ -161,7 +163,8 @@ def main():
                 continue
             for ch in v:
                 o = ord(ch)
-                # 允許 \t \n \r（多行字串用），其餘控制字元一律擋下
+                # \t \n \r are allowed (for multi-line strings); every other control character is
+                # rejected
                 if (o < 0x20 and ch not in "\t\n\r") or o == 0x7F:
                     errors.append("key %s locale %s 含控制字元 U+%04X" % (key, lc, o))
                     break
@@ -186,9 +189,10 @@ def main():
     print("i18n 驗證通過：%d 個 locale × %d 個字串 = %d 筆翻譯"
           % (len(codes), n_keys, len(codes) * n_keys))
 
-    # ---- 資料完整性：en 基準不應含非 ASCII ----
-    # 曾發生「補齊缺漏時誤把 zh-TW 寫進 en」的資料損毀，導致 en 與所有以英文
-    # 暫代的語系都變成中文。en 是基準語言，正常情況下應全為 ASCII。
+    # ---- data integrity: the en baseline must not contain non-ASCII ----
+    # There was once data corruption where "filling the gaps accidentally wrote zh-TW into en",
+    # turning en and every locale temporarily using English into Chinese. en is the baseline
+    # language and should be all ASCII in normal circumstances.
     nonascii = [(k, entry["en"]) for k, entry in strings.items()
                 if isinstance(entry.get("en"), str)
                 and any(ord(ch) > 127 for ch in entry["en"])]
@@ -198,7 +202,7 @@ def main():
             print("  - %s = %r" % (k, v), file=sys.stderr)
         sys.exit(1)
 
-    # ---- 資料完整性：每個 key 都必須有 en ----
+    # ---- data integrity: every key must have en ----
     no_en = [k for k, e in strings.items() if not e.get("en")]
     if no_en:
         print("錯誤：下列 key 缺少 en 基準值：%s" % ", ".join(no_en[:20]), file=sys.stderr)
@@ -207,7 +211,7 @@ def main():
     if check_only:
         return
 
-    # ---- 產生標頭 ----
+    # ---- generate the header ----
     L = []
     L.append("/*")
     L.append(" * i18n_strings.h — 自動產生，請勿手改。")

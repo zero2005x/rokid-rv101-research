@@ -19,7 +19,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
-/** 媒體照片牆（3 欄正方格 + 多選勾選 + 影片角標）。 */
+/** Media photo wall (3-column square grid + multi-select checkmarks + video corner badge). */
 class MediaGridAdapter(
     private val coverLoader: suspend (MediaItem) -> Bitmap?,
     private val onClick: (MediaItem) -> Unit,
@@ -30,7 +30,7 @@ class MediaGridAdapter(
     private var items: List<MediaItem> = emptyList()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    /** 目前選取（多選模式）的 mediaId 集合。 */
+    /** Set of mediaIds currently selected (multi-select mode). */
     val selected = LinkedHashSet<String>()
 
     var selectionMode: Boolean = false
@@ -101,7 +101,7 @@ class MediaGridAdapter(
         onSelectionChanged()
     }
 
-    /** 退出多選並清空。 */
+    /** Exit multi-select and clear. */
     fun exitSelection() {
         if (!selectionMode) return
         selectionMode = false

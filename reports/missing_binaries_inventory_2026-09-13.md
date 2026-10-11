@@ -1,4 +1,5 @@
 # Missing / Referenced Binary Inventory — Rokid RV101 (RG_glasses)
+> English: [missing_binaries_inventory_2026-09-13_EN.md](missing_binaries_inventory_2026-09-13_EN.md)
 > ⚠ **2026-09-13 後續更正**：§4.1／§4.3 將搶救回來的 12 個檔案統稱「執行檔」有誤——
 > `fakepayload` 是 **4096 bytes 全零頁**、`min_payload` 是 **24 B `CrAU` OTA payload 標頭殘檔**，兩者皆非 ELF；
 > 其餘 10 個確為 aarch64 探針（含原始檔名與 CVE／子系統對應），詳見 `reports/static_re_gate_codes_and_rescue_2026-09-13.md`。

@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-"""硬編碼稽核：掃描兩個 App、shared 與腳本，找出不該寫死的東西。
+"""Hardcode audit: scan both apps, shared and the scripts for things that should not be
+hardcoded.
 
-檢查項目：
-  1. Kotlin 中文字面值（排除註解）→ 可能是未在地化的使用者可見文字
-  2. Kotlin 硬編碼路徑（/data、/sdcard、/sys…）、IP、MAC、埠號
-  3. 版面 XML 硬編碼 android:text/hint/contentDescription 與顏色
-  4. 重複出現的字面值（同一常數散落多處 → 應集中成常數）
-  5. deploy/、scripts/ 內硬編碼的序號、IP、Windows 路徑
-  6. Android 元件可達性：`android:exported="true"` 而**沒有** `android:permission`
-  7. 憑證型字面值（pass／secret／token／key／pin 直接寫死）
-  8. native 端權限（world-accessible chmod）
+Checks:
+  1. Chinese string literals in Kotlin (comments excluded) -> possibly unlocalised user-visible
+     text
+  2. Hardcoded paths (/data, /sdcard, /sys...), IPs, MACs and ports in Kotlin
+  3. Layout XML with hardcoded android:text/hint/contentDescription and colours
+  4. Repeated literals (the same constant scattered around -> should be centralised)
+  5. Hardcoded serials, IPs and Windows paths in deploy/ and scripts/
+  6. Android component reachability: `android:exported="true"` with **no** `android:permission`
+  7. Credential-shaped literals (pass / secret / token / key / pin written straight into code)
+  8. Native-side permissions (world-accessible chmod)
 
-第 6–8 項是 2026-09-13 的戒指稽核後補上的：先前 `DebugReceiver` 被歸類為
-「開發工具訊息」而漏掉它的**可達性**（任何 App 都能送），`AP_PASS` 也從未被列出。
-見 reports/ring_capture_security_audit_2026-09-13.md §2 R4/R5/R8。
+Items 6-8 were added after the 2026-09-13 ring audit: `DebugReceiver` had been filed as
+"developer tooling information", missing its **reachability** (any app can send it), and
+`AP_PASS` was never listed at all.
+See reports/ring_capture_security_audit_2026-09-13.md §2 R4/R5/R8.
 
-用法：python3 scripts/audit_hardcode.py [--only N]
+Usage: python3 scripts/audit_hardcode.py [--only N]
 """
 import argparse
 import collections
@@ -30,23 +33,27 @@ CJK = re.compile(r'"(?:[^"\\]|\\.)*[\u4e00-\u9fff](?:[^"\\]|\\.)*"')
 PAT_PATH = re.compile(r'"(/(?:data|sdcard|storage|sys|proc|dev|system)[^"\s]*)"')
 PAT_IP = re.compile(r'"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"')
 PAT_MAC = re.compile(r'\b([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5})\b')
-# 只在 SERIAL= 或 adb -s 的參數位置判斷，且值需含 8 位以上數字（避免誤判程序名）
+# only match in a SERIAL= or adb -s argument position, and the value must contain 8+ digits
+# (to avoid matching process names)
 PAT_SERIAL = re.compile(r'(?:SERIAL=\s*"?|\s-s\s+"?)(?=[0-9A-Za-z]{8,20}"?)(?=[0-9A-Za-z]*[0-9]{8})([0-9A-Za-z]{8,20})')
 PAT_STR = re.compile(r'"((?:[^"\\]|\\.){4,60})"')
-# 憑證型字面值：識別字含 pass/secret/token/key/pin，且直接賦值成字串
+# Credential-shaped literals: the identifier contains pass/secret/token/key/pin and is
+# assigned a string directly
 PAT_CRED = re.compile(
     r'(?i)\b([A-Za-z_][A-Za-z0-9_]*)\s*[:=]\s*"([^"\n]{1,64})"'
 )
-# 識別字本身即為憑證名（無條件算）
+# the identifier itself is a credential name (counted unconditionally)
 PAT_CRED_ALWAYS = re.compile(
     r'(?i)(?:^|_)(?:pass|passwd|password|pwd|secret|token|pin)(?:$|_)'
     r'|(?:^|_)api_?key(?:$|_)|pass(?:word|wd)?$|secret|token'
 )
-# 以 key 結尾者：只有值「像金鑰」才算（排除 lastKey / readerOffset 之類）
+# identifiers ending in key: only counted when the value "looks like a key"
+# (excludes lastKey / readerOffset and the like)
 PAT_CRED_KEYNAME = re.compile(r'(?i)(?:^|_)key$|Key$|_key_?$')
 PAT_KEYLIKE = re.compile(r'(?:[0-9a-fA-F]{16,}|[A-Za-z0-9+/]{20,}={0,2})')
 
-# 受系統保護的廣播（只有系統能送；這些 intent-filter 不需 permission）
+# System-protected broadcasts (only the system can send them; these intent-filters need no
+# permission)
 PROTECTED_ACTIONS = {
     "android.intent.action.BOOT_COMPLETED",
     "android.intent.action.LOCKED_BOOT_COMPLETED",
@@ -60,7 +67,7 @@ PROTECTED_ACTIONS = {
     "android.intent.action.POWER_DISCONNECTED",
     "android.intent.action.LOCALE_CHANGED",
 }
-# native：chmod(path, mode)
+# native: chmod(path, mode)
 PAT_CHMOD = re.compile(r'chmod\s*\(\s*[^,]+,\s*(0?[0-7]{3,4})\s*\)')
 
 ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
@@ -102,7 +109,7 @@ def main():
     args = ap.parse_args()
     only = args.only
 
-    # 1) 中文字面值
+    # 1) Chinese string literals
     section("Kotlin 中文字面值（可能是未在地化的使用者可見文字）", 1, only)
     if only in (None, 1):
         for p in kotlin_files():
@@ -115,7 +122,7 @@ def main():
                 if len(hits) > 8:
                     print(f"  … 其餘 {len(hits) - 8} 筆")
 
-    # 2) 路徑／IP／MAC／埠
+    # 2) paths / IP / MAC / ports
     section("硬編碼路徑／IP／MAC／埠號（Kotlin）", 2, only)
     if only in (None, 2):
         for name, pat in (("路徑", PAT_PATH), ("IP", PAT_IP), ("MAC", PAT_MAC)):
@@ -133,7 +140,7 @@ def main():
                 for v, c in counter.most_common(15):
                     print(f"  {v:44s} ×{c:<3} {sorted(where[v])[:4]}")
 
-    # 3) 版面 XML
+    # 3) layout XML
     section("版面 XML：硬編碼文字與顏色", 3, only)
     if only in (None, 3):
         hard, colors = [], collections.Counter()
@@ -152,7 +159,7 @@ def main():
         for v, c in colors.most_common(12):
             print(f"  {v} ×{c}")
 
-    # 4) 重複字面值
+    # 4) duplicated literals
     section("重複字面值（散落多處 → 建議集中為常數）", 4, only)
     if only in (None, 4):
         counter, where = collections.Counter(), collections.defaultdict(set)
@@ -170,7 +177,7 @@ def main():
             if c >= 3 and len(where[v]) >= 2:
                 print(f"  {v:46s} ×{c:<3} {sorted(where[v])[:5]}")
 
-    # 5) 腳本
+    # 5) scripts
     section("腳本硬編碼（序號／IP／Windows 路徑）", 5, only)
     if only in (None, 5):
         for p in files({".sh", ".cmd", ".ps1"}, ["deploy", "scripts"]):
@@ -188,7 +195,7 @@ def main():
                 for i, tag, v in hits[:6]:
                     print(f"  {i:4d} [{tag}] {v}")
 
-    # 6) Android 元件可達性（exported 且無 permission）
+    # 6) Android component reachability (exported without permission)
     section("Android 元件可達性：exported=true 而無 android:permission（任何 App 可觸發）", 6, only)
     if only in (None, 6):
         total = 0
@@ -239,7 +246,7 @@ def main():
         print("  若要保留 `adb shell am broadcast` 自動化，可加 android:permission=\"android.permission.DUMP\"")
         print("  （shell 持有 DUMP，第三方 App 沒有）。")
 
-    # 7) 憑證型字面值
+    # 7) credential-shaped literals
     section("憑證型字面值（密碼／權杖／金鑰直接寫死）", 7, only)
     if only in (None, 7):
         hits = []
@@ -254,7 +261,7 @@ def main():
                     continue
                 for m in PAT_CRED.finditer(ln):
                     ident, val = m.group(1), m.group(2)
-                    # 排除樣板／佔位符／資源參考
+                    # exclude templates / placeholders / resource references
                     if val.startswith(("@string", "${", "%", "<")) or val in ("", "null", "true", "false"):
                         continue
                     if PAT_CRED_ALWAYS.search(ident):
@@ -272,7 +279,7 @@ def main():
         print(f"\n合計 {len(hits)} 筆。處置原則：預設值可留（如空字串），"
               "**可用的固定憑證**必須改為每次安裝／每次啟動隨機產生或由使用者設定。")
 
-    # 8) native 權限
+    # 8) native permissions
     section("native 端檔案權限：world-accessible chmod", 8, only)
     if only in (None, 8):
         hits = []

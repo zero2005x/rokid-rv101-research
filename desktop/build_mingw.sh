@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# build_mingw.sh — 在 Linux / macOS 上以 MinGW-w64 交叉編譯 ZeroLightRokid Desktop
+# build_mingw.sh — cross-compile ZeroLightRokid Desktop with MinGW-w64 on Linux / macOS
 #
-# 用法：
-#   ./build_mingw.sh            # 編譯 64 位元（預設）
-#   ./build_mingw.sh 32         # 編譯 32 位元
-#   ./build_mingw.sh clean      # 清除產物
+# Usage:
+#   ./build_mingw.sh            # build 64-bit (default)
+#   ./build_mingw.sh 32         # build 32-bit
+#   ./build_mingw.sh clean      # remove the build artefacts
 #
-# 需求：x86_64-w64-mingw32-gcc（Debian/Ubuntu: gcc-mingw-w64-x86-64；
-#       macOS: brew install mingw-w64）
+# Requires: x86_64-w64-mingw32-gcc (Debian/Ubuntu: gcc-mingw-w64-x86-64;
+#           macOS: brew install mingw-w64)
 #
-# 注意：-mwindows 不可省略。少了它會產生 console 子系統執行檔，
-#       雙擊時會先閃出一個黑色命令提示字元視窗。
+# NOTE: -mwindows must not be omitted. Without it the executable uses the console subsystem
+#       and double-clicking it flashes a black command-prompt window first.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -38,26 +38,26 @@ echo "== 1/4 產生並驗證語系字串表 =="
 python3 tools/gen_i18n.py
 
 echo "== 2/4 檢查多語系格式化呼叫的引數個數 =="
-# 格式字串來自執行期查表，編譯器無法檢查引數是否相符；
-# 少給引數會讓 vswprintf 讀取不存在的堆疊內容而崩潰。
+# The format strings come from a runtime lookup, so the compiler cannot check the argument
+# counts; too few arguments make vswprintf read non-existent stack contents and crash.
 python3 tools/check_logfmt.py
 
 echo "== 3/4 編譯資源（manifest + 版本資訊） =="
 "$WINDRES" -I src src/app.rc -O coff -o src/app.res
 
 echo "== 4/4 編譯主程式（$TRIPLE） =="
-# -finput-charset=UTF-8  : 原始碼為 UTF-8
-# -fwide-exec-charset     : Windows target 預設即 UTF-16LE，L"..." 直接正確
-# -municode              : 使用 wWinMain 進入點
-# -mwindows              : GUI 子系統（不要 console 視窗）
+# -finput-charset=UTF-8  : the source is UTF-8
+# -fwide-exec-charset    : the Windows target already defaults to UTF-16LE, so L"..." is correct
+# -municode              : use the wWinMain entry point
+# -mwindows              : GUI subsystem (no console window)
 CFLAGS=(
   -O2 -std=c11 -municode -mwindows -DUNICODE -D_UNICODE
   -finput-charset=UTF-8
   -Wall -Wextra -Wno-unused-parameter -Wno-cast-function-type
   -ffile-prefix-map="$PWD"=. -fdebug-prefix-map="$PWD"=.
 )
-# --no-insert-timestamp：連結器預設會把建置時間寫進 PE 標頭，
-#   導致同樣的原始碼每次建出不同位元組、SHA256SUMS.txt 永遠對不上。
+# --no-insert-timestamp: by default the linker writes the build time into the PE header, so the
+#   same source produces different bytes each time and SHA256SUMS.txt never matches.
 LDFLAGS=( -Wl,--no-insert-timestamp )
 
 "$CC" "${CFLAGS[@]}" "${LDFLAGS[@]}" \

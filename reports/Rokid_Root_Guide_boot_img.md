@@ -1,4 +1,7 @@
 # Rokid AR 眼鏡 Root 指南：刷入自定義 boot.img
+
+> English: [Rokid_Root_Guide_boot_img_EN.md](Rokid_Root_Guide_boot_img_EN.md)
+
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 > ⚠ **歷史文件／非現行路徑（2026-09-13 註）**：本指南描述的是**刷入自訂 boot.img**（Magisk）路線，

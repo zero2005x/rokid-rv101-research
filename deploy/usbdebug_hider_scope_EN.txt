@@ -1,0 +1,51 @@
+# > 中文版：[usbdebug_hider_scope.txt](usbdebug_hider_scope.txt)
+
+# DebugMask scope — banks + payments + cryptocurrency + 2FA
+# Purpose: ./deploy/usbdebug_hider_ctl.sh scope-from-file deploy/usbdebug_hider_scope.txt
+# Format: one package per line; text after # is a comment; blank lines are ignored.
+# Labels (2026-09-30) were verified one by one against the "Settings → App info" heading, not inferred from the package name.
+
+# ── Banks (11) ──────────────────────────────────────────────
+com.cathaybk.mymobibank.android      # 國泰世華
+com.chinatrust.mobilebank            # 中國信託
+com.esunbank                         # 玉山銀行
+com.fubon.aibank                     # 台北富邦
+tw.com.taishinbank.ccapp             # Richart Life（台新）
+tw.com.taishinbank.richart           # Richart（台新數位帳戶）
+com.tbb.mb.prod                      # 臺灣企銀
+com.landbank.newrelease.android      # 土銀行動銀行
+tw.com.hncb.nmbank                   # 華南銀行+
+com.ubot.dbank                       # New New Bank（聯邦）
+tw.gov.post.mpost                    # 行動郵局
+
+# ── Payments / stored-value cards / wallets (9) ─────────────
+tw.com.twmp.twhcewallet              # 台灣行動支付（台灣Pay）
+com.easycard.wallet                  # Easy Wallet（悠遊卡）
+com.ipass.ipassmoney                 # iPASS MONEY（一卡通）
+com.allpay.tw                        # 歐付寶
+tw.net.pic.m.openpoint               # OPENPOINT（統一超商）
+grasea.familife                      # 全家便利商店（FamiPay）
+com.hilife.vipapp                    # Hi-Life VIP（萊爾富）
+com.pxmart.android                   # 全聯福利中心（PX Pay）
+com.google.android.apps.walletnfcrel # Google 錢包
+
+# ── Cryptocurrency (5) ─────────────────────────────────────
+com.binance.dev                      # 幣安 Binance
+io.metamask                          # MetaMask
+com.maicoin.maicoin                  # MaiCoin
+com.maicoin.max                      # MAX
+com.nicehash.metallum                # NiceHash（同類別一併納入；不需要可刪這行）
+
+# ── 2FA authenticators (3) ─────────────────────────────────
+com.azure.authenticator              # Microsoft Authenticator（包名 azure＝微軟）
+com.google.android.apps.authenticator2 # Google Authenticator
+com.twofasapp                        # 2FAS
+
+# ── Verification (control-group probe; optional) ───────────
+com.rokid.rc.debugdetectprobe        # DebugDetectProbe（本專案探針）
+
+# ── Not included, but can be added at any time ─────────────
+# E-commerce wallets: com.shopee.tw (Shopee ShopeePay) / com.tencent.mm (WeChat Pay) / tw.com.costco (Costco Pay) / com.starbucks.tw (Starbucks reloadable card)
+# Bookkeeping and tax filing: com.lib.cwmoneyex (CWMoney) / com.tradevan.android.forms (EZ Way) / tw.gov.invoice (uniform invoice prize redemption)
+# Transit card binding: com.ubercab / dbx.taiwantaxi (55688) / com.cht.easyrent.irent / com.wemoscooter / tw.com.chailease.android.shareCar
+# Insurance and securities: com.uniprosperity.mobile.one (Wanjiafu; not financial, do not add)

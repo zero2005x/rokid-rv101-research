@@ -1,5 +1,8 @@
 # Rokid AR Glasses Privilege Escalation Research Report
 
+> English: [ATTACK_SURFACE_RESEARCH_EN.md](ATTACK_SURFACE_RESEARCH_EN.md)
+
+
 ## Session 12: Alternative Attack Surface Deep Dive
 
 **Date**: 2026-02-02

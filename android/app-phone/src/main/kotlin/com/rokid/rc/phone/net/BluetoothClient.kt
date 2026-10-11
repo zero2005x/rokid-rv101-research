@@ -7,14 +7,14 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 
 /**
- * 手機端藍牙 RFCOMM 鏈路（傳輸邏輯見 [LinkClient]）。
- * 控制指令/回退媒體通道皆可走此鏈路。
+ * Phone-side Bluetooth RFCOMM link (transfer logic in [LinkClient]).
+ * Control commands and the fallback media channel can both use this link.
  */
 class BluetoothClient : LinkClient() {
 
     private var socket: BluetoothSocket? = null
 
-    // BLUETOOTH_CONNECT 已於 Manifest 宣告並於連線前請求
+    // BLUETOOTH_CONNECT is declared in the Manifest and requested before connecting
     @Suppress("MissingPermission")
     suspend fun connect(device: BluetoothDevice): Result<Unit> = withContext(Dispatchers.IO) {
         try {

@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
-/** 眼鏡端藍牙 RFCOMM server。預設單一連線，新連線取代舊連線。 */
+/** Glasses-side Bluetooth RFCOMM server. Single connection by default; a new connection replaces the old one. */
 class BluetoothServer(private val graph: AppGraph) {
 
     private var serverSocket: BluetoothServerSocket? = null
@@ -20,7 +20,7 @@ class BluetoothServer(private val graph: AppGraph) {
 
     fun start(onStarted: () -> Unit, onError: (String) -> Unit) {
         acceptJob = graph.scope.launch {
-            // 藍牙 stack 可能尚未就緒（Rokid 開機後會重啟藍牙），重試等待
+            // the Bluetooth stack may not be ready yet (Rokid restarts Bluetooth after boot), so retry and wait
             var adapter: BluetoothAdapter? = null
             for (attempt in 1..15) {
                 adapter = BluetoothAdapter.getDefaultAdapter()
@@ -32,7 +32,7 @@ class BluetoothServer(private val graph: AppGraph) {
                 return@launch
             }
             try {
-                // BLUETOOTH_CONNECT 已於 Manifest 宣告並由 MainActivity 請求
+                // BLUETOOTH_CONNECT is already declared in the Manifest and requested by MainActivity
                 @Suppress("MissingPermission")
                 val ss = adapter.listenUsingRfcommWithServiceRecord(SERVICE_NAME, SPP_UUID)
                 serverSocket = ss
@@ -54,7 +54,7 @@ class BluetoothServer(private val graph: AppGraph) {
                     graph.connection = handler
                     graph.btConnected = true
                     launch(Dispatchers.IO) { handler.run() }
-                    // 連線成功後，預設關閉隱私指示燈（若啟用）
+                    // after a successful connection, turn the privacy LED off by default (when enabled)
                     if (graph.autoLedOffOnConnect) {
                         Log.i(TAG, "連線成功，自動關閉隱私指示燈")
                         graph.scope.launch { graph.led.setLed(false) }

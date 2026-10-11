@@ -1,5 +1,7 @@
 # 實機測試截圖
 
+> English: [README_EN.md](README_EN.md)
+
 2026-09-11 於 Windows 11（build 26200，2880x1620 @ 200% 縮放）+
 實機 Rokid RV101 眼鏡（序號 <DEVICE_SERIAL>）執行 `zero_light_desktop.exe` 的截圖。
 

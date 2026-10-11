@@ -1,5 +1,7 @@
 # 傳輸方式標示修正 — 實機截圖證據（2026-09-13 23:03–23:10）
 
+> English: [README_EN.md](README_EN.md)
+
 ## 對應報告
 `reports/wifi_transfer_fix_2026-09-13.md` Rev.3 §11–§12（FACTS.md §7 P28 的 UI 標示段）。
 

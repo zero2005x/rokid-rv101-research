@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 # =============================================================================
-# setup_direct.sh — 一次性設定：讓眼鏡 App「直連提權」，不再需要 shell helper。
+# setup_direct.sh — one-time setup: let the glasses App escalate directly, without a shell helper.
 #
-# 原理（symlink trick）：
-#   untrusted_app 原本寫不了 /data/local/tmp/.ghostlock_root.sh（目錄 0771，others 無 w）。
-#   若把 .ghostlock_root.sh 設成 symlink → /data/local/tmp/ghostlock_bridge/.ghostlock_root.sh
-#   （bridge 目錄 chmod 777），則 exploit 與 App 讀寫 .ghostlock_root.sh 時都會 follow symlink
-#   寫入 777 目錄，App 就能自行完成「等 ready → 置換 payload → 等 done」。
+# How (symlink trick):
+#   untrusted_app cannot write /data/local/tmp/.ghostlock_root.sh (directory 0771, others
+#   have no w). If .ghostlock_root.sh is a symlink to
+#   /data/local/tmp/ghostlock_bridge/.ghostlock_root.sh (bridge directory chmod 777), then the
+#   exploit and the App both follow the symlink into the 777 directory when reading and
+#   writing .ghostlock_root.sh, so the App can do "wait ready -> swap payload -> wait done"
+#   on its own.
 #
-# ⚠ 2026-09-13：DIRECT（ShellGhostlockEngine 直連）**已不使用**——實測 untrusted_app 跑 exploit
-#   會 kernel panic，且引擎改為執行期自動探測（不再有 USE_BRIDGE 開關）。本腳本僅保留供研究。
-# 之後 reboot 後 symlink 仍在（/data/local/tmp 是持久檔案系統），App 開機即可自行提權，
-# 不需要桌機 adb。
+# ⚠ 2026-09-13: DIRECT (ShellGhostlockEngine direct) is **no longer used** — untrusted_app
+#   running the exploit was measured to kernel-panic, and the engine now probes at runtime
+#   (there is no USE_BRIDGE switch any more). This script is kept for research only.
+# The symlink survives a reboot (/data/local/tmp is a persistent filesystem), so after boot
+# the App can escalate on its own without a desktop adb.
 # =============================================================================
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 
 BRIDGE="/data/local/tmp/ghostlock_bridge"

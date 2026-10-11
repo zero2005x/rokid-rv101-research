@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  遙控分頁（重設計）：**不使用外層 ScrollView**，所有內容依權重分配，
-  日誌面板固定在下方並佔滿剩餘空間 → 常用功能與日誌「一屏可見、不需滾動」。
-  設定類項目（WiFi／ghostlock／root／顯示配置／指示燈顏色／戒指／語言／裝置資訊）
-  已移至「設定」分頁。
+  Remote tab (redesigned): **no outer ScrollView**; all content is distributed by weight,
+  with the log panel pinned at the bottom filling the remaining space → frequently used controls and the log stay
+  "visible on one screen without scrolling".
+  Settings-type items (WiFi/ghostlock/root/display config/LED colour/ring/language/device info) have moved to the
+  "Settings" tab.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -15,7 +16,7 @@
     android:paddingTop="10dp"
     android:paddingBottom="8dp">
 
-    <!-- ===== 連線狀態（唯一的狀態來源） ===== -->
+    <!-- ===== connection state (the single source of status) ===== -->
     <com.google.android.material.card.MaterialCardView
         style="@style/Widget.RokidPhone.Card"
         android:layout_width="match_parent"
@@ -88,7 +89,7 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- ===== 拍攝 ===== -->
+    <!-- ===== capture ===== -->
     <com.google.android.material.card.MaterialCardView
         style="@style/Widget.RokidPhone.Card"
         android:layout_width="match_parent"
@@ -125,7 +126,7 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- ===== 快速開關（拍攝時最常用） ===== -->
+    <!-- ===== quick switches (most used while capturing) ===== -->
     <com.google.android.material.card.MaterialCardView
         style="@style/Widget.RokidPhone.Card"
         android:layout_width="match_parent"
@@ -160,7 +161,7 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- ===== 操作紀錄（固定在下方，佔滿剩餘高度） ===== -->
+    <!-- ===== operation log (pinned at the bottom, filling the remaining height) ===== -->
     <com.google.android.material.card.MaterialCardView
         style="@style/Widget.RokidPhone.Card"
         android:layout_width="match_parent"

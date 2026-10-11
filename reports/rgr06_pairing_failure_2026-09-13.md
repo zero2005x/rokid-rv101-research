@@ -1,5 +1,7 @@
 # RGR06 戒指配對失敗 — log 取證、我們程式的真 bug、以及可行的解法
 
+> English: [rgr06_pairing_failure_2026-09-13_EN.md](rgr06_pairing_failure_2026-09-13_EN.md)
+
 - **日期**：2026-09-13 17:05–17:14
 - **戒指**：`RGR06` ＝ `D1:03:CB:ED:C7:97`（LE-only、HOGP `0x1812`、Appearance `0x03C2` Mouse、random static address）
 - **主機**：手機 `<PHONE_SERIAL>`（Android 13 / MIUI V816）· 眼鏡 `<DEVICE_SERIAL>`（Android 12 / API 32）

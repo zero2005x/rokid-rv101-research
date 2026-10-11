@@ -1,5 +1,7 @@
 # Redaction Checklist
 
+> English: [Redaction_Checklist_EN.md](Redaction_Checklist_EN.md)
+
 Two copies of every sensitive artifact must be maintained:
 
 1. **Immutable/raw** copy → `confidential/raw_evidence/` (never edited in place).

@@ -1,5 +1,7 @@
 # [ARCHIVE] NVD / OSV Record Digest — CVE-2026-43499
 
+> English: [advisory_nvd_osv_record_20260824_EN.md](advisory_nvd_osv_record_20260824_EN.md)
+
 > Archived: 2026-08-24 by RV101 research team.
 > Sources:
 > - NVD: https://nvd.nist.gov/vuln/detail/CVE-2026-43499 (Published 2026-05-21, last modified 2026-07-24, source CNA: kernel.org)

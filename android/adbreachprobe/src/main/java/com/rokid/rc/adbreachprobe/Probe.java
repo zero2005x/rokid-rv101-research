@@ -23,28 +23,28 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * adbreachprobe — 探針本體（2026-09-20）。
+ * adbreachprobe — the probe itself (2026-09-20).
  *
- * 全部動作都在 App 自己的 process 裡執行：
- *   uid      = App 自己的 uid（u0_aNNN）
- *   SELinux  = untrusted_app（由 /proc/self/attr/current 讀出，不用猜）
+ * Everything runs inside the app's own process:
+ *   uid      = the app's own uid (u0_aNNN)
+ *   SELinux  = untrusted_app (read from /proc/self/attr/current, not guessed)
  *
- * 問題：一般第三方 App 能否 connect() 到 /dev/socket/adbd（adbd 的 UNIX socket）？
+ * Question: can an ordinary third-party app connect() to /dev/socket/adbd (adbd's UNIX socket)?
  *
- * 主探針走 native raw syscall（NativeProbe / libadbreachprobe.so），因為這個 ROM 的
- * android.net.LocalSocket 在 connect() 之前就會丟 framework 例外，碰不到 kernel。
- * Java LocalSocket 版本仍保留並逐步記錄，當作 framework 行為的對照。
+ * The main probe goes through native raw syscalls (NativeProbe / libadbreachprobe.so), because on this ROM
+ * android.net.LocalSocket throws a framework exception before connect() and never reaches the kernel.
+ * The Java LocalSocket version is kept as well and logged step by step, as a comparison for framework behavior.
  *
- * 只做連線與唯讀操作：不 bind 系統路徑、不寫任何檔案、不改 property、
- * 不建立也不啟動 /data/local/tmp/root_daemon.sock、不碰 adbd。
+ * Only connection and read-only operations: no binding to system paths, no writing any file, no property
+ * changes, no creating or starting /data/local/tmp/root_daemon.sock, no touching adbd.
  */
 public final class Probe {
 
     public static final String TAG = "ADBREACH";
 
-    /** 真正的問題：adbd 的 UNIX socket。 */
+    /** The real question: adbd's UNIX socket. */
     public static final String TARGET_ADBD = "/dev/socket/adbd";
-    /** 次要對照：0777、SELinux type = shell_data_file 的 socket。 */
+    /** Secondary comparison: a socket that is 0777 with SELinux type = shell_data_file. */
     public static final String TARGET_SECONDARY = "/data/local/tmp/root_daemon.sock";
 
     private static final int TIMEOUT_MS = 3000;
@@ -180,7 +180,7 @@ public final class Probe {
     // ------------------------------------------------- native-backed probes
 
     /**
-     * Probe A（主問題，native raw syscall）：connect() /dev/socket/adbd。
+     * Probe A (the main question, native raw syscall): connect() to /dev/socket/adbd.
      */
     private static Res probeANative(List<String> lines) {
         Res r = new Res();
@@ -190,7 +190,7 @@ public final class Probe {
         r.nbytes = a[2];
 
         if (r.stage >= 3) {
-            // connect 成功
+            // connect succeeded
             r.connected = true;
             if (r.nbytes > 0) {
                 byte[] buf = new byte[r.nbytes];
@@ -228,7 +228,7 @@ public final class Probe {
     }
 
     /**
-     * Probe A 對照（Java framework）：逐步記錄，看 android.net.LocalSocket 到底在哪一步失敗。
+     * Probe A comparison (Java framework): log step by step to see exactly where android.net.LocalSocket fails.
      */
     private static void probeAJava(List<String> lines) {
         LocalSocket s = null;
@@ -253,8 +253,8 @@ public final class Probe {
     }
 
     /**
-     * Probe B（控制組，native）：在 App 自己的 files dir 做完整的
-     * bind() + listen() + connect() + accept() + echo。
+     * Probe B (control group, native): a full bind() + listen() + connect() + accept() + echo
+     * inside the app's own files dir.
      */
     private static Res probeBNative(Context ctx, List<String> lines) {
         Res r = new Res();
@@ -282,7 +282,7 @@ public final class Probe {
         return r;
     }
 
-    /** Probe B 對照（Java framework），逐步記錄。 */
+    /** Probe B comparison (Java framework), logged step by step. */
     private static void probeBJava(Context ctx, List<String> lines) {
         String path = new File(ctx.getFilesDir(), "self.sock").getAbsolutePath();
         try {
@@ -317,7 +317,7 @@ public final class Probe {
         }
     }
 
-    /** Probe C（次要，native）：0777 但通常沒有 listener 的 socket。 */
+    /** Probe C (secondary, native): a socket that is 0777 but usually has no listener. */
     private static Res probeCNative(List<String> lines) {
         Res r = new Res();
         int[] c = NativeProbe.connectUnixRead(TARGET_SECONDARY, TIMEOUT_MS);
@@ -389,7 +389,7 @@ public final class Probe {
 
         diag(lines);
 
-        // ---- Probe A（主問題；native raw syscall 為權威答案）
+        // ---- Probe A (the main question; the native raw syscall is the authoritative answer)
         Res a = NativeProbe.AVAILABLE ? probeANative(lines) : new Res();
         probeAJava(lines);
         if (!NativeProbe.AVAILABLE) {
@@ -400,14 +400,14 @@ public final class Probe {
                 ? "PROBE_A=OK " + a.detail
                 : "PROBE_A=ERR errno=" + a.errnoText() + " [" + a.detail + "]");
 
-        // ---- Probe B（控制組）
+        // ---- Probe B (control group)
         Res b = probeBNative(ctx, lines);
         probeBJava(ctx, lines);
         lines.add(b.connected
                 ? "PROBE_B=OK " + b.detail
                 : "PROBE_B=ERR errno=" + b.errnoText() + " [" + b.detail + "]");
 
-        // ---- Probe C（次要）
+        // ---- Probe C (secondary)
         Res c = probeCNative(lines);
         lines.add(c.connected
                 ? "PROBE_C=OK " + c.detail

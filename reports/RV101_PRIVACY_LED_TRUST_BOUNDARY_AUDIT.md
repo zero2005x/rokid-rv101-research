@@ -1,6 +1,8 @@
 # RV101 Privacy Indicator Trust Boundary Audit Report
 # （RV101 隱私指示燈 / P-Sensor 信任邊界審計報告）
 
+> English: [RV101_PRIVACY_LED_TRUST_BOUNDARY_AUDIT_EN.md](RV101_PRIVACY_LED_TRUST_BOUNDARY_AUDIT_EN.md)
+
 > 審計日期：2026-08-24　裝置：Rokid RV101（serial <DEVICE_SERIAL>）
 > 韌體：1.22.009-20260710-150201（Android 12, kernel 5.10.209-perf）
 > 環境：adb root（GhostLock CVE-2026-43499 取得 uid=0）+ SELinux Permissive

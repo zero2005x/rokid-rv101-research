@@ -12,20 +12,21 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * ghostlock LPE 觸發層（root 橋接 daemon 版）。
+ * ghostlock LPE trigger layer (root bridge daemon version).
  *
- * 不直接碰 `/data/local/tmp`，而是委託一個以 shell 常駐的 helper
- * （由 deploy/root_bridge.sh 一次性佈署）代為：
- *   跑 exploit → 等 ready → 原子置換 payload → 等 done → 回收。
+ * It does not touch `/data/local/tmp` directly, but delegates to a helper resident as shell
+ * (deployed once by deploy/root_bridge.sh):
+ *   run the exploit → wait for ready → atomically replace the payload → wait for done → reap.
  *
- * App 與 helper 之間用 [BridgeConfig.bridgeDir]（預設 /data/local/tmp/ghostlock_bridge，
- * 由 setup chmod 777）下的固定檔案通訊：
- *   - `last.cmd`：App 寫入的 payload 腳本
- *   - `last.done`：payload（root）寫入的 DONE 標記
- *   - `last.out`：helper 回寫的結果（`OK` / `ERR:...`）
- *   - `last.progress`：helper 寫入的階段標記（供進度回報）
+ * App and helper communicate through fixed files under [BridgeConfig.bridgeDir] (default
+ * /data/local/tmp/ghostlock_bridge, chmod 777 by setup):
+ *   - `last.cmd`: the payload script written by the app
+ *   - `last.done`: the DONE marker written by the payload (root)
+ *   - `last.out`: the result written back by the helper (`OK` / `ERR:...`)
+ *   - `last.progress`: the stage marker written by the helper (for progress reporting)
  *
- * 由於採固定檔名，本引擎以 Mutex 序列化 exec，保證與 helper 的單一迴圈一對一。
+ * Because the file names are fixed, this engine serializes exec with a Mutex, guaranteeing a one-to-one match with
+ * the helper's single loop.
  */
 class BridgeGhostlockEngine(
     private val config: BridgeConfig = BridgeConfig()
@@ -55,7 +56,7 @@ class BridgeGhostlockEngine(
         private set
 
     override suspend fun acquireRoot(): ExecResult {
-        // 若已有常駐 root daemon（uid=0），跳過重跑 exploit，避免無謂的 reboot 風險
+        // if a resident root daemon (uid=0) already exists, skip re-running the exploit to avoid a pointless reboot risk
         val client = RootDaemonClient()
         if (client.isRoot()) {
             rootAcquired = true
@@ -81,8 +82,8 @@ class BridgeGhostlockEngine(
             doneFile.delete()
             progressFile.delete()
 
-            // 原子寫入命令檔，避免 helper 讀到半寫入。
-            // 設為 world-readable/writable(0666)：否則 helper(shell) 讀不到 app 寫的 0600 檔。
+            // write the command file atomically, so the helper does not read a half-written file.
+            // make it world-readable/writable (0666): otherwise the helper (shell) cannot read the 0600 file the app wrote.
             val tmp = File(bridgeDir, "last.cmd.tmp")
             tmp.writeText(payload.content)
             tmp.setReadable(true, false)
@@ -122,7 +123,7 @@ class BridgeGhostlockEngine(
         }
     }
 
-    /** helper 進度檔 → 代碼。 */
+    /** helper progress file → code. */
     private fun progressCode(p: String): String = when {
         p.startsWith("exploit-attempt") -> GhostlockCodes.ATTEMPT
         p == "started" -> GhostlockCodes.HELPER_STARTED
@@ -134,7 +135,7 @@ class BridgeGhostlockEngine(
         else -> p
     }
 
-    /** helper 進度檔 → 參數（僅部分代碼需要）。 */
+    /** helper progress file → argument (needed by only some codes). */
     private fun progressArg(p: String): String? = when {
         p.startsWith("exploit-attempt") -> p.removePrefix("exploit-attempt-")
         p.startsWith("failed") -> p

@@ -1,34 +1,36 @@
 package com.rokid.rc.shared.protocol
 
 /**
- * 通訊協定常數。與 docs/protocol.md 對應。
+ * Protocol constants. Mirrors docs/protocol.md.
  */
 object Protocol {
     const val PROTO_VERSION = 1
-    // 傳輸為藍牙 RFCOMM（無 TCP port）；DEFAULT_PORT 已移除。
+    // Transport is Bluetooth RFCOMM (no TCP port); DEFAULT_PORT has been removed.
     const val APP_NAME_GLASSES = "RokidGlassesCapture"
     const val APP_NAME_PHONE = "RokidPhoneRemote"
 
-    // WiFi 媒體通道（眼鏡 SoftAP + TCP server；控制指令維持藍牙，媒體可走 WiFi 並回退藍牙）
+    // WiFi media channel (glasses SoftAP + TCP server; control commands stay on Bluetooth,
+    // media can use WiFi and fall back to Bluetooth)
     const val WIFI_PORT = 8555
     const val AP_SSID = "RokidCam"
     const val AP_PASS = "rokid1234"
     const val AP_IP = "192.168.43.1"
 
     /**
-     * 藍牙 SPP（RFCOMM）服務 UUID。
+     * Bluetooth SPP (RFCOMM) service UUID.
      *
-     * **手機與眼鏡必須一致**：先前兩端各自寫死一份字串，只要有一邊改動就會靜默連不上，
-     * 因此集中在協定常數（`java.util.UUID.fromString(Protocol.SPP_UUID)`）。
+     * **The phone and the glasses must agree**: previously each side hard-coded its own string, so a change on
+     * either side silently broke the connection; hence it is centralised in the protocol constants
+     * (`java.util.UUID.fromString(Protocol.SPP_UUID)`).
      */
     const val SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB"
 }
 
 /**
- * 媒體型別（MIME 與副檔名）唯一來源。
+ * Single source of truth for media types (MIME and file extensions).
  *
- * 先前 `"image/jpeg"`／`".mp4"`／`".part"` 等字面值散落在兩個 App 共 7 處，
- * 判斷邏輯（是否為影片、是否為下載暫存檔）也因此重複實作。
+ * Previously literals such as `"image/jpeg"` / `".mp4"` / `".part"` were scattered across 7 places in the two
+ * apps, and the classification logic (is it a video, is it a partial download) was duplicated as a result.
  */
 object MediaTypes {
     const val MIME_JPEG = "image/jpeg"
@@ -39,17 +41,17 @@ object MediaTypes {
     const val EXT_PNG = ".png"
     const val EXT_MP4 = ".mp4"
     const val EXT_MOV = ".mov"
-    /** 下載中的暫存副檔名（完成後才改名）。 */
+    /** Extension of an in-progress download (renamed only once complete). */
     const val EXT_PART = ".part"
 
-    /** 是否為影片（依副檔名）。 */
+    /** Whether this is a video (by file extension). */
     fun isVideo(fileName: String): Boolean =
         fileName.endsWith(EXT_MP4, ignoreCase = true) || fileName.endsWith(EXT_MOV, ignoreCase = true)
 
-    /** 是否為下載暫存檔。 */
+    /** Whether this is a partial download. */
     fun isPartial(fileName: String): Boolean = fileName.endsWith(EXT_PART, ignoreCase = true)
 
-    /** 依副檔名推 MIME。 */
+    /** Infer the MIME type from the file extension. */
     fun mimeOf(fileName: String): String = when {
         fileName.endsWith(EXT_MP4, ignoreCase = true) -> MIME_MP4
         fileName.endsWith(EXT_PNG, ignoreCase = true) -> MIME_PNG
@@ -57,9 +59,9 @@ object MediaTypes {
     }
 }
 
-/** 訊息型別常數。 */
+/** Message type constants. */
 object MsgType {
-    // 手機 → 眼鏡
+    // phone -> glasses
     const val HELLO = "HELLO"
     const val GET_STATUS = "GET_STATUS"
     const val SET_GHOSTLOCK = "SET_GHOSTLOCK"
@@ -82,14 +84,14 @@ object MsgType {
     const val SET_DISPLAY_CONFIG = "SET_DISPLAY_CONFIG"
     const val ENABLE_WIFI_ADB = "ENABLE_WIFI_ADB"
 
-    /** 開發模式：按需開啟無線 adb（加入網段＋開 listener＋逾時自動關）。 */
+    /** Dev mode: enable wireless adb on demand (join the subnet + open a listener + auto-close on timeout). */
     const val DEV_MODE_START = "DEV_MODE_START"
     const val DEV_MODE_STOP = "DEV_MODE_STOP"
     const val DEV_MODE_STATUS = "DEV_MODE_STATUS"
     const val SET_SILENT = "SET_SILENT"
     const val SET_RING = "SET_RING"
 
-    // 眼鏡 → 手機
+    // glasses -> phone
     const val HELLO_ACK = "HELLO_ACK"
     const val ACK = "ACK"
     const val STATUS = "STATUS"

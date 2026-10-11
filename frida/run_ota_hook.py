@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""run_ota_hook.py — attach com.rokid.glass.ota + 載入 ota_hook.js 並常駐收 log。"""
+"""run_ota_hook.py — attach to com.rokid.glass.ota, load ota_hook.js and keep collecting log."""
 import frida
 import sys
 import time
@@ -30,7 +30,7 @@ def main():
     print(f"[*] attached to {PACKAGE}, hooks loaded. Ctrl+C to stop.", flush=True)
     try:
         while True:
-            time.sleep(1)  # 常駐收 log
+            time.sleep(1)  # keep collecting log
     except KeyboardInterrupt:
         pass
     finally:

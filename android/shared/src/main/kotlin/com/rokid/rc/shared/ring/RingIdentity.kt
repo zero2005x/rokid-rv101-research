@@ -1,33 +1,34 @@
 package com.rokid.rc.shared.ring
 
 /**
- * 戒指身分比對字串的**唯一來源**。
+ * **Single source of truth** for the ring identity match string.
  *
- * 背景：手機端（路徑 A）與眼鏡端（路徑 B）原本各自在 11 處寫死 `"RGR"`，
- * 而這個字串是**選裝置的唯一依據**（見 `reports/ring_capture_security_audit_2026-09-13.md` §2 R6）。
- * 散落的失敗模式是**靜默的**：只要有一處不同步，「配對的裝置」與「實際監聽的裝置」
- * 就會不一致，而且只留一行 log。
+ * Background: the phone side (path A) and the glasses side (path B) each hardcoded `"RGR"` in 11 places,
+ * and this string is **the only basis for selecting a device** (see `reports/ring_capture_security_audit_2026-09-13.md` §2 R6).
+ * The scattered failure mode is **silent**: as soon as one place is out of sync, "the paired device" and "the device
+ * actually listened to" diverge, leaving only a single log line.
  *
- * ⚠ **這不是安全邊界**：BLE 廣告名稱由周邊自行宣告，任何裝置都能自稱 `RGR`。
- * 真正的來源綁定需要「配對後持久化的 identity address ＋ 使用者確認」，
- * 目前**尚未實作**（同報告 §3）。
+ * ⚠ **This is not a security boundary**: a BLE advertising name is declared by the peripheral itself, so any device
+ * can call itself `RGR`. Real source binding needs "a persisted identity address after pairing + user confirmation",
+ * which is **not implemented yet** (same report §3).
  */
 object RingIdentity {
 
-    /** 官方 Rokid 戒指（RGR06 等）的預設廣告名稱比對字串。 */
+    /** Default advertising-name match string for official Rokid rings (RGR06 etc.). */
     const val DEFAULT_NAME_PATTERN = "RGR"
 
-    /** 部分戒指只廣告 `RING`；僅在 [DEFAULT_NAME_PATTERN] 完全找不到時作為退化比對。 */
+    /** Some rings only advertise `RING`; used as a degraded match only when [DEFAULT_NAME_PATTERN] finds nothing at all. */
     const val FALLBACK_NAME_PATTERN = "RING"
 
-    /** 眼鏡內建觸控板（`ROKID,PSOC-TP-R`）的名稱比對字串；除錯／替代來源用。 */
+    /** Name match string for the glasses' built-in touchpad (`ROKID,PSOC-TP-R`); for debugging/alternative sources. */
     const val TOUCHPAD_NAME_PATTERN = "TP"
 
     /**
-     * 使用者是否明確指定了比對字串。
+     * Whether the user explicitly specified a match string.
      *
-     * `null`／空字串代表「由呼叫端決定」——手機端解讀為「取 RSSI 最強的可連線裝置」，
-     * 眼鏡端解讀為 [DEFAULT_NAME_PATTERN]。此差異原本靠各處的 `?: "RGR"` 表達。
+     * `null`/an empty string means "the caller decides" — the phone side reads it as "take the connectable device
+     * with the strongest RSSI", the glasses side as [DEFAULT_NAME_PATTERN]. This difference used to be expressed by
+     * `?: "RGR"` scattered around the code.
      */
     fun orDefault(pattern: String?): String =
         if (pattern.isNullOrBlank()) DEFAULT_NAME_PATTERN else pattern

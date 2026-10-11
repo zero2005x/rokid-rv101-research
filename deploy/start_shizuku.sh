@@ -1,21 +1,24 @@
 #!/usr/bin/env bash
-# start_shizuku.sh — 每 boot 一次的 Shizuku server bootstrap（Rokid RV101）。
+# start_shizuku.sh — per-boot Shizuku server bootstrap (Rokid RV101).
 #
-# 做三件事（順序重要）：
-#   1) 確認/安裝 Shizuku manager APK（moe.shizuku.privileged.api，v13.6.0+，server class 在內）
-#   2) 預授權：pm grant 眼鏡 App 的 moe.shizuku.manager.permission.API_V23（dangerous 權限，
-#      server 啟動時會依 runtime permission 狀態寫回授權 config → 免在眼鏡 UI 點允許）
-#   3) 啟動 server：adb shell <nativeLibraryDir>/libshizuku.so（v13.6.0 起無 start.sh；
-#      starter 要求執行身份為 root(0) 或 shell(2000)，adb shell = 2000 ✓）
+# Three things (order matters):
+#   1) Verify/install the Shizuku manager APK (moe.shizuku.privileged.api, v13.6.0+, which
+#      bundles the server class)
+#   2) Pre-authorise: pm grant the glasses App moe.shizuku.manager.permission.API_V23 (a
+#      dangerous permission; on startup the server writes the grant config back from the
+#      runtime permission state -> no need to tap Allow in the glasses UI)
+#   3) Start the server: adb shell <nativeLibraryDir>/libshizuku.so (no start.sh since
+#      v13.6.0; the starter requires the caller to be root(0) or shell(2000), adb shell = 2000 ✓)
 #
-# 用法：
+# Usage:
 #   bash deploy/start_shizuku.sh
-#   可覆寫：ADB=/path/to/adb  SERIAL=<DEVICE_SERIAL>  MANAGER_APK=/path/to/shizuku-v13.x.x.apk
+#   Overridable: ADB=/path/to/adb  SERIAL=<DEVICE_SERIAL>  MANAGER_APK=/path/to/shizuku-v13.x.x.apk
 #
-# 注意：Shizuku server 不跨 reboot；每次開機後（含 exploit kernel-panic 重啟後）都要重跑一次。
-# 之後眼鏡 App 即可自行以 shell 身份跑 exploit（ShizukuGhostlockEngine），
-# Shizuku 不可用時 App 會自動回退 bridge helper。
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+# NOTE: the Shizuku server does not survive a reboot; rerun this after every boot (including
+# restarts caused by an exploit kernel panic).
+# The glasses App can then run the exploit itself as shell (ShizukuGhostlockEngine), and falls
+# back to the bridge helper automatically when Shizuku is unavailable.
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 
 MANAGER_APK="${MANAGER_APK:-}"
@@ -48,12 +51,12 @@ fi
 
 echo "[2/4] 預授權眼鏡 App（跳過授權 UI）"
 adb_s shell "pm grant $APP_PKG $PERM" 2>&1 | sed 's/^/  /'
-# 授權 config 由 server 啟動時依 runtime permission 重建；此處 grant 即足。
+# The grant config is rebuilt from the runtime permission state when the server starts; the grant here is enough.
 echo "  （若顯示 Unknown permission 屬正常：manager 首次啟動後再重跑一次即可）"
 
 echo "[3/4] 推導 libshizuku.so 並啟動 server"
 LIB_SO="${APK_PATH%/base.apk}/lib/arm64/libshizuku.so"
-# 安裝後路徑可能變動，重新取一次
+# the path may change after install; fetch it again
 APK_PATH=$(adb_s shell pm path "$MANAGER_PKG" 2>/dev/null | tr -d '\r' | sed -n 's/^package://p' | head -1)
 LIB_SO="${APK_PATH%/base.apk}/lib/arm64/libshizuku.so"
 echo "  lib: $LIB_SO"
@@ -62,7 +65,7 @@ if ! adb_s shell "[ -x $LIB_SO ]" 2>/dev/null; then
   adb_s shell "ls \$(dirname $LIB_SO) 2>/dev/null"
   exit 1
 fi
-# 先殺舊 server（starter 也會做，雙保險）
+# kill the old server first (the starter does this too; belt and braces)
 adb_s shell "pkill -9 -f shizuku_server 2>/dev/null; true"
 adb_s shell "$LIB_SO" 2>&1 | sed 's/^/  /'
 sleep 3

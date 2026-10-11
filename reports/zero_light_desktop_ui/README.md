@@ -1,5 +1,7 @@
 # ZeroLightRokid Desktop — GUI 驗收截圖（2026-09-11/12）
 
+> English: [README_EN.md](README_EN.md)
+
 Windows 原生（Win32 C）LPE 輔助工具 v2.0.0 的實機操作截圖。
 主報告見 [`../zero_light_desktop_test_report.md`](../zero_light_desktop_test_report.md)。
 

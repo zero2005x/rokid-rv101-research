@@ -3,6 +3,8 @@
 
 # 實機除錯紀錄（Rokid RG-glasses）
 
+> English: [device-debug-notes_EN.md](device-debug-notes_EN.md)
+
 > 本文為歷史除錯紀錄（記載撰寫當下的狀態）。**最新架構**：Shizuku 模式（預設）+
 > bridge 自動回退，見 `docs/deploy.md` §9 與 `reports/shizuku_integration_test_report.md`。
 

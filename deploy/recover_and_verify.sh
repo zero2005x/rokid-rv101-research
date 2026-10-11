@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# recover_and_verify.sh — 眼鏡 USB adb 恢復後的一鍵回歸流程。
+# recover_and_verify.sh — one-shot regression flow once the glasses' USB adb recovers.
 #
-# 背景：此 build 的 adbd 重啟會讓 USB 列舉丟失（ENABLE_WIFI_ADB 舊版所致）。
-# 眼鏡恢復（拔插 USB 或重啟）後跑本腳本：
-#   1) 安裝非破壞性版眼鏡 APK（ENABLE_WIFI_ADB 不再重啟 adbd）
-#   2) 重跑提權（Shizuku E2E，含 panic 自動重試）
-#   3) 驗證 WIFI_ADB 只回報不支援、且 USB adb 保持連線
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+# Background: restarting adbd on this build loses USB enumeration (caused by the old
+# ENABLE_WIFI_ADB). Once the glasses recover (replug USB or reboot), run this script:
+#   1) install the non-destructive glasses APK (ENABLE_WIFI_ADB no longer restarts adbd)
+#   2) rerun the escalation (Shizuku E2E, with automatic retry after a panic)
+#   3) verify WIFI_ADB only reports unsupported and USB adb stays connected
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 
-# 手機序號（選用）：可由環境變數 PHONE 提供，不再寫死於腳本
+# phone serial (optional): supplied via the PHONE environment variable, no longer hardcoded
 PHONE="${PHONE:-}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 

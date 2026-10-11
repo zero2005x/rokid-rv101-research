@@ -1,4 +1,7 @@
 # KGSL ioctl 本世代回測（1.22.009 / kernel 5.10.209-perf-gd908d71a0404）
+
+> English: [kgsl_ioctl_retest_2026-09-13_EN.txt](kgsl_ioctl_retest_2026-09-13_EN.txt)
+
 # 日期：2026-09-13 11:15:22  裝置：<DEVICE_SERIAL>
 # 方法：執行既有探針二進位（同裝置 aarch64；原始碼見 source_code/），每支 timeout 30s
 

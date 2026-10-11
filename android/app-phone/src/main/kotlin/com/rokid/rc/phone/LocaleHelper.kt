@@ -5,14 +5,14 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 
 /**
- * per-app 語言切換（AppCompatDelegate.setApplicationLocales）。
- * 未設定時跟隨系統語言；SET_LOCALE 指令可覆寫（存 SharedPreferences，重啟仍保留）。
+ * Per-app language switching (AppCompatDelegate.setApplicationLocales).
+ * When unset it follows the system language; the SET_LOCALE command can override it (stored in SharedPreferences, kept across restarts).
  */
 object LocaleHelper {
     private const val PREFS = "app_locale"
     private const val KEY = "lang"
 
-    /** Application.onCreate 呼叫：套用已儲存的語言。 */
+    /** Called from Application.onCreate: apply the saved language. */
     fun apply(context: Context) {
         val lang = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
         AppCompatDelegate.setApplicationLocales(
@@ -21,7 +21,7 @@ object LocaleHelper {
         )
     }
 
-    /** 設定語言（lang=null 還原跟隨系統）。 */
+    /** Set the language (lang=null restores following the system). */
     fun set(context: Context, lang: String?) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().apply {
             if (lang.isNullOrEmpty()) remove(KEY) else putString(KEY, lang)
@@ -33,9 +33,9 @@ object LocaleHelper {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
 
     /**
-     * 支援的語言（locale tag → 母語名稱）。清單順序即對話框顯示順序；
-     * `null` = 跟隨系統（標籤由 `R.string.lang_system` 提供）。
-     * 與 `res/values-xx/strings.xml` 的 14 語系（含預設繁中）一一對應。
+     * Supported languages (locale tag → native name). The list order is the dialog order;
+     * `null` = follow the system (the label comes from `R.string.lang_system`).
+     * One-to-one with the 14 locales in `res/values-xx/strings.xml` (including the default zh-TW).
      */
     val LANGUAGES: List<Pair<String?, String>> = listOf(
         "zh-TW" to "繁體中文",
@@ -54,7 +54,7 @@ object LocaleHelper {
         "ar" to "العربية",
     )
 
-    /** 目前選取的索引（0 = 跟隨系統，其餘對應 [LANGUAGES] + 1）。 */
+    /** Currently selected index (0 = follow the system, otherwise it corresponds to [LANGUAGES] + 1). */
     fun currentIndex(context: Context): Int {
         val cur = current(context)
         if (cur.isNullOrEmpty()) return 0

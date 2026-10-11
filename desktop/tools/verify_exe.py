@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-verify_exe.py — 驗證編譯後的 .exe 真的含有全部語系字串。
+verify_exe.py — verify that the compiled .exe really contains every locale string.
 
-為什麼需要這個：gen_i18n.py 只驗證「來源資料」正確，無法證明
-  (1) 產生的表頭有被編進執行檔，
-  (2) 編譯器把 L"..." 正確編成 UTF-16LE，
-  (3) 沒有任何字串在編譯期被截斷或合併掉。
-本腳本直接從 PE 的唯讀資料段取出位元組，逐字串比對 UTF-16LE 編碼。
+Why this is needed: gen_i18n.py only validates that the "source data" is correct; it cannot prove
+  (1) the generated header was actually compiled into the executable,
+  (2) the compiler encoded L"..." as UTF-16LE correctly,
+  (3) no string was truncated or merged at compile time.
+This script takes the bytes straight out of the PE's read-only data sections and compares each
+string against its UTF-16LE encoding.
 
-用法：
+Usage:
   python3 tools/verify_exe.py zero_light_desktop.exe
   python3 tools/verify_exe.py zero_light_desktop.exe --objcopy x86_64-w64-mingw32-objcopy
 """
@@ -27,10 +28,10 @@ MASTER = os.path.join(ROOT, "tools", "i18n_master.json")
 
 def sections_with_data(objdump, exe):
     """
-    回傳 PE 中含初始化資料的區段名。
-    注意：objcopy -h 印的是說明，區段表要用 objdump -h。
-    objdump -h 每行格式：
-      Idx Name  Size  VMA  LMA  File off  Algn   （下一行才是 Flags）
+    Return the names of the PE sections that hold initialised data.
+    NOTE: objcopy -h prints help; the section table comes from objdump -h.
+    Each objdump -h line looks like:
+      Idx Name  Size  VMA  LMA  File off  Algn   (Flags are on the next line)
     """
     out = subprocess.run([objdump, "-h", exe], capture_output=True, text=True).stdout
     names = []
@@ -41,8 +42,8 @@ def sections_with_data(objdump, exe):
             continue
         name = m.group(1)
         size = int(m.group(2), 16)
-        # 字串只會落在 .rdata/.data/.text；.debug_* 可能被 objcopy 補齊到
-        # 檔案位移而膨脹成 GB 級，且不可能含字串常值。
+        # Strings can only land in .rdata/.data/.text; .debug_* can be padded by objcopy out to
+        # file offsets and balloon to gigabytes, and cannot contain string literals.
         if size > 0 and name in (".rdata", ".data", ".text"):
             names.append(name)
     return names
@@ -68,7 +69,7 @@ def main():
     codes = [l["code"] for l in data["locales"]]
     strings = data["strings"]
 
-    # 把各區段抓成單一 blob
+    # pull the sections into a single blob
     blob = bytearray()
     secs = sections_with_data(objdump, exe)
     if not secs:
@@ -108,7 +109,7 @@ def main():
     print("\n✓ 全部 %d 筆翻譯（%d 語系 × %d 字串）皆已正確編入 %s"
           % (total, len(codes), len(strings), os.path.basename(exe)))
 
-    # 額外檢查：阿拉伯文確實存在且不含 bidi 控制字元
+    # extra check: Arabic is present and contains no bidi control characters
     BIDI = set([0x200E, 0x200F, 0x061C] + list(range(0x202A, 0x202F)) + list(range(0x2066, 0x206A)))
     ar_bad = [(k, v) for k, v in ((k, e.get("ar", "")) for k, e in strings.items())
               if any(ord(c) in BIDI for c in v)]

@@ -1,4 +1,7 @@
 # 外部 URL 可達性抽查（2026-09-13）
+
+> English: [url_check_2026-09-13_EN.txt](url_check_2026-09-13_EN.txt)
+
 # 來源：reports/*.md、docs/*.md 的 178 個不重複 URL；以下為高價值／高引用者
 
 HTTP   次數 URL

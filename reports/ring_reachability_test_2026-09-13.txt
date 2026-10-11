@@ -1,4 +1,7 @@
 # 戒指稽核 — 「第三方 App 可否投遞 DebugReceiver」端到端實證
+
+> English: [ring_reachability_test_2026-09-13_EN.txt](ring_reachability_test_2026-09-13_EN.txt)
+
 **日期**：2026-09-13 15:45 · **目的**：把 `reports/ring_capture_security_audit_2026-09-13.md` §2 R4
 的「任何已安裝 App 都能送」由 manifest 推論提升為**端到端實測**。
 

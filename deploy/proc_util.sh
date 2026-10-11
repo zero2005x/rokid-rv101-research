@@ -1,39 +1,41 @@
 #!/usr/bin/env bash
-# proc_util.sh — deploy 腳本共用的「安全殺程序」工具。
+# proc_util.sh — the "safe process killing" helper shared by the deploy scripts.
 #
-# ## 為什麼不能用 `pkill -f`
+# ## Why `pkill -f` cannot be used
 #
-# 兩個已實測的坑：
+# Two measured pitfalls:
 #
-#  1. **自我匹配**：`pkill -f <pattern>` 的 pattern 會匹配到**執行它的 shell 本身**
-#     （`sh -c "pkill -f ghostlock_rv101"` 的 cmdline 就含該字串）→ shell 自殺、
-#     退出碼 137、清理中斷。（見 `docs/lease-and-keeper.md`）
+#  1. **Self-matching**: the `pkill -f <pattern>` pattern also matches **the shell running
+#     it** (the cmdline of `sh -c "pkill -f ghostlock_rv101"` contains that string) -> the
+#     shell kills itself, exit code 137, cleanup aborted. (see `docs/lease-and-keeper.md`)
 #
-#  2. **pattern 太窄會漏殺**：實測（2026-09-13）在裝置上以 `grep -E` 驗證：
+#  2. **A too-narrow pattern misses processes**: measured on-device with `grep -E` (2026-09-13):
 #
-#       pattern="ghostlock_bridge_helper.sh"    → 中 App helper、**不中** _desktop 變體
-#       pattern="ghostlock_bridge_helper.s[h]"  → 中 App helper、**不中** _desktop 變體
-#       pattern="ghostlock_bridge_helpe[r]"     → 兩者都中
+#       pattern="ghostlock_bridge_helper.sh"    → matches the App helper, **does not match** the _desktop variant
+#       pattern="ghostlock_bridge_helper.s[h]"  → matches the App helper, **does not match** the _desktop variant
+#       pattern="ghostlock_bridge_helpe[r]"     → matches both
 #
-#     原因是 `helper.sh` 與 `helper_desktop.sh` 在 "helper" 之後分岔。
-#     這個漏殺讓桌面板 helper 在整場測試中存活，並在裝置自行重開機後被重新拉起、
-#     看到殘留的 `last.cmd` 就再次觸發 exploit → **994 個子程序、load 75.8**。
+#     Because `helper.sh` and `helper_desktop.sh` diverge after "helper".
+#     That miss let the desktop helper survive the whole run; after the device rebooted on
+#     its own it was restarted, saw the leftover `last.cmd` and triggered the exploit again
+#     -> **994 child processes, load 75.8**.
 #
-# ## 本檔的做法
+# ## What this file does
 #
-# **在 host 端過濾、只把 PID 送到裝置端 kill**：
+# **Filter on the host, send only PIDs to the device to kill**:
 #
-#   ps（裝置） → grep/awk（host） → kill -9 <PID>（裝置）
+#   ps (device) → grep/awk (host) → kill -9 <PID> (device)
 #
-# 裝置端執行的命令只有 `ps -A -o PID,ARGS`，**pattern 從不出現在裝置的 cmdline 上**，
-# 因此結構上不可能自我匹配。搭配 `ps` 取 PID 再逐一 kill（本專案既有教訓）。
+# The only command run on the device is `ps -A -o PID,ARGS`, so **the pattern never appears
+# in a device cmdline** and self-matching is structurally impossible. This pairs with the
+# project's existing lesson: take PIDs from `ps`, then kill them in batches.
 set -u
 
 _PROC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=env.sh
 [ -n "${ADB:-}" ] && [ -n "${SERIAL:-}" ] || source "$_PROC_DIR/env.sh"
 
-# 兩個 helper 變體的共同前綴：用 `helpe` 結尾可同時涵蓋
+# Common prefix of the two helper variants: ending at `helpe` covers both
 #   ghostlock_bridge_helper.sh
 #   ghostlock_bridge_helper_desktop.sh
 HELPER_PAT='ghostlock_bridge_helpe'
@@ -42,27 +44,29 @@ ROOT_SOCK='/data/local/tmp/root_daemon.sock'
 
 _padb() { "$ADB" -s "$SERIAL" "$@"; }
 
-# ---- root 通道 ----
-# exploit 提權成功後，它的行程變成 **root 所有**；adb shell（uid 2000）
-# 殺不掉 root 行程（`kill` 回 EPERM）。所以清理殘留 exploit 必須能走 root 通道。
-# 這也是 `root_restore_delayed.sh` 的同一個道理：只有 root 能收拾 root。
-# 注意：必須直接呼叫 "$ADB"，**不能**寫成 `timeout 25 _padb ...` ——
-# `timeout` 只能執行外部程式；餵 shell 函式給它會 exec 失敗，
-# 並且**靜默**回傳空字串，於是 root_ok 誤判為 false、整段升級清理失效（實測踩過）。
+# ---- root channel ----
+# After a successful escalation the exploit's processes are **owned by root**; adb shell
+# (uid 2000) cannot kill them (`kill` returns EPERM). So leftover-exploit cleanup must have a
+# root channel. Same reasoning as `root_restore_delayed.sh`: only root can clean up root.
+# NOTE: "$ADB" must be called directly, **not** as `timeout 25 _padb ...` — `timeout` can only
+# run external programs; handing it a shell function fails to exec and **silently** returns an
+# empty string, so root_ok is misread as false and the whole escalation cleanup is a no-op
+# (measured).
 root_exec() {
   printf '%s\n' "${1:?root_exec <cmd>}" | timeout 25 "$ADB" -s "$SERIAL" shell "nc -U $ROOT_SOCK" 2>/dev/null | tr -d '\r'
 }
 root_ok() { root_exec 'id' | grep -q 'uid=0'; }
 
-# 列出符合 regex 的裝置 PID（host 端過濾；不影響裝置端 cmdline）
+# list device PIDs matching regex (host-side filter; device cmdline untouched)
 dev_pids_matching() {
   local pat="${1:?dev_pids_matching <regex>}"
   _padb shell "ps -A -o PID,ARGS" 2>/dev/null | tr -d '\r' \
     | grep -E "$pat" | grep -v '[g]rep' | awk '{print $1}' | grep -E '^[0-9]+$'
 }
 
-# 殺掉符合 regex 的程序，**先用 shell、殺不掉的再用 root 通道**。
-# root 通道不可用時就把殘留數量回報出來（呼叫端可自行決定是否中止）。
+# Kill processes matching regex, **shell first, then the root channel for survivors**.
+# When the root channel is unavailable, report the leftover count (the caller decides
+# whether to abort).
 kill_matching_escalating() {
   local pat="${1:?}" label="${2:-$1}" pids left
   pids=$(dev_pids_matching "$pat")
@@ -91,10 +95,11 @@ kill_matching_escalating() {
   return 0
 }
 
-# 殺掉符合 regex 的程序。回傳被送出的 kill 數。
+# Kill processes matching regex. Returns the number of kills sent.
 #
-# 效能注意：不要「一個 PID 一次 adb」——實測殺 515 個程序會超過 60 秒而讓呼叫端
-# 逾時中斷（清理只做一半）。改成**分批**：host 端收齊 PID，再一次 adb 送整批 kill。
+# Perf note: never "one adb call per PID" — killing 515 processes measured over 60 s and
+# timed out the caller (cleanup half done). Batch instead: collect PIDs on the host, then send
+# one adb call with the whole batch of kills.
 kill_matching() {
   local pat="${1:?kill_matching <regex>}" label="${2:-$1}" pids pid n=0 batch_n=0
   pids=$(dev_pids_matching "$pat")
@@ -104,7 +109,7 @@ kill_matching() {
   for pid in $pids; do
     batch="$batch $pid"
     batch_n=$((batch_n + 1))
-    # 每 200 個送一批，避免命令列過長
+    # send a batch every 200 to keep the command line short
     if [ "$batch_n" -ge 200 ]; then
       _padb shell "kill -9$batch" >/dev/null 2>&1
       batch=""; batch_n=0
@@ -113,18 +118,19 @@ kill_matching() {
   [ -n "$batch" ] && _padb shell "kill -9$batch" >/dev/null 2>&1
 
   n=$(echo "$pids" | wc -w | tr -d ' ')
-  sleep 1   # kill 是非同步的，稍等再讓呼叫端數殘留
+  sleep 1   # kill is asynchronous; wait a moment before the caller counts leftovers
   echo "  [kill] $label：送出 $n 個 kill -9" >&2
   return 0
 }
 
-# 收斂用：先殺 trigger 來源（helper），再殺被生出來的 exploit 子程序。
+# For convergence: kill the trigger source (helper) first, then the exploit children it spawned.
 kill_all_helpers()  { kill_matching "$HELPER_PAT"  "bridge helper（含 _desktop）"; }
-# exploit 提權後變 root 所有 → 用會升級到 root 通道的版本
+# after escalation the exploit is root-owned -> use the version that escalates to the root channel
 kill_all_exploits() { kill_matching_escalating "$EXPLOIT_PAT" "ghostlock_rv101"; }
 
-# 清掉兩個信箱的觸發檔——**這是失控重生迴圈的根源**：
-# 裝置重開機後 helper 被重新拉起，若看到殘留的 last.cmd 就會立刻再跑一次 exploit。
+# Clear the trigger files of both mailboxes — **the root cause of the runaway respawn
+# loop**: after a device reboot the helper is restarted, sees the leftover last.cmd, and
+# immediately runs the exploit again.
 clear_trigger_mailboxes() {
   _padb shell "rm -f \
     /data/local/tmp/ghostlock_bridge/last.cmd \
@@ -132,11 +138,11 @@ clear_trigger_mailboxes() {
     /data/local/tmp/ghostlock_bridge_desktop/last.progress" >/dev/null 2>&1
 }
 
-# 目前程序數（診斷用）
+# current process counts (diagnostics)
 helper_count()  { dev_pids_matching "$HELPER_PAT"  | wc -l | tr -d ' '; }
 exploit_count() { dev_pids_matching "$EXPLOIT_PAT" | wc -l | tr -d ' '; }
 
-# 直接執行：顯示現況
+# Run directly: show current state
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
   case "${1:-status}" in
     status)

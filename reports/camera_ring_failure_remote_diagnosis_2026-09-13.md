@@ -1,5 +1,7 @@
 # 「無法拍照／錄影、眼鏡觸控板沒反應、畫面有滑鼠指標閃爍」— 遠端診斷與修正
 
+> English: [camera_ring_failure_remote_diagnosis_2026-09-13_EN.md](camera_ring_failure_remote_diagnosis_2026-09-13_EN.md)
+
 - **日期**：2026-09-13 18:39–18:45
 - **情境**：眼鏡**未接 adb**（依使用者描述，拔線後），只能經由**手機 App 的藍牙通道**遠端診斷
 - **裝置**：眼鏡 `<DEVICE_SERIAL>`（Android 12）· 手機 `<PHONE_SERIAL>`

@@ -1,4 +1,7 @@
 # KGSL micronode / ioctl (nr,size) 矩陣回測 — 本世代 1.22.009
+
+> English: [kgsl_micronode_retest_2026-09-13_EN.txt](kgsl_micronode_retest_2026-09-13_EN.txt)
+
 # 日期：2026-09-13 11:31:36  裝置：<DEVICE_SERIAL>
 # 工具：deploy/kgsl_micronode_probe.c（zig 交叉編譯 aarch64-linux-musl 靜態）
 

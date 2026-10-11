@@ -4,12 +4,12 @@ import java.io.File
 import com.rokid.rc.glasses.GlassesPaths
 
 /**
- * 相機隱私 LED 壓制/還原的 root payload 模板。
+ * Root payload templates for suppressing/restoring the camera privacy LED.
  *
- * 依據既有測試腳本結論（led_test.log Path A）：root 下直寫
- * `/sys/class/leds/white/brightness` / `led_current` 即可控制 LED。
- * 為避免相機開啟事件（lights_ctrl `EVENT_WARN_ID_CAMERA_OPEN`）在拍攝中重新點亮，
- * suppress 會 fork 一個背景迴圈，在 marker 檔案存在期間持續把 LED 壓在 0。
+ * Based on the conclusion of the existing test script (led_test.log Path A): under root, writing
+ * `/sys/class/leds/white/brightness` / `led_current` directly is enough to control the LED.
+ * To stop the camera-open event (lights_ctrl `EVENT_WARN_ID_CAMERA_OPEN`) from lighting it again during capture,
+ * suppress forks a background loop that holds the LED at 0 for as long as the marker file exists.
  */
 object LedPayloads {
 
@@ -23,7 +23,7 @@ object LedPayloads {
         "red" to GlassesPaths.ledBrightness("red")
     )
 
-    /** 開始壓制：立即壓 0 + 取消 lights_ctrl camera-open 事件（根治閃爍）+ 背景保持迴圈。 */
+    /** Start suppression: drive it to 0 immediately + cancel the lights_ctrl camera-open event (fixes flicker at the root) + background hold loop. */
     fun suppress(marker: File, payloadLog: File): RootScript {
         val content = """
             #!/system/bin/sh
@@ -42,7 +42,7 @@ object LedPayloads {
         return RootScript("led_suppress", content)
     }
 
-    /** 還原：LED 回到相機開啟狀態（brightness=255, led_current=2，並重發 camera-open 事件）。 */
+    /** Restore: put the LED back into the camera-open state (brightness=255, led_current=2, and re-emit the camera-open event). */
     fun restore(payloadLog: File): RootScript {
         val content = """
             #!/system/bin/sh
@@ -54,7 +54,7 @@ object LedPayloads {
         return RootScript("led_restore", content)
     }
 
-    /** 驗證/取得 root：把 id 寫到 log 並標記 DONE。 */
+    /** Verify/acquire root: write id to the log and mark DONE. */
     fun verifyRoot(doneLog: File): RootScript {
         val content = """
             #!/system/bin/sh
@@ -64,18 +64,18 @@ object LedPayloads {
         return RootScript("verify_root", content)
     }
 
-    /** 提權成功後啟動常駐 root daemon（並驗證 root）。 */
+    /** Start the resident root daemon after escalation (and verify root). */
     /**
-     * 啟動 root daemon，並**加上存活強化（P0）**：
-     *  1. 寫 pid 檔（後續健康檢查／清理可精準鎖定）
-     *  2. `oom_score_adj=-1000`：避免被 lmkd 在記憶體壓力下回收
-     *  3. 安裝並啟動 **root 常駐 keep-alive 迴圈**：daemon 崩潰時自動重建（不需 adb／不需重跑 exploit）
+     * Start the root daemon, **with liveness hardening (P0)**:
+     *  1. write a pid file (so later health checks/cleanup can target it precisely)
+     *  2. `oom_score_adj=-1000`: keeps lmkd from reclaiming it under memory pressure
+     *  3. install and start a **resident root keep-alive loop**: rebuilds the daemon automatically when it crashes (no adb / no re-running the exploit)
      *
-     * 注意（踩過的坑）：reboot 後 `/data/local/tmp` 會殘留 `root_daemon.sock`「檔案」但沒有 listener，
-     * 只檢查 `[ -S ]` 會誤判 → 一律用 `/proc/net/unix`（只列有 listener 的 socket）判斷存活。
+     * NOTE (a pitfall already hit): after a reboot `/data/local/tmp` keeps a `root_daemon.sock` "file" with no listener behind it,
+     * so checking `[ -S ]` alone misreports -> always use `/proc/net/unix` (which lists only sockets that have a listener) to decide liveness.
      */
     fun startRootDaemon(doneLog: File, daemonPath: String = GlassesPaths.ROOT_DAEMON_BIN): RootScript {
-        // 注意：這是 Kotlin 原始字串，shell 的 $ 需以 ${'$'} 轉義
+        // NOTE: this is a Kotlin raw string, so shell's $ must be escaped as ${'$'}
         val content = """
             #!/system/bin/sh
             echo 0 > /sys/fs/selinux/enforce 2>/dev/null
@@ -85,10 +85,10 @@ object LedPayloads {
             SOCK=${GlassesPaths.ROOT_DAEMON_SOCK}
             LOG=${GlassesPaths.ROOT_DAEMON_LOG}
 
-            # ---- 1) keep-alive 迴圈（root 常駐；daemon 掛掉就重建）----
+            # ---- 1) keep-alive loop (resident as root; rebuilds the daemon when it dies) ----
             cat > "${'$'}KA" <<'KEEPALIVE'
             #!/system/bin/sh
-            # root daemon 存活看守（P0）。daemon 崩潰/被回收時自動重建，並持續維持低 OOM 分數。
+            # root daemon liveness watchdog (P0). Rebuilds it when it crashes/is reclaimed, and keeps its OOM score low.
             PID=${GlassesPaths.ROOT_DAEMON_PID}
             SOCK=${GlassesPaths.ROOT_DAEMON_SOCK}
             BIN=${GlassesPaths.ROOT_DAEMON_BIN}
@@ -100,7 +100,7 @@ object LedPayloads {
                 echo ${'$'}! > "${'$'}PID"
                 echo "${'$'}(date '+%F %T') keepalive: daemon restarted pid=${'$'}(cat ${'$'}PID 2>/dev/null)" >> "${'$'}LOG"
               fi
-              # pid 檔可能殘留舊值 → 由 ps 反查真實 PID（keepalive 以 root 執行）
+              # the pid file may hold a stale value -> look the real PID up via ps (keepalive runs as root)
               ACTUAL=${'$'}(ps -A -o PID,ARGS 2>/dev/null | grep '[r]oot_daemon${'$'}' | awk '{print ${'$'}1}' | head -1)
               [ -n "${'$'}ACTUAL" ] && echo "${'$'}ACTUAL" > "${'$'}PID"
               for p in ${'$'}(cat "${'$'}PID" 2>/dev/null) ${'$'}${'$'}; do
@@ -111,7 +111,7 @@ object LedPayloads {
             KEEPALIVE
             chmod 755 "${'$'}KA"
 
-            # ---- 2) daemon 本體 ----
+            # ---- 2) the daemon itself ----
             if ! grep -q 'root_daemon.sock' /proc/net/unix 2>/dev/null; then
               rm -f "${'$'}SOCK"
               setsid ${daemonPath} >>"${'$'}LOG" 2>&1 &
@@ -122,12 +122,12 @@ object LedPayloads {
               sleep 0.2
             done
 
-            # ---- 3) 啟動 keep-alive（已在跑就不重複）----
+            # ---- 3) start keep-alive (do not duplicate it if already running) ----
             if ! ps -A -o ARGS 2>/dev/null | grep -q '[r]oot_daemon_keepalive.sh'; then
               setsid sh "${'$'}KA" >/dev/null 2>&1 &
               echo ${'$'}! > ${GlassesPaths.ROOT_DAEMON_KEEPALIVE_PID}
             fi
-            # daemon 與 keep-alive 都設為最不易被回收（pid 檔先校正）
+            # make both the daemon and keep-alive as hard to reclaim as possible (correct the pid file first)
             ACTUAL=${'$'}(ps -A -o PID,ARGS 2>/dev/null | grep '[r]oot_daemon${'$'}' | awk '{print ${'$'}1}' | head -1)
             [ -n "${'$'}ACTUAL" ] && echo "${'$'}ACTUAL" > "${'$'}PID"
             for p in $(cat "${'$'}PID" 2>/dev/null) $(cat ${GlassesPaths.ROOT_DAEMON_KEEPALIVE_PID} 2>/dev/null); do
@@ -140,7 +140,7 @@ object LedPayloads {
         return RootScript("start_root_daemon", content)
     }
 
-    /** 指定顏色 LED 開/關。color ∈ white/green/blue/red/all。 */
+    /** Turn the given colour LED on/off. color is one of white/green/blue/red/all. */
     fun ledColor(color: String, on: Boolean, marker: File?, payloadLog: File): RootScript {
         val value = if (on) "255" else "0"
         val targets = if (color == "all") {
@@ -149,7 +149,7 @@ object LedPayloads {
             listOf(LED_PATHS[color] ?: LED_PATHS["white"]!!)
         }
         val writes = targets.joinToString("\n") { "echo $value > $it 2>/dev/null" }
-        // white（或 all）關燈時：取消 camera-open 事件（根治閃爍）+ hold loop 保險
+        // when turning white (or all) off: cancel the camera-open event (fixes flicker at the root) + hold loop as a safety net
         val hold = if (!on && marker != null && (color == "white" || color == "all")) {
             """
             service call lights_ctrl 9 i32 2 i32 2014 >/dev/null 2>&1

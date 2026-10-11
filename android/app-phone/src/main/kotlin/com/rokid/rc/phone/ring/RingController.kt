@@ -18,16 +18,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * 戒指控制（路徑 A：手機端攔截）。
+ * Ring control (path A: phone-side interception).
  *
- * 戒指以 BLE HID 連到手機後，Android 會把它的按鍵／滑鼠事件送給前景視窗；
- * [MainActivity] 把這些事件餵進來，這裡負責：
- *   1. 手勢辨識（[RingGestureDetector]）
- *   2. 依對應表執行 [RingAction]（拍照／錄影／靜音／切換顯示）
- *   3. 提供狀態文字給 UI（最近手勢、次數、錯誤）
+ * Once the ring connects to the phone as BLE HID, Android delivers its key/mouse events to the foreground window;
+ * [MainActivity] feeds those events in, and this object is responsible for:
+ *   1. gesture recognition ([RingGestureDetector])
+ *   2. executing a [RingAction] per the mapping table (photo/video/silent/toggle display)
+ *   3. providing status text to the UI (latest gesture, counts, errors)
  *
- * 預設對應：單擊=拍照、雙擊=錄影切換、長按=靜音切換、滾輪=切換顯示。
- * （可由 UI 改；鍵碼學習功能後續接上 prefs。）
+ * Default mapping: single tap=photo, double tap=video toggle, long press=silent toggle, wheel=toggle display.
+ * (Changeable from the UI; the key-code learning feature will hook up to prefs later.)
  */
 object RingController {
 
@@ -46,34 +46,34 @@ object RingController {
     private var lastGesture: RingGesture? = null
     private var lastAction: RingAction? = null
 
-    /** UI 觀察用（RemoteFragment 訂閱後更新畫面）。 */
+    /** For UI observation (RemoteFragment updates the screen after subscribing). */
     var onStateChanged: ((String) -> Unit)? = null
 
-    /** 手勢學習：非 null 時，下一個按鍵/滑鼠鍵只回報 (鍵碼, 描述)、不執行既有對應。 */
+    /** Gesture learning: while non-null, the next key/mouse button only reports (key code, description) and runs no existing mapping. */
     private var learnSink: ((Int, String) -> Unit)? = null
 
     private const val KEY_MAP_PREFIX = "map_"
 
-    /** 媒體鍵遷移旗標（只跑一次）。 */
+    /** Media-key migration flag (runs once). */
     private const val KEY_MEDIA_MIGRATION = "migrated_media_keys_v1"
 
-    /** 使用者在「配對戒指」清單中選定的裝置（唯一來源；供顯示與後續來源綁定使用）。 */
+    /** The device the user selected in the "pair ring" list (single source of truth; used for display and for binding later sources). */
     private const val KEY_APPROVED_MAC = "approved_mac"
     private const val KEY_APPROVED_NAME = "approved_name"
 
-    /** 記住使用者選定的戒指裝置。 */
+    /** Remember the ring device the user selected. */
     fun setApprovedDevice(context: Context, name: String?, mac: String) {
         ensureInit(context)
         prefs?.edit()?.putString(KEY_APPROVED_MAC, mac)?.putString(KEY_APPROVED_NAME, name)?.apply()
     }
 
-    /** 已選定的戒指（mac, name）；未選過回 null。 */
+    /** The already selected ring (mac, name); null when never selected. */
     fun approvedDevice(): Pair<String, String?>? {
         val mac = prefs?.getString(KEY_APPROVED_MAC, null) ?: return null
         return mac to prefs?.getString(KEY_APPROVED_NAME, null)
     }
 
-    /** 最近一次學到的鍵碼描述（給 UI 顯示）。 */
+    /** Description of the most recently learned key code (shown in the UI). */
     @Volatile var lastLearned: String? = null
         private set
 
@@ -95,11 +95,11 @@ object RingController {
     }
 
     /**
-     * 一次性遷移（2026-09-13）：移除「媒體鍵 → 錄影切換」的舊自訂對應。
+     * One-shot migration (2026-09-13): remove the old custom "media key → video toggle" mappings.
      *
-     * 這些對應是使用者先前在「手勢學習」中建立的（例：`map_85 → VIDEO_TOGGLE`）。
-     * 保留它們等於讓一次誤滑就開始錄影 → 錄影卡住時相機會被鎖死。
-     * 只移除**動作是 VIDEO_TOGGLE** 的媒體鍵對應，其他自訂（例：媒體鍵 → 拍照）不動。
+     * These mappings were created earlier by the user in "gesture learning" (e.g. `map_85 → VIDEO_TOGGLE`).
+     * Keeping them means one stray swipe starts recording → when recording gets stuck the camera is locked up.
+     * Only media-key mappings whose **action is VIDEO_TOGGLE** are removed; other custom ones (e.g. media key → photo) are untouched.
      */
     private fun migrateMediaKeyMappings() {
         val p = prefs ?: return
@@ -112,7 +112,7 @@ object RingController {
                 removed++
             }
             if (p.getString("${MOUSE_BUTTON_BASE + code}", null) == RingAction.VIDEO_TOGGLE.name) {
-                // 理論上不會發生（滑鼠鍵不走這條），一併保險
+                // in theory this cannot happen (mouse buttons do not take this path), belt and braces
                 edit.remove("${MOUSE_BUTTON_BASE + code}")
                 removed++
             }
@@ -124,20 +124,20 @@ object RingController {
     fun setEnabled(context: Context, value: Boolean) {
         ensureInit(context)
         prefs?.edit()?.putBoolean(KEY_ENABLED, value)?.apply()
-        // 連動背景媒體鍵：啟用時取得媒體鍵路由，停用時釋放（把媒體鍵還給音樂 App）
+        // link the background media key: acquire media-key routing when enabled, release it when disabled (handing the media key back to the music app)
         if (value) RingMediaSession.ensureStarted(context) else RingMediaSession.stop()
         detector.reset()
         lastSummary = s(if (value) R.string.ring_state_enabled else R.string.ring_state_disabled)
         onStateChanged?.invoke(lastSummary)
     }
 
-    /** 週期性 tick：由 MainActivity 每 80ms 呼叫，用於長按與連續點擊判定。 */
+    /** Periodic tick: called by MainActivity every 80 ms, used for long-press and repeated-tap detection. */
     fun tick() {
         if (!enabled) return
         detector.tick()
     }
 
-    /** 開始手勢學習：下一個按鍵事件只回報 (鍵碼, 描述)、不動作。 */
+    /** Start gesture learning: the next key event only reports (key code, description) and takes no action. */
     fun startLearn(onResult: (Int, String) -> Unit) {
         learnSink = onResult
         onStateChanged?.invoke(s(R.string.ring_learn_waiting))
@@ -147,16 +147,16 @@ object RingController {
         learnSink = null
     }
 
-    /** 取在地化字串（appContext 於 ensureInit 設定；未初始化時回空字串避免 NPE）。 */
+    /** Fetch a localized string (appContext is set in ensureInit; returns an empty string when uninitialized, to avoid an NPE). */
     private fun s(resId: Int, vararg args: Any): String =
         appContext?.getString(resId, *args) ?: ""
 
     private fun describeKey(code: Int): String =
         runCatching { android.view.KeyEvent.keyCodeToString(code) }.getOrDefault("KEYCODE_$code") + " ($code)"
 
-    // ---------------- 可學習的鍵碼對應 ----------------
+    // ---------------- learnable key-code mappings ----------------
 
-    /** 自訂對應：鍵碼 → 動作（存 prefs，重啟後保留）。 */
+    /** Custom mapping: key code → action (stored in prefs, kept across restarts). */
     fun keyMappings(): Map<Int, RingAction> {
         val p = prefs ?: return emptyMap()
         return p.all.mapNotNull { (k, v) ->
@@ -180,21 +180,21 @@ object RingController {
         onStateChanged?.invoke(s(R.string.ring_map_cleared_short))
     }
 
-    /** 鍵盤類事件（戒指可能送 ENTER／媒體鍵…）。回傳 true 表示已消費（不再往下傳）。 */
+    /** Keyboard-type events (the ring may send ENTER / media keys…). Returning true means consumed (not passed further down). */
     /**
-     * 會被戒指控制攔截的鍵（其餘一律放行，否則 BACK／HOME 等系統鍵會被吃掉——實測踩到）。
-     * 內容＝戒指 HID 描述元常見的鍵：確認鍵、音量鍵、首頁鍵、F1–F12。
+     * Keys that ring control will intercept (everything else is passed through, otherwise system keys such as BACK/HOME get eaten — hit this in practice).
+     * Contents = keys common in ring HID descriptors: confirm, volume, home, F1-F12.
      *
-     * ⚠ **媒體鍵刻意不在這裡**（2026-09-13）：AIVELA 等戒指的「滑動」送 `MEDIA_NEXT/PREVIOUS`、
-     * 輕觸送 `PLAY_PAUSE`。先前它們走手勢預設（雙擊 → `VIDEO_TOGGLE`），導致**滑一下就開始錄影**；
-     * 一旦錄影卡住，相機就再也拍不了照（見 `reports/aivela_ring_connection_failure_2026-09-13.md`）。
-     * 現在媒體鍵一律放行給系統媒體控制，不再參與手勢判定；使用者仍可在「手勢學習」中
-     * **明確**把它綁到某個動作（走 `keyMappings()` 那條路，不經手勢預設）。
+     * ⚠ **Media keys are deliberately not here** (2026-09-13): the "swipe" of rings such as AIVELA sends `MEDIA_NEXT/PREVIOUS`,
+     * and a light tap sends `PLAY_PAUSE`. Previously they went through the gesture defaults (double tap → `VIDEO_TOGGLE`), so **one swipe started recording**;
+     * once recording got stuck the camera could no longer take photos (see `reports/aivela_ring_connection_failure_2026-09-13.md`).
+     * Media keys are now always passed through to the system media controls and no longer take part in gesture resolution; the user can still
+     * **explicitly** bind one to an action in "gesture learning" (through the `keyMappings()` route, not the gesture defaults).
      */
-    /** 滑鼠鍵在可學習鍵碼表的基底（0x1000 + button），避免與 KeyEvent 撞號。 */
+    /** Base of mouse buttons in the learnable key-code table (0x1000 + button), to avoid clashing with KeyEvent numbers. */
     const val MOUSE_BUTTON_BASE = 0x1000
 
-    /** 預設**不攔截**（放行給系統）的媒體鍵；同時是舊對應的清理清單。 */
+    /** Media keys **not intercepted** by default (passed through to the system); also the cleanup list for old mappings. */
     private val MEDIA_KEYS_PASS_THROUGH = setOf(
         android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
         android.view.KeyEvent.KEYCODE_MEDIA_PLAY,
@@ -213,7 +213,7 @@ object RingController {
         android.view.KeyEvent.KEYCODE_BUTTON_A,
         android.view.KeyEvent.KEYCODE_VOLUME_UP,
         android.view.KeyEvent.KEYCODE_VOLUME_DOWN,
-        122,                                                        // KEYCODE_HOMEPAGE（API 33+ 常數，這裡用數值）
+        122,                                                        // KEYCODE_HOMEPAGE (an API 33+ constant; the numeric value is used here)
         131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142  // F1–F12
     )
 
@@ -226,17 +226,17 @@ object RingController {
             sink(code, desc)
             return true
         }
-        // 自訂鍵碼對應優先於手勢預設（學習後的鍵碼直接執行指定動作）
+        // custom key-code mappings take precedence over the gesture defaults (a learned key code runs the given action directly)
         keyMappings()[code]?.let { action ->
             onCustomKey(action, describeKey(code))
             return true
         }
-        if (code !in INTERESTING_KEYS) return false   // 放行：BACK／HOME／其他 App 快捷鍵
+        if (code !in INTERESTING_KEYS) return false   // pass through: BACK/HOME/other app shortcuts
         detector.onPress(code)
         return true
     }
 
-    /** 執行自訂鍵碼對應的動作。 */
+    /** Run the action of a custom key-code mapping. */
     private fun onCustomKey(action: RingAction, desc: String) {
         gestureCount++
         prefs?.edit()?.putInt(KEY_COUNT, gestureCount)?.apply()
@@ -255,12 +255,12 @@ object RingController {
         return true
     }
 
-    /** 滑鼠類事件（戒指多為滑鼠式 HID）：左／右／中鍵。 */
+    /** Mouse-type events (the ring is mostly a mouse-style HID): left/right/middle button. */
     fun onMouseButton(action: Int, button: Int): Boolean {
         if (!enabled) return false
         learnSink?.let { sink ->
             if (action == android.view.MotionEvent.ACTION_DOWN) {
-                val code = MOUSE_BUTTON_BASE + button   // 滑鼠鍵位移，避免與 KeyEvent 撞號
+                val code = MOUSE_BUTTON_BASE + button   // mouse button offset, to avoid clashing with KeyEvent numbers
                 val desc = "MOUSE_BUTTON_$button"
                 lastLearned = desc
                 learnSink = null
@@ -284,16 +284,16 @@ object RingController {
         }
     }
 
-    /** 滾輪／滑動。 */
+    /** Wheel/swipe. */
     fun onScroll(amount: Int): Boolean {
         if (!enabled) return false
         detector.onScroll(amount)
         return true
     }
 
-    // ---------------- 手勢 → 動作 ----------------
+    // ---------------- gesture → action ----------------
 
-    /** 手勢對應表（先寫死預設；之後由 UI／學習模式覆寫）。 */
+    /** Gesture mapping table (hardcoded defaults for now; later overridden by the UI/learn mode). */
     private fun actionFor(g: RingGesture): RingAction = when (g) {
         RingGesture.TAP -> RingAction.PHOTO
         RingGesture.DOUBLE_TAP -> RingAction.VIDEO_TOGGLE
@@ -322,8 +322,8 @@ object RingController {
     }
 
     private suspend fun perform(action: RingAction): String {
-        // 不在這裡事先檢查連線：Remote 的 request() 內部會 ensureConnected() 自動重連，
-        // 事前擋掉反而讓「閒置斷線」的戒指手勢直接失敗（實測踩到）。
+        // Do not check the connection up front here: Remote's request() calls ensureConnected() internally to reconnect,
+        // so blocking beforehand only makes ring gestures fail outright after an "idle disconnect" (hit this in practice).
         return when (action) {
             RingAction.PHOTO -> Remote.capturePhoto().fold(
                 onSuccess = { m -> s(R.string.ring_photo_ok, m.fileName) },
@@ -373,10 +373,10 @@ object RingController {
         }
     }
 
-    /** 顯示資訊循環：全部 → 連線+儲存 → 相機+指示燈 → 全部關閉。 */
+    /** Display info cycle: all → connection+storage → camera+LED → all off. */
     private fun cycleDisplay(cur: DisplayConfig, dir: Int): DisplayConfig {
         val presets = listOf(
-            DisplayConfig(),                                                   // 全部
+            DisplayConfig(),                                                   // all
             DisplayConfig(conn = true, root = false, camera = false, storage = true, led = false),
             DisplayConfig(conn = false, root = false, camera = true, storage = false, led = true),
             DisplayConfig(conn = false, root = false, camera = false, storage = false, led = false)

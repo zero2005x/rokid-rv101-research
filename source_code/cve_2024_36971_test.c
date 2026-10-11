@@ -1,18 +1,18 @@
 /*
- * CVE-2024-36971 漏洞存在性測試
+ * CVE-2024-36971 vulnerability existence test
  *
- * 漏洞描述：
- * __dst_negative_advice() 中的 RCU 競態條件導致 UAF
- * 當 sk->dst_cache 被清除時，順序錯誤導致 use-after-free
+ * Vulnerability description:
+ * An RCU race condition in __dst_negative_advice() leads to a UAF
+ * When sk->dst_cache is cleared, the wrong ordering causes a use-after-free
  *
- * 受影響版本：
+ * Affected versions:
  * - 5.10.x < 5.10.219
  * - 5.15.x < 5.15.161
  * - 6.1.x < 6.1.94
  *
- * 修補日期：2024-08-05 (Android Security Patch)
+ * Patch date: 2024-08-05 (Android Security Patch)
  *
- * 注意：此為檢測程式，非完整 exploit
+ * NOTE: this is a detection program, not a full exploit
  */
 
 #include <stdio.h>
@@ -25,36 +25,36 @@
 #include <errno.h>
 #include <sys/utsname.h>
 
-// 解析核心版本
+// Parse the kernel version
 int parse_kernel_version(const char *release, int *major, int *minor, int *patch)
 {
     return sscanf(release, "%d.%d.%d", major, minor, patch);
 }
 
-// 檢查是否受影響
+// Check whether it is affected
 int is_vulnerable(int major, int minor, int patch)
 {
-    // 5.10.x: 受影響範圍 5.5 - 5.10.218
+    // 5.10.x: affected range 5.5 - 5.10.218
     if (major == 5 && minor == 10)
     {
         return patch < 219;
     }
-    // 5.15.x: 受影響範圍 5.11 - 5.15.160
+    // 5.15.x: affected range 5.11 - 5.15.160
     if (major == 5 && minor == 15)
     {
         return patch < 161;
     }
-    // 6.1.x: 受影響範圍 5.16 - 6.1.93
+    // 6.1.x: affected range 5.16 - 6.1.93
     if (major == 6 && minor == 1)
     {
         return patch < 94;
     }
-    // 6.6.x: 受影響範圍 6.2 - 6.6.33
+    // 6.6.x: affected range 6.2 - 6.6.33
     if (major == 6 && minor == 6)
     {
         return patch < 34;
     }
-    // 其他版本
+    // Other versions
     if (major == 5 && minor >= 5 && minor < 10)
         return 1;
     if (major == 5 && minor > 10 && minor < 15)
@@ -100,7 +100,7 @@ int main()
 
     printf("[*] 解析版本: %d.%d.%d\n\n", major, minor, patch);
 
-    // 檢查安全補丁
+    // Check the security patch
     printf("[*] 檢查 Android 安全補丁級別:\n");
     FILE *fp = popen("getprop ro.build.version.security_patch 2>/dev/null", "r");
     char patch_date[32] = {0};
@@ -111,7 +111,7 @@ int main()
         patch_date[strcspn(patch_date, "\n")] = 0;
         printf("    安全補丁: %s\n", patch_date);
 
-        // CVE-2024-36971 在 2024-08-05 補丁修復
+        // CVE-2024-36971 was fixed by the 2024-08-05 patch
         if (strlen(patch_date) > 0 && strcmp(patch_date, "2024-08-05") >= 0)
         {
             printf("    [+] 安全補丁 >= 2024-08-05\n\n");

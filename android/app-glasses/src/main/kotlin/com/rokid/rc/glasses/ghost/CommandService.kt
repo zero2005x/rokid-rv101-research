@@ -8,18 +8,20 @@ import java.io.InputStreamReader
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Shizuku UserService 實作：在 Shizuku server 進程內（server 以 adb shell 啟動時 =
- * uid 2000 / u:r:shell:s0）以 shell 身份執行指令。
+ * Shizuku UserService implementation: runs commands as shell inside the Shizuku server process (when the server was
+ * started through adb shell = uid 2000 / u:r:shell:s0).
  *
- * 設計（參考 ghostlock-aak-apk 的 runCommandStream/writeFile 模式，自行重寫）：
- *  - [runCommandStream]：服務端另起 Thread 執行 `sh -c`，雙線程並行讀 stdout/stderr
- *    （防 pipe 寫滿死鎖），逐行 oneway 回呼；`waitFor()` 不做硬 timeout（exploit 需
- *    100–150 秒）。line 回呼限制 64KB/行，超長輸出（如二進位噴出）會先截斷。
- *  - [writeFile]：以 shell 身份直接寫檔，可 chmod 755（等同 helper 的 cp+chmod）。
- *  - [destroy]：Shizuku server 保留碼（16777114），server 銷毀本服務時呼叫。
+ * Design (following ghostlock-aak-apk's runCommandStream/writeFile pattern, rewritten from scratch):
+ *  - [runCommandStream]: the service starts a separate Thread to run `sh -c`, reading stdout/stderr on two threads in
+ *    parallel (to keep a full pipe from deadlocking), calling back oneway line by line; `waitFor()` applies no hard
+ *    timeout (the exploit needs 100-150 seconds). The line callback is capped at 64KB/line, so very long output
+ *    (e.g. binary spew) is truncated first.
+ *  - [writeFile]: write a file directly as shell, with chmod 755 (equivalent to the helper's cp+chmod).
+ *  - [destroy]: Shizuku server reserved code (16777114), called when the server destroys this service.
  *
- * ⚠ 安全約束：本服務只允許跑「呼叫 App 預先組好的指令」。引擎側保證永不從
- * App uid 直接 exec exploit（會 kernel panic），一律經此服務的 shell 身份。
+ * ⚠ Safety constraint: this service may only run "commands the calling app has assembled in advance". The engine side
+ * guarantees it never execs the exploit directly from the app uid (that kernel-panics); everything goes through this
+ * service's shell identity.
  */
 class CommandService : ICommandService.Stub() {
 

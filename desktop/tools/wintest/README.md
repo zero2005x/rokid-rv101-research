@@ -1,5 +1,7 @@
 # wintest — ZeroLightRokid Desktop 的 Windows 測試輔助
 
+> English: [README_EN.md](README_EN.md)
+
 ## 為什麼是獨立主控台程式，不是 PowerShell 腳本
 
 先前用 PowerShell 直接 P/Invoke，連續踩到四個**假訊號**（每一個都讓我做出錯誤結論）：

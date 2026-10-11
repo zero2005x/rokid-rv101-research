@@ -1,4 +1,7 @@
 # Rokid Glasses 資訊安全漏洞評估報告
+
+> English: [Rokid_Glasses_資安漏洞報告_EN.md](Rokid_Glasses_%E8%B3%87%E5%AE%89%E6%BC%8F%E6%B4%9E%E5%A0%B1%E5%91%8A_EN.md)
+
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 

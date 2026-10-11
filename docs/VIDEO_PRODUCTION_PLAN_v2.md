@@ -1,5 +1,7 @@
 # 修正後製作計畫 v2 —《Rokid RV101 Root 研究紀錄》
 
+> English: [VIDEO_PRODUCTION_PLAN_v2_EN.md](VIDEO_PRODUCTION_PLAN_v2_EN.md)
+
 > 版本：v2（私人審閱版優先）｜2026-09-06
 > 依據：`docs/Disclosure_Timeline.md`、`docs/ghostlock-before-after-redacted.md`、
 > `RV101_Disclosure/00_README.md`、`RV101_Disclosure/CVE_Relationship_Assessment.md`、

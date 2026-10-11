@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# build_probe_zig.sh — 用 zig 交叉編譯「裝置端探針」（本機無 Linux NDK 時的替代路徑）
+# build_probe_zig.sh — cross-compile a device-side probe with zig (the fallback when no local Linux NDK exists)
 #
-# 背景：本工作區原本只能靠 Windows 版 NDK clang 編譯（deploy/build_root_daemon.sh），
-# 但沙箱中 /mnt/c 為唯讀 → 無法在那裡寫暫存檔。改用 ziglang（pip 套件，自帶交叉編譯器）：
+# Background: this workspace could only compile with the Windows NDK clang
+# (deploy/build_root_daemon.sh), but /mnt/c is read-only in the sandbox -> no temporary files
+# can be written there. Switch to ziglang (a pip package that ships its own cross-compiler):
 #     .venv/bin/pip install ziglang
-#     zig cc -target aarch64-linux-musl -static  → 產出可在 Android 執行的靜態 ELF
+#     zig cc -target aarch64-linux-musl -static  -> a static ELF that runs on Android
 #
-# 注意：zig 需要可寫的快取目錄（預設 ~/.cache/zig 在沙箱中唯讀），故一律指定到工作區內。
+# NOTE: zig needs a writable cache directory (the default ~/.cache/zig is read-only in the sandbox), so it always points inside the workspace.
 #
-# 用法：bash deploy/build_probe_zig.sh <原始碼.c> [輸出檔名]
+# Usage: bash deploy/build_probe_zig.sh <source.c> [output-name]
 set -eu
 cd "$(dirname "$0")/.."
 SRC="${1:?用法: build_probe_zig.sh <原始碼.c> [輸出檔名]}"
@@ -26,7 +27,7 @@ mkdir -p "$ZIG_GLOBAL_CACHE_DIR" "$ZIG_LOCAL_CACHE_DIR" build-cache
 echo "產出: build-cache/$OUT"
 file "build-cache/$OUT" | cut -c1-90
 
-# 可選：直接推上裝置
+# optional: push straight to the device
 if [ "${PUSH:-0}" = "1" ]; then
   source "$(dirname "$0")/env.sh"
   "$ADB" -s "$SERIAL" push "build-cache/$OUT" /data/local/tmp/ >/dev/null

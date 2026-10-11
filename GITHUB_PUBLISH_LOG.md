@@ -1,5 +1,7 @@
 # GitHub 發布紀錄（PUBLISH LOG）
 
+> English: [GITHUB_PUBLISH_LOG_EN.md](GITHUB_PUBLISH_LOG_EN.md)
+
 發布日期：**2026-10-11**
 目標 repo：<https://github.com/zero2005x/rokid-rv101-research>（**private**）
 
@@ -96,3 +98,11 @@ cd ~/rokid_root            # 原始完整工作區（17 GB，未動）
 `gh.exe` 位於 `/mnt/c/Program Files/GitHub CLI/gh.exe`，
 WSL 端的 git credential helper 已設定於 `~/.gitconfig`，
 沿用 Windows 端既有的 GitHub 登入（不需額外 token）。
+
+## 附註：本檔中的 GitHub 帳號名稱
+
+本檔出現的 `zero2005x` 是**本 repo 自身的 GitHub 帳號與 URL**
+（`https://github.com/zero2005x/rokid-rv101-research`），屬於必要的發布識別資訊，
+不是需要遮蔽的個資。`REDACTION_LOG.md` 中遮蔽的是該帳號被當作**個人信箱前綴**使用的
+情形（`zero2005x@gmail.com`），兩者不同。此處刻意保留，否則讀者無法依本檔驗證發布結果。
+

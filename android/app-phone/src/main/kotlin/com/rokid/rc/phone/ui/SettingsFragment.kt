@@ -23,10 +23,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
- * 設定分頁（新）：集中所有非拍攝當下必需的設定，依功能分組、樣式統一。
+ * Settings tab (new): gathers every setting that is not needed at capture time, grouped by function and styled consistently.
  *
- * 分組：連線（WiFi／裝置資訊）、拍攝與權限（靜音／ghostlock／root）、隱私指示燈顏色、
- * 眼鏡儀表板顯示內容、戒指控制（手機端／眼鏡端）、語言。
+ * Groups: connection (WiFi/device info), capture and permissions (silent/ghostlock/root), privacy LED colour,
+ * glasses dashboard contents, ring control (phone side/glasses side), language.
  */
 class SettingsFragment : Fragment() {
 
@@ -36,7 +36,7 @@ class SettingsFragment : Fragment() {
     private var dispCfg = DisplayConfig()
     private var rootStateView: TextView? = null
     private var rootMetricsView: TextView? = null
-    /** 最近一次狀態（供操作指引對話框使用）。 */
+    /** Latest status (used by the operating-instructions dialog). */
     private var lastStatus: com.rokid.rc.shared.protocol.Status? = null
 
     override fun onCreateView(
@@ -45,7 +45,7 @@ class SettingsFragment : Fragment() {
         val v = inflater.inflate(R.layout.fragment_settings, container, false)
         rootV = v
 
-        // ---------- 連線 ----------
+        // ---------- connection ----------
         v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swWifi)
             .setOnCheckedChangeListener { _, checked ->
                 if (syncing) return@setOnCheckedChangeListener
@@ -68,7 +68,7 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        // ---------- 拍攝與權限 ----------
+        // ---------- capture and permissions ----------
         v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swSilent)
             .setOnCheckedChangeListener { _, checked ->
                 if (syncing) return@setOnCheckedChangeListener
@@ -120,18 +120,18 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        // ---------- root 狀態（P0-b）：點一下顯示操作指引 ----------
+        // ---------- root state (P0-b): tap to show the operating instructions ----------
         v.findViewById<TextView>(R.id.tvRootState).setOnClickListener { showRootHelpDialog() }
         rootStateView = v.findViewById(R.id.tvRootState)
         rootMetricsView = v.findViewById(R.id.tvRootMetrics)
 
-        // ---------- 隱私指示燈顏色 ----------
+        // ---------- privacy LED colour ----------
         bindLedChip(v, R.id.chipLedW, "white")
         bindLedChip(v, R.id.chipLedG, "green")
         bindLedChip(v, R.id.chipLedB, "blue")
         bindLedChip(v, R.id.chipLedR, "red")
 
-        // ---------- 眼鏡儀表板顯示內容 ----------
+        // ---------- glasses dashboard contents ----------
         bindDispChip(v, R.id.chipDispConn) { it.copy(conn = it.conn.not()) }
         bindDispChip(v, R.id.chipDispRoot) { it.copy(root = it.root.not()) }
         bindDispChip(v, R.id.chipDispCamera) { it.copy(camera = it.camera.not()) }
@@ -142,7 +142,7 @@ class SettingsFragment : Fragment() {
             applyDisp(DisplayConfig(conn = false, root = false, camera = false, storage = false, led = false))
         }
 
-        // ---------- 戒指控制 ----------
+        // ---------- ring control ----------
         val ring = RingController
         ring.ensureInit(requireContext())
         val tvRingStatus = v.findViewById<TextView>(R.id.tvRingStatus)
@@ -192,7 +192,7 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
-        // 長按＝清除所有自訂鍵碼對應
+        // long press = clear all custom key-code mappings
         btnLearn.setOnLongClickListener {
             ring.clearKeyMappings()
             toast(getString(R.string.ring_map_cleared))
@@ -201,12 +201,12 @@ class SettingsFragment : Fragment() {
         }
         v.findViewById<View>(R.id.btnRingPair).setOnClickListener { showRingPicker(tvRingStatus) }
 
-        // ---------- 語言 ----------
+        // ---------- language ----------
         val btnLang = v.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnLanguage)
         btnLang.text = getString(R.string.btn_language, currentLanguageLabel())
         btnLang.setOnClickListener { showLanguageDialog() }
 
-        // ---------- 可折疊分組（狀態記憶於 prefs） ----------
+        // ---------- collapsible groups (state remembered in prefs) ----------
         bindCollapsible(v, R.id.headerConn, R.id.chevronConn, R.id.contentConn, "conn", defaultOpen = true)
         bindCollapsible(v, R.id.headerCapture, R.id.chevronCapture, R.id.contentCapture, "capture", defaultOpen = true)
         bindCollapsible(v, R.id.headerLed, R.id.chevronLed, R.id.contentLed, "led", defaultOpen = false)
@@ -215,14 +215,14 @@ class SettingsFragment : Fragment() {
         bindCollapsible(v, R.id.headerAppearance, R.id.chevronAppearance, R.id.contentAppearance, "appearance", defaultOpen = false)
         bindCollapsible(v, R.id.headerLang, R.id.chevronLang, R.id.contentLang, "lang", defaultOpen = false)
 
-        // ---------- 外觀：淺色模式 ----------
+        // ---------- appearance: light mode ----------
         v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swLight)
             .apply { isChecked = ThemeHelper.isLight(requireContext()) }
             .setOnCheckedChangeListener { _, checked ->
                 if (checked == ThemeHelper.isLight(requireContext())) return@setOnCheckedChangeListener
                 ThemeHelper.setLight(requireContext(), checked)
                 log(getString(R.string.light_mode_label) + "：" + getString(if (checked) R.string.ring_on else R.string.ring_off))
-                requireActivity().recreate()   // 立即套用新主題
+                requireActivity().recreate()   // apply the new theme immediately
             }
 
         refresh()
@@ -230,8 +230,8 @@ class SettingsFragment : Fragment() {
     }
 
     /**
-     * 綁定可折疊分組：點標題列切換內容顯示，箭頭旋轉 180°，
-     * 展開狀態存 prefs（下次進來保持一致）。
+     * Bind a collapsible group: tapping the title row toggles the content, the arrow rotates 180°,
+     * and the expanded state is stored in prefs (so it stays consistent next time).
      */
     private fun bindCollapsible(
         root: View, headerId: Int, chevronId: Int, contentId: Int, key: String, defaultOpen: Boolean
@@ -265,13 +265,13 @@ class SettingsFragment : Fragment() {
         super.onDestroyView()
     }
 
-    /** 讀回眼鏡狀態以同步開關與顯示。 */
+    /** Read back the glasses status to sync the switches and the display. */
     fun refresh() {
         val v = rootV ?: return
         refreshJob?.cancel()
         refreshJob = viewLifecycleOwner.lifecycleScope.launch {
             syncing = true
-            // WiFi 傳輸開關
+            // WiFi transfer switch
             val swWifi = v.findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.swWifi)
             swWifi.isChecked = Remote.autoWifi
             v.findViewById<TextView>(R.id.tvWifiHint).text = when {
@@ -279,7 +279,7 @@ class SettingsFragment : Fragment() {
                     R.string.transport_wifi, Remote.wifiLink.apInfo.ip, Remote.wifiLink.apInfo.port
                 )
                 Remote.wifiNegotiating -> getString(R.string.transport_wifi_connecting)
-                // 已開啟自動模式但尚未連上：說明下一次媒體操作會自動切到 WiFi
+                // auto mode is on but not connected yet: explain that the next media operation switches to WiFi automatically
                 Remote.autoWifi -> getString(R.string.wifi_switch_hint)
                 else -> getString(R.string.transport_bt)
             }
@@ -312,7 +312,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    /** 更新 root 狀態列與度量（P0-b／P2）。 */
+    /** Update the root status row and metrics (P0-b/P2). */
     private fun updateRootState(s: com.rokid.rc.shared.protocol.Status) {
         val ctx = context ?: return
         rootStateView?.text = RootText.state(ctx, s.rootState)
@@ -325,8 +325,8 @@ class SettingsFragment : Fragment() {
     }
 
     /**
-     * root 操作指引（P0-b）：明確告訴使用者「現在缺什麼、要跑哪支腳本」。
-     * 沒有 root 時，靜音拍攝／隱私燈抑制／WiFi 媒體傳輸／眼鏡端戒指都會失效。
+     * root operating instructions (P0-b): tell the user explicitly "what is missing right now and which script to run".
+     * Without root, silent capture / privacy LED suppression / WiFi media transfer / the glasses-side ring all stop working.
      */
     private fun showRootHelpDialog() {
         val ctx = context ?: return
@@ -347,7 +347,7 @@ class SettingsFragment : Fragment() {
     // ---------------- WiFi ----------------
 
     private suspend fun toggleWifi(enable: Boolean) {
-        // 記住偏好：往後每次媒體傳輸（縮圖／下載）都會自動確保 WiFi 通道
+        // remember the preference: from then on every media transfer (thumbnail/download) ensures the WiFi channel automatically
         Remote.setAutoWifi(enable)
         if (!enable) {
             Remote.closeWifiMedia()
@@ -378,7 +378,7 @@ class SettingsFragment : Fragment() {
         )
     }
 
-    // ---------------- 指示燈顏色 ----------------
+    // ---------------- LED colour ----------------
 
     private fun bindLedChip(v: View, id: Int, color: String) {
         val chip = v.findViewById<Chip>(id)
@@ -412,7 +412,7 @@ class SettingsFragment : Fragment() {
 
     private fun ledName(color: String): String = getString(R.string.led_name, colorLabel(color))
 
-    // ---------------- 顯示配置 ----------------
+    // ---------------- display configuration ----------------
 
     private fun bindDispChip(v: View, id: Int, toggle: (DisplayConfig) -> DisplayConfig) {
         val chip = v.findViewById<Chip>(id)
@@ -451,7 +451,7 @@ class SettingsFragment : Fragment() {
         syncing = false
     }
 
-    // ---------------- 語言 ----------------
+    // ---------------- language ----------------
 
     private fun currentLanguageLabel(): String {
         val cur = LocaleHelper.current(requireContext())
@@ -476,17 +476,17 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
-    /** 學習到鍵碼後，選擇要綁定的動作（可學習的鍵碼對應）。 */
+    /** After a key code is learned, pick the action to bind it to (learnable key-code mapping). */
     /**
-     * 「配對戒指」＝**列出已配對的 HID 裝置讓使用者選**（2026-09-13 改版）。
+     * "Pair ring" = **list the already paired HID devices for the user to choose from** (revised 2026-09-13).
      *
-     * 舊版用 `scanAndBond(pattern = "RGR")`，對已配對的戒指**永遠不會成功**：
-     *   1. 已配對的 BLE 周邊不再對外廣播 → 掃描清單根本不會出現它；
-     *   2. 名稱不含 "RGR" 者（例如 `AIVELA_RP13EJ37`）也永遠不符。
-     * 見 `reports/aivela_ring_connection_failure_2026-09-13.md`。
+     * The old version used `scanAndBond(pattern = "RGR")`, which can **never succeed** for an already paired ring:
+     *   1. a paired BLE peripheral no longer advertises → it never shows up in the scan list at all;
+     *   2. anything whose name does not contain "RGR" (for example `AIVELA_RP13EJ37`) never matches either.
+     * See `reports/aivela_ring_connection_failure_2026-09-13.md`.
      *
-     * 只有要配「全新、尚未配對」的裝置時才做掃描，且掃描結果**不套名稱過濾**，
-     * 一律由使用者從清單中挑選。
+     * A scan is only done to pair a "brand-new, not yet paired" device, and the scan result is **not filtered by
+     * name** — the user always picks from the list.
      */
     private fun showRingPicker(status: TextView) {
         val ctx = requireContext()
@@ -515,7 +515,7 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
-    /** 使用者從清單選定裝置：記住它（唯一來源）＋必要時完成配對。 */
+    /** The user picked a device from the list: remember it (single source of truth) and complete pairing when needed. */
     private fun useRingDevice(device: android.bluetooth.BluetoothDevice, status: TextView) {
         val ctx = requireContext()
         val name = com.rokid.rc.shared.ring.RingBonder.displayName(device)
@@ -537,7 +537,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    /** 配「全新裝置」：掃描所有可連線裝置（不過濾名稱），由使用者挑選。 */
+    /** Pair a "brand-new device": scan every connectable device (no name filter) and let the user choose. */
     private fun scanAndPickRing(status: TextView) {
         val ctx = requireContext()
         val scanning = getString(R.string.ring_pick_scanning)
@@ -585,7 +585,7 @@ class SettingsFragment : Fragment() {
             .show()
     }
 
-    // ---------------- 共用小工具 ----------------
+    // ---------------- shared helpers ----------------
 
     private fun revertSwitch(id: Int, value: Boolean) {
         syncing = true

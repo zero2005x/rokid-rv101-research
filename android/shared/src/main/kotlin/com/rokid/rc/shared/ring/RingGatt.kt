@@ -13,13 +13,14 @@ import android.os.Looper
 import android.util.Log
 
 /**
- * 戒指 GATT 探測：連上指定 MAC、列出 service/characteristic，並讀取可讀特徵值後斷線。
+ * Ring GATT probing: connect to the given MAC, list services/characteristics, read the readable characteristic
+ * values, then disconnect.
  *
- * 用途：
- *  1. BLE 周邊常常**不廣播名稱**，只能連上去看服務來辨識。
- *  2. HID 裝置的 **Report Map（0x2A4B）** 常可在未綁定時讀取 → 可離線解析它會送哪些
- *     按鍵／軸（本專案靠這步決定手勢對應）。
- *  3. 後續「戒指 GATT 直連控制」的基礎。
+ * Uses:
+ *  1. BLE peripherals often **do not advertise a name**, so the only way to identify one is to connect and inspect its services.
+ *  2. A HID device's **Report Map (0x2A4B)** can often be read while it is unbound → it can be parsed offline to see which
+ *     keys/axes it sends (this project relies on that step to decide the gesture mapping).
+ *  3. The basis for a later "ring GATT direct control".
  */
 object RingGatt {
 
@@ -38,7 +39,7 @@ object RingGatt {
 
     private fun hex(b: ByteArray?): String = b?.joinToString("") { "%02X".format(it) } ?: "-"
 
-    /** 連線並列舉服務（含讀取可讀特徵）；[onDone] 回傳 (成功?, 服務清單, 說明)。 */
+    /** Connect and enumerate services (including reading readable characteristics); [onDone] returns (success?, service list, explanation). */
     fun probe(
         context: Context,
         mac: String,
@@ -60,8 +61,8 @@ object RingGatt {
     }
 
     /**
-     * 以掃描取得的 [BluetoothDevice] 探測（**建議用這個**）：
-     * 字串 MAC 重建的物件會是 public address type，對 random address 周邊會得到 status 133。
+     * Probe with a [BluetoothDevice] obtained from a scan (**prefer this one**):
+     * an object rebuilt from a MAC string is a public address type, and for random-address peripherals that yields status 133.
      */
     fun probe(
         context: Context,
@@ -72,7 +73,7 @@ object RingGatt {
         Probe(context, device, device.address ?: "?", timeoutMs, onDone).start()
     }
 
-    /** 掃描後對前 [maxDevices] 台可連線裝置依序探測。 */
+    /** After a scan, probe the first [maxDevices] connectable devices in order. */
     fun scanAndProbe(context: Context, maxDevices: Int = 3, onDone: (List<Pair<String, List<SvcInfo>>>) -> Unit) {
         RingScanner(context).scan(durationMs = 10_000L) { list ->
             val targets = list.filter { it.connectable != false }.take(maxDevices)
@@ -100,7 +101,7 @@ object RingGatt {
         }
     }
 
-    /** 單次探測的狀態機（避免多個 probe 彼此干擾）。 */
+    /** State machine for a single probe (keeps several probes from interfering with each other). */
     private class Probe(
         private val context: Context,
         private val device: BluetoothDevice,

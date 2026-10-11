@@ -1,4 +1,6 @@
 # 寄生式 GPU 命令注入 - 攻擊狀態報告
+
+> English: [PARASITIC_INJECT_STATUS_EN.md](PARASITIC_INJECT_STATUS_EN.md)
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 

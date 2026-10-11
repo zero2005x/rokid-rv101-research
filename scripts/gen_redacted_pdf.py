@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-# gen_redacted_pdf.py — 把 docs/ghostlock-before-after-redacted.md 產生成要寄給 Rokid 的 PDF。
+# gen_redacted_pdf.py — render docs/ghostlock-before-after-redacted.md into the PDF to send to Rokid.
 #
-# 為什麼需要這支：原 PDF 是 2026-09-06 在 Windows 用 Chrome 列印的，內容與 .md 會不同步
-# （曾發生 .md 已更新、PDF 仍留 `[待補]` 的情形）。改 .md 後請一律重跑本腳本。
+# Why this exists: the original PDF was printed from Chrome on Windows on 2026-09-06, so it
+# drifts out of sync with the .md (there was a case where the .md had been updated but the PDF
+# still said `[待補]`). Always rerun this script after editing the .md.
 #
-# 排版要點（踩過的坑）：
-#   - 表格 `table-layout: fixed` ＋ `overflow-wrap: anywhere`：否則 SHA-256 / OTA 檔名會把右欄推出頁面被裁掉。
-#   - §1 拆成「每版一張表」：兩版並排會讓 64 字元雜湊被迫折行，複製比對容易出錯。
+# Layout notes (pitfalls already hit):
+#   - Table `table-layout: fixed` + `overflow-wrap: anywhere`: otherwise the SHA-256 / OTA file
+#     names push the right column off the page and it gets clipped.
+#   - §1 is split into one table per version: putting both versions side by side forces the
+#     64-character hashes to wrap, which makes copy-and-compare error-prone.
 #
-# 用法：python3 scripts/gen_redacted_pdf.py
-# 依賴：weasyprint（`pip install weasyprint`）；CJK 需系統有 Droid Sans Fallback 或 Noto CJK。
+# Usage: python3 scripts/gen_redacted_pdf.py
+# Depends on: weasyprint (`pip install weasyprint`); CJK needs Droid Sans Fallback or Noto CJK
+# installed on the system.
 import subprocess, markdown, sys, os
 ROOT=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src=os.path.join(ROOT,'docs/ghostlock-before-after-redacted.md')

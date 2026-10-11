@@ -1,5 +1,7 @@
 # USB 偵錯防偵測模組（自建 LSPosed/Vector 模組）實作與實機驗證 — 2026-09-30
 
+> English: [usbdebug_antidetect_module_2026-09-30_EN.md](usbdebug_antidetect_module_2026-09-30_EN.md)
+
 > **狀態更新（2026-09-30 17:15）：本報告描述的軟體已於當日應要求「完整移除」。**
 > 移除範圍：`com.rokid.rc.usbdebughider`（模組）、`com.rokid.rc.debugdetectprobe`（探針）、
 > 框架模組 `zygisk_vector`（Vector）＋ `zygisksu`（NeoZygisk）、`/data/local/tmp/usbdebug_hider.conf`

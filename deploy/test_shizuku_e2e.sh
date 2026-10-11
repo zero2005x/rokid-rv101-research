@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# test_shizuku_e2e.sh — E2E 測試：Shizuku 路徑端到端提權（含 kernel-panic 重試）
+# test_shizuku_e2e.sh — E2E test: end-to-end escalation through the Shizuku path (with kernel-panic retry)
 #
-# 流程：設定 root_mode=AUTO（run-as 寫 prefs，debug build 可用）→ 確保 Shizuku server
-# 活著 → 清 logcat → 啟動 CaptureService → App 內 ShizukuGhostlockEngine 以 shell 身份
-# 跑 ghostlock_rv101 → 等 root_daemon socket 回 uid=0。
-# exploit ~50% 機率 kernel panic→reboot；裝置重啟後自動重啟 Shizuku server 並重試。
+# Flow: set root_mode=AUTO (run-as writes prefs; works on a debug build) -> make sure the
+# Shizuku server is alive -> clear logcat -> start CaptureService -> the in-App
+# ShizukuGhostlockEngine runs ghostlock_rv101 as shell -> wait for the root_daemon socket to
+# return uid=0.
+# The exploit kernel-panics and reboots ~50% of the time; after the reboot the Shizuku server
+# is restarted automatically and the attempt repeats.
 #
-# 用法：ADB=... SERIAL=<DEVICE_SERIAL> bash deploy/test_shizuku_e2e.sh
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+# Usage: ADB=... SERIAL=<DEVICE_SERIAL> bash deploy/test_shizuku_e2e.sh
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-3}"
@@ -62,9 +64,9 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   ensure_shizuku || exit 1
   set_auto_mode
   adb_s logcat -c 2>/dev/null
-  # Android 12 背景啟動限制：shell 直接 am start-foreground-service 會被打回
-  # （"app is in background"），改走 App 自身路徑：launch MainActivity →
-  # onResume 前台啟動 CaptureService（rootMode=AUTO → 自動跑 acquireRoot）。
+  # Android 12 background-start restriction: a direct shell am start-foreground-service is
+  # rejected ("app is in background"), so go through the App: launch MainActivity ->
+  # onResume starts CaptureService in the foreground (rootMode=AUTO -> acquireRoot runs).
   adb_s shell "am start -n com.rokid.rc.glasses/.MainActivity" 2>&1 | sed 's/^/  /'
   sleep 3
   if ! adb_s shell "pidof com.rokid.rc.glasses" 2>/dev/null | grep -q .; then

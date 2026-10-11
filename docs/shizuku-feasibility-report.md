@@ -1,5 +1,7 @@
 # Shizuku × Rokid RV101：眼鏡端 App 整合 GhostLock 提權之可行性報告
 
+> English: [shizuku-feasibility-report_EN.md](shizuku-feasibility-report_EN.md)
+
 > 日期：2026-09-09（定稿）
 > 適用設備：Rokid RG-glasses（RV101，serial <DEVICE_SERIAL>），Android 12，kernel 5.10.209-perf，韌體 1.22.009（GhostLock 漏洞版）
 > 用途：自有/授權設備之安全研究。

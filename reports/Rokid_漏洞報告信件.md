@@ -1,4 +1,7 @@
 # Rokid 產品安全漏洞報告
+
+> English: [Rokid_漏洞報告信件_EN.md](Rokid_%E6%BC%8F%E6%B4%9E%E5%A0%B1%E5%91%8A%E4%BF%A1%E4%BB%B6_EN.md)
+
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 

@@ -1,5 +1,7 @@
 # v2.0 對應的最新研究整理
 
+> English: [research-update_EN.md](research-update_EN.md)
+
 > 来源：`/home/kali/rokid_root`（分析日期 2026-09-11）
 > 本文只記錄**與桌面板工具有關**的結論，以及每一項在 v2.0 中如何落實。
 

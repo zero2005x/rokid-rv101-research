@@ -5,21 +5,21 @@
     android:layout_height="match_parent"
     android:background="@color/black">
 
-    <!-- 照片（可縮放） -->
+    <!-- Photo (zoomable) -->
     <com.rokid.rc.phone.widget.ZoomImageView
         android:id="@+id/ivZoom"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="invisible" />
 
-    <!-- 影片 -->
+    <!-- Video -->
     <VideoView
         android:id="@+id/vvVideo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <!-- 中央訊息（下載中/失敗） -->
+    <!-- Centre message (downloading/failed) -->
     <LinearLayout
         android:id="@+id/llMsg"
         android:layout_width="wrap_content"
@@ -53,7 +53,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- 頂部工具列 -->
+    <!-- Top toolbar -->
     <LinearLayout
         android:id="@+id/llTop"
         android:layout_width="match_parent"
@@ -85,7 +85,7 @@
             android:textSize="15sp" />
     </LinearLayout>
 
-    <!-- 底部資訊列 -->
+    <!-- Bottom info bar -->
     <LinearLayout
         android:id="@+id/llBottom"
         android:layout_width="match_parent"
@@ -118,7 +118,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- 下載進度條（頂端細線） -->
+    <!-- Download progress bar (thin line at the top) -->
     <com.google.android.material.progressindicator.LinearProgressIndicator
         android:id="@+id/piDownload"
         android:layout_width="match_parent"

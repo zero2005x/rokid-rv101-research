@@ -1,4 +1,7 @@
 # Facebook 發文 - Rokid Glasses 討論區
+
+> English: [Facebook_Rokid_Root_Post_EN.md](Facebook_Rokid_Root_Post_EN.md)
+
 > ⚠ **歷史文件（非現況）**：本文為當時的紀錄；專案其後已有重大變化（root 已取得、引擎改執行期探測、手機 UI 重做、i18n 193 key）。
 > 現行狀態請看 `README.md`、`MANIFEST.md`、`docs/deploy.md`。
 

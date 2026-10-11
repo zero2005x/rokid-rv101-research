@@ -1,5 +1,7 @@
 # Rokid 雙 Android 遙控拍攝系統 — 架構設計
 
+> English: [architecture_EN.md](architecture_EN.md)
+
 > **用途聲明**：本專案用於**自有/已授權 Rokid 眼鏡設備**的安全研究與滲透測試。眼鏡端透過既有的 `ghostlock_rv101` LPE（本機提權）在 root 下控制相機隱私 LED，以驗證「隱私指示燈可被繞過」的風險。請勿用於未授權設備或侵害他人隱私。
 
 ## 1. 系統總覽

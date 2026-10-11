@@ -2,7 +2,7 @@
 # ghostlock_run.sh — wrap a ghostlock_rv101 run with full metadata capture.
 # Usage: ghostlock_run.sh <tag> <version> <command...>
 set -u
-source "$(dirname "$0")/../deploy/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/../deploy/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 TAG="$1"; VER="$2"; shift 2
 TS=$(date +%H%M%S)

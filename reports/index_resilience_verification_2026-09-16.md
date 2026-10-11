@@ -1,5 +1,7 @@
 # 眼鏡媒體索引／傳輸通道 — 補跑驗證（2026-09-16 07:51–08:03）
 
+> English: [index_resilience_verification_2026-09-16_EN.md](index_resilience_verification_2026-09-16_EN.md)
+
 - **觸發**：`reports/wifi_transfer_fix_2026-09-13.md` §24 的待辦（眼鏡 adb 中斷，未能於當晚完成）。
 - **對象**：眼鏡 `1.0-safe.3`（versionCode 5）、手機 `1.3`（versionCode 4）。
 - **腳本**：`scripts/verify_index_resilience.sh`（可重跑；只動自建測試檔並先備份索引）。

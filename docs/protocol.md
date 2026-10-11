@@ -1,5 +1,7 @@
 # 通訊協定 — 手機 ↔ 眼鏡（藍牙 RFCOMM + WiFi TCP / JSON）
 
+> English: [protocol_EN.md](protocol_EN.md)
+
 > 本文件描述**現行**協定（最後校對：2026-09-13）。歷史變更與研究過程見 `reports/`。
 
 ## 1. 傳輸層

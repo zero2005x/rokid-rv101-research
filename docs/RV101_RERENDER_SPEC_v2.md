@@ -1,5 +1,7 @@
 # RV101 剪輯師重渲清單 v2（精確到檔案與行號）
 
+> English: [RV101_RERENDER_SPEC_v2_EN.md](RV101_RERENDER_SPEC_v2_EN.md)
+
 > 對象：`RV101_Edit_Project（**外部剪輯專案，不在本工作區**）/production/` 下的 `design.py`、`story.json`。
 > 成品輸出：重新跑 `design.py`（重產 `assets/scene_00..15.png`）→ `render.py`（重合成 MP4）。
 > 對應旁白：`docs/RV101_NARRATION_v2.md`。

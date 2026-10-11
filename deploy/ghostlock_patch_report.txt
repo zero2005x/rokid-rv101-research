@@ -1,3 +1,5 @@
+> English: [ghostlock_patch_report_EN.txt](ghostlock_patch_report_EN.txt)
+
 ========================================================================
  GhostLock (CVE-2026-43499) Patch Check Report
 ========================================================================

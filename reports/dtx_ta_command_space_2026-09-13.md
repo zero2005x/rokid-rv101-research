@@ -1,5 +1,7 @@
 # DTX / SMCInvoke gate TA — command space, ID→handler map, and risk classification
 
+> English: [dtx_ta_command_space_2026-09-13_EN.md](dtx_ta_command_space_2026-09-13_EN.md)
+
 **Date**: 2026-09-13
 **Scope**: static reverse engineering of the vendor TA `smcinvoke_gate_ta64.mbn` and its client
 `GateServiced`, to enumerate the command surface reachable through `127.0.0.1:8341` → `EXEC_CMD` → TA.

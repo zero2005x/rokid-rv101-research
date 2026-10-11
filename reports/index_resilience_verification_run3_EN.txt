@@ -1,0 +1,18 @@
+> 中文版：[index_resilience_verification_run3.txt](index_resilience_verification_run3.txt)
+=== 眼鏡媒體索引驗證（2026-09-16 08:03:48）===
+APK: /home/kali/rokid_root/scripts/../dist/app-glasses-v1.0-safe.3.apk
+
+--- 0. 安裝與基準 ---
+  Success
+      versionName=1.0-safe.3
+  ✅ 版本正確
+  索引基準：media=14（磁碟 14 檔）
+     （第 1 次取清單失敗，重試）
+     （第 2 次取清單失敗，重試）
+     （第 3 次取清單失敗，重試）
+  手機端基準：total=     （第 1 次取清單失敗，重試）
+     （第 2 次取清單失敗，重試）
+     （第 3 次取清單失敗，重試）
+  （基準啟動無 reconcile 訊息＝磁碟與索引一致）
+
+--- A. 壞 album 逐筆容錯 ---

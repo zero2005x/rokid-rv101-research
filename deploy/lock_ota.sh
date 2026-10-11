@@ -1,28 +1,30 @@
 #!/usr/bin/env bash
-# lock_ota.sh — 鎖定 OTA，防止眼鏡升到 1.25.012（已 backport 修補 GhostLock，不可逆）。
+# lock_ota.sh — lock OTA so the glasses cannot upgrade to 1.25.012 (GhostLock patched there, irreversible).
 #
-# 原理（見 research/shizuku/alternatives_and_ota.md §C）：
-#   本 Rokid build 的 pm 不支援 disable-user（"Failure [not support for 0]"），
-#   改採 pm suspend：暫停的 app 不可執行/不可收廣播，狀態持久化於 package settings，
-#   實測跨 3 次 reboot 仍維持（見 reports/shizuku_integration_test_report.md §3）。
-#   一般裝置則走 disable-user 兜底（寫入 package-restrictions.xml，reboot 後維持）。
-#   眼鏡本身無網路，風險在官方手機 App 代理；關掉 OTA app 即斷掉裝置端入口。
+# Rationale (see research/shizuku/alternatives_and_ota.md §C):
+#   This Rokid build's pm does not support disable-user ("Failure [not support for 0]"), so
+#   use pm suspend: a suspended app cannot run or receive broadcasts, its state persists in
+#   package settings and was measured to survive 3 reboots (see
+#   reports/shizuku_integration_test_report.md §3). Other devices fall back to disable-user
+#   (written to package-restrictions.xml, survives reboot).
+#   The glasses have no network themselves; the risk is the official phone App proxying, and
+#   disabling the OTA app cuts the device-side entry point.
 #
-# 用法（host 或手機 Termux 的 adb 皆可）：
+# Usage (host adb or phone Termux adb both work):
 #   bash deploy/lock_ota.sh
-# 可覆寫：ADB=/path/to/adb SERIAL=<DEVICE_SERIAL>
+# Overridable: ADB=/path/to/adb SERIAL=<DEVICE_SERIAL>
 #
-# 還原（suspend 路徑）：
+# Restore (suspend path):
 #   adb shell pm unsuspend com.rokid.glass.ota
-# 還原（disable-user 兜底路徑）：
+# Restore (disable-user fallback path):
 #   adb shell pm enable com.rokid.glass.ota
 #   adb shell cmd package install-existing com.rokid.glass.ota
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 
 OTA_PKG="com.rokid.glass.ota"
-# 次要目標（中繼服務）。⚠ 可能影響其他手機連動功能，預設「不」關閉；
-# 要關請把下一行註解拿掉。
+# Secondary target (relay service). ⚠ may affect other phone-tethered features, so it is
+# "not" disabled by default; uncomment the next line to disable it.
 # ASSIST_PKG="com.rokid.os.sprite.assistserver"
 
 adb_s() { "$ADB" -s "$SERIAL" "$@"; }
@@ -41,13 +43,14 @@ case "$FP" in
 esac
 
 echo "[1/3] 停用 OTA app：$OTA_PKG"
-# 此 Rokid build 的 pm 不支援 disable-user（回 "Failure [not support for 0]"），
-# 改用 pm suspend（暫停=不可執行/不可收廣播，狀態持久化於 package settings，reboot 後維持）。
+# This Rokid build's pm does not support disable-user (it returns "Failure [not support for
+# 0]"), so use pm suspend (suspended = cannot run or receive broadcasts, state persists in
+# package settings and survives reboot).
 DISABLED=0
 adb_s shell "pm suspend $OTA_PKG" 2>&1 | sed 's/^/  /'
 adb_s shell "pm list packages -s" 2>/dev/null | grep -q "$OTA_PKG" && DISABLED=1
 if [ "$DISABLED" = "0" ]; then
-  # 兜底：一般裝置走 disable-user
+  # fallback: other devices use disable-user
   adb_s shell "pm disable-user --user 0 $OTA_PKG" 2>&1 | sed 's/^/  /'
   adb_s shell "pm list packages -d" 2>/dev/null | grep -q "$OTA_PKG" && DISABLED=1
 fi

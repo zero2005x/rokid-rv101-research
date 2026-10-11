@@ -1,5 +1,7 @@
 # HITCON 證據／附件清單
 
+> English: [Evidence_Attachment_List_EN.md](Evidence_Attachment_List_EN.md)
+
 ## 可在初次通報提供
 
 | ID | 檔案 | 性質 | 來源 | 用途 |

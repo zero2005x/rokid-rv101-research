@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# adb_wifi_probe.sh — 無線 adb 可行性「裝置端」唯讀探測（不改任何狀態）
+# adb_wifi_probe.sh — read-only device-side probe of wireless adb feasibility (changes no state)
 #
-# 目的：回答一個關鍵問題——**這台裝置的 adbd 到底聽在哪裡？**
-#   A) 有 UNIX local socket（/dev/socket/adbd）→ relay 可行（TCP → socket）
-#   B) 只有 USB FunctionFS（/dev/usb-ffs/adb/ep0）→ relay 不可行，必須自帶 adbd
+# Purpose: answer one key question — **where does this device's adbd actually listen?**
+#   A) a UNIX local socket (/dev/socket/adbd) -> relay is feasible (TCP -> socket)
+#   B) USB FunctionFS only (/dev/usb-ffs/adb/ep0) -> relay is not feasible; ship your own adbd
 #
-# 全程唯讀：只 getprop / ls / cat / netstat，不寫屬性、不重啟 adbd、不掛載。
+# Read-only throughout: getprop / ls / cat / netstat only; no property writes, no adbd restarts, no mounts.
 #
-# 用法：
+# Usage:
 #   source deploy/env.sh
-#   bash deploy/adb_wifi_probe.sh                 # 用 env.sh 的裝置
+# use the device from env.sh
 #   SERIAL=xxx bash deploy/adb_wifi_probe.sh
 set -u
 source "$(dirname "$0")/env.sh"

@@ -1,21 +1,24 @@
 /*
- * theme.h — ZeroLightRokid Desktop v3.0 主題與繪製基礎
+ * theme.h — ZeroLightRokid Desktop v3.0 theming and drawing primitives
  *
- * 提供：
- *   - 品牌調色盤（深／淺兩套，色值與 android/app-phone 的 colors.xml 一致）
- *   - 主題偵測（跟隨 Windows 的 AppsUseLightTheme，可手動覆寫）
- *   - GDI+ 初始化與形狀繪製（抗鋸齒圓角矩形／圓／線／路徑）
- *   - 幾何圖示（純路徑繪製，不依賴任何圖示字型）
+ * Provides:
+ *   - the brand palette (dark / light, colour values matching android/app-phone's
+ *     colors.xml)
+ *   - theme detection (follows Windows' AppsUseLightTheme, manually overridable)
+ *   - GDI+ initialisation and shape drawing (anti-aliased rounded rectangles / circles /
+ *     lines / paths)
+ *   - geometric icons (drawn purely from paths, with no icon font dependency)
  *
- * 為什麼用 GDI+：GDI 的 RoundRect/Ellipse 沒有抗鋸齒，青色的填色按鈕與開關
- * 在深色底上會有明顯鋸齒。gdiplus.dll 是 Windows 內建元件（XP 起），
- * 不引入任何外部依賴，仍符合「單一 exe、零依賴」。
+ * Why GDI+: GDI's RoundRect/Ellipse are not anti-aliased, so the cyan filled buttons and
+ * switches show visible jaggies on a dark background. gdiplus.dll is a Windows built-in
+ * (since XP), so it adds no external dependency and keeps the "single exe, zero
+ * dependencies" property.
  *
- * 注意：GDI+ 在 MinGW 下可由純 C 使用（需先 include <propidl.h>），
- * 連結需加 -lgdiplus -lole32 -luuid。
+ * NOTE: under MinGW, GDI+ is usable from plain C (include <propidl.h> first) and linking
+ * needs -lgdiplus -lole32 -luuid.
  *
- * 文字仍走 GDI（DrawTextW）：比 GDI+ DrawString 銳利，且能沿用 i18n.h
- * 既有的各語系字型鏈。
+ * Text still goes through GDI (DrawTextW): sharper than GDI+ DrawString and it can reuse
+ * i18n.h's existing per-locale font chains.
  */
 #ifndef ZL_THEME_H
 #define ZL_THEME_H
@@ -25,26 +28,26 @@
 #include <propidl.h>
 #include <gdiplus/gdiplus.h>
 
-/* ================= 調色盤 ================= */
+/* ================= palette ================= */
 
 typedef enum {
-    TC_BG,       /* 視窗底色 */
-    TC_CARD,     /* 卡片底 */
-    TC_CARD2,    /* 卡片底（次階，輸入框等） */
-    TC_LINE,     /* 邊框 */
-    TC_TEXT,     /* 主文字 */
-    TC_TEXT2,    /* 次要文字 */
-    TC_TEXT3,    /* 淡化文字 */
-    TC_PRI,      /* 品牌主色（青） */
-    TC_ONPRI,    /* 主色上的文字 */
-    TC_SEC,      /* 品牌輔色（琥珀） */
+    TC_BG,       /* window background */
+    TC_CARD,     /* card background */
+    TC_CARD2,    /* card background (secondary: input fields etc.) */
+    TC_LINE,     /* border */
+    TC_TEXT,     /* primary text */
+    TC_TEXT2,    /* secondary text */
+    TC_TEXT3,    /* dimmed text */
+    TC_PRI,      /* brand primary (cyan) */
+    TC_ONPRI,    /* text on the primary colour */
+    TC_SEC,      /* brand secondary (amber) */
     TC_ONSEC,
-    TC_OK,       /* 成功 */
-    TC_ERR,      /* 錯誤 */
-    TC_CHIP,     /* chip 底色 */
-    TC_SW_OFF,   /* 開關關閉時的軌道 */
-    TC_SW_KNOB,  /* 開關旋鈕 */
-    TC_HOVER,    /* 滑鼠移入疊色 */
+    TC_OK,       /* success */
+    TC_ERR,      /* error */
+    TC_CHIP,     /* chip background */
+    TC_SW_OFF,   /* switch track when off */
+    TC_SW_KNOB,  /* switch knob */
+    TC_HOVER,    /* hover overlay */
     TC_COUNT
 } theme_color;
 
@@ -54,7 +57,7 @@ typedef struct {
     COLORREF       col[TC_COUNT];
 } zl_theme;
 
-/* 深色：與手機板品牌一致（bg #0B1220 / primary #22D3EE / secondary #FFB300） */
+/* dark: matches the phone brand (bg #0B1220 / primary #22D3EE / secondary #FFB300) */
 static const zl_theme g_theme_dark = {
     L"dark", 1, {
     /* BG      */ RGB(0x0B,0x12,0x20),
@@ -76,7 +79,7 @@ static const zl_theme g_theme_dark = {
     /* HOVER   */ RGB(0x22,0x2E,0x48),
     }};
 
-/* 淺色：同一組品牌色在亮底的對應（青色加深以維持對比） */
+/* light: the same brand colours on a bright background (cyan darkened to keep contrast) */
 static const zl_theme g_theme_light = {
     L"light", 0, {
     RGB(0xEE,0xF2,0xF7), RGB(0xFF,0xFF,0xFF), RGB(0xF6,0xF9,0xFC),
@@ -87,14 +90,14 @@ static const zl_theme g_theme_light = {
     RGB(0xFF,0xFF,0xFF), RGB(0xE2,0xE9,0xF2),
     }};
 
-/* 目前主題（0 = 深色，1 = 淺色） */
+/* current theme (0 = dark, 1 = light) */
 static const zl_theme *g_th = &g_theme_dark;
-static int             g_theme_mode = 0;   /* -1 = 跟隨系統，否則 0/1 */
+static int             g_theme_mode = 0;   /* -1 = follow the system, otherwise 0/1 */
 
 static COLORREF TH(int idx) { return g_th->col[idx]; }
 static int      TH_IS_DARK(void) { return g_th->dark; }
 
-/* 讀取 Windows 的應用程式主題偏好；回傳 1 = 淺色，0 = 深色 */
+/* read Windows' app theme preference; returns 1 = light, 0 = dark */
 static int theme_detect_system(void) {
     HKEY  k = NULL;
     DWORD v = 0, sz = sizeof(v), type = 0;
@@ -110,19 +113,19 @@ static int theme_detect_system(void) {
     return v ? 1 : 0;
 }
 
-/* mode: -1 = 跟隨系統，0 = 強制深色，1 = 強制淺色 */
+/* mode: -1 = follow the system, 0 = force dark, 1 = force light */
 static void theme_apply(int mode) {
     g_theme_mode = mode;
     int light = (mode < 0) ? theme_detect_system() : mode;
     g_th = light ? &g_theme_light : &g_theme_dark;
 }
 
-/* 重新讀取系統設定（WM_SETTINGCHANGE 時呼叫） */
+/* re-read the system setting (called on WM_SETTINGCHANGE) */
 static void theme_refresh(void) {
     if (g_theme_mode < 0) theme_apply(-1);
 }
 
-/* ================= GDI+ 初始化 ================= */
+/* ================= GDI+ initialisation ================= */
 
 static ULONG_PTR g_gdip_token = 0;
 static int       g_gdip_ok = 0;
@@ -139,14 +142,14 @@ static void gdip_shutdown(void) {
     if (g_gdip_ok) { GdiplusShutdown(g_gdip_token); g_gdip_ok = 0; }
 }
 
-/* ================= 繪製基礎 ================= */
+/* ================= drawing primitives ================= */
 
 typedef struct {
     GpGraphics *g;
     HDC         dc;
 } zl_canvas;
 
-/* 由記憶體 DC 建立畫布；開啟抗鋸齒 */
+/* create a canvas from a memory DC; enables anti-aliasing */
 static void cv_begin(zl_canvas *c, HDC dc) {
     c->dc = dc;
     c->g  = NULL;
@@ -169,7 +172,7 @@ static GpSolidFill *mk_brush(COLORREF c) {
     return b;
 }
 
-/* 圓角矩形填色（r = 圓角半徑，像素） */
+/* filled rounded rectangle (r = corner radius in pixels) */
 static void fill_round(zl_canvas *c, int x, int y, int w, int h, int r, COLORREF col) {
     if (w <= 0 || h <= 0) return;
     if (r * 2 > w) r = w / 2;
@@ -194,7 +197,7 @@ static void fill_round(zl_canvas *c, int x, int y, int w, int h, int r, COLORREF
         }
         GdipDeleteBrush((GpBrush *)b);
     } else {
-        /* GDI+ 不可用時的後備（無抗鋸齒） */
+        /* fallback when GDI+ is unavailable (no anti-aliasing) */
         HBRUSH br = CreateSolidBrush(col);
         HPEN   pn = CreatePen(PS_SOLID, 1, col);
         HGDIOBJ ob = SelectObject(c->dc, br), op = SelectObject(c->dc, pn);
@@ -204,7 +207,7 @@ static void fill_round(zl_canvas *c, int x, int y, int w, int h, int r, COLORREF
     }
 }
 
-/* 圓角矩形外框 */
+/* rounded rectangle outline */
 static void stroke_round(zl_canvas *c, int x, int y, int w, int h, int r,
                          COLORREF col, float lw) {
     if (w <= 0 || h <= 0) return;
@@ -243,7 +246,7 @@ static void stroke_round(zl_canvas *c, int x, int y, int w, int h, int r,
     }
 }
 
-/* 直線 */
+/* straight line */
 static void d_line(zl_canvas *c, int x1, int y1, int x2, int y2, COLORREF col) {
     if (c->g) {
         GpPen *pen = NULL;
@@ -260,7 +263,7 @@ static void d_line(zl_canvas *c, int x1, int y1, int x2, int y2, COLORREF col) {
     }
 }
 
-/* 圓角矩形填色（可指定透明度 alpha 0-255；僅 GDI+ 路徑支援） */
+/* filled rounded rectangle (alpha 0-255; only the GDI+ path supports it) */
 static void fill_round_a(zl_canvas *c, int x, int y, int w, int h, int r,
                          COLORREF col, int alpha) {
     if (w <= 0 || h <= 0) return;
@@ -285,7 +288,7 @@ static void fill_round_a(zl_canvas *c, int x, int y, int w, int h, int r,
     GdipDeleteBrush((GpBrush *)b);
 }
 
-/* 圓 */
+/* circle */
 static void fill_circle(zl_canvas *c, int cx, int cy, int r, COLORREF col) {
     if (r <= 0) return;
     if (c->g) {
@@ -303,15 +306,15 @@ static void fill_circle(zl_canvas *c, int cx, int cy, int r, COLORREF col) {
     }
 }
 
-/* ================= 幾何圖示（純路徑，不依賴圖示字型） ================= */
+/* ================= geometric icons (pure paths, no icon font) ================= */
 
 typedef enum { IC_BOLT, IC_CHECK, IC_REFRESH, IC_POWER, IC_CHEVRON, IC_LOCK,
                IC_BULB, IC_MUTE, IC_INFO, IC_MORE } zl_icon;
 
-/* 以 (x,y) 為左上角、邊長 s 的方形內繪製圖示；col 為線/填色 */
+/* draw the icon inside a square of side s whose top-left is (x,y); col is the line/fill colour */
 static void draw_icon(zl_canvas *c, zl_icon ic, int x, int y, int s, COLORREF col) {
     if (s < 6) s = 6;
-    float u = s / 16.0f;                       /* 以 16 格為設計單位 */
+    float u = s / 16.0f;                       /* the design grid is 16 units */
     #define PX(v) ((int)(x + (v) * u))
     #define PY(v) ((int)(y + (v) * u))
     GpSolidFill *b = c->g ? mk_brush(col) : NULL;

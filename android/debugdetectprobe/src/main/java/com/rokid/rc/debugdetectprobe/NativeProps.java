@@ -1,6 +1,6 @@
 package com.rokid.rc.debugdetectprobe;
 
-/** native 偵測途徑（見 src/main/jni/debugdetectprobe.c）。 */
+/** Native detection paths (see src/main/jni/debugdetectprobe.c). */
 final class NativeProps {
 
     static {
@@ -10,9 +10,9 @@ final class NativeProps {
     private NativeProps() {
     }
 
-    /** __system_property_get()：繞過 Java 層 SystemProperties hook。 */
+    /** __system_property_get(): bypasses Java-layer SystemProperties hooks. */
     static native String getProp(String key);
 
-    /** /proc/net/tcp{,6} 的 LISTEN 埠清單。 */
+    /** LISTEN port list from /proc/net/tcp{,6}. */
     static native String listenPorts();
 }

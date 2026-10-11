@@ -9,7 +9,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import androidx.appcompat.widget.AppCompatImageView
 
-/** 支援雙指縮放、雙擊放大/還原、拖曳平移的照片檢視器。 */
+/** Photo viewer with pinch-to-zoom, double-tap zoom/restore, and drag-to-pan. */
 class ZoomImageView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -68,7 +68,7 @@ class ZoomImageView @JvmOverloads constructor(
                 lastY = ev.y
             }
             MotionEvent.ACTION_MOVE -> {
-                // 單指拖曳平移（需已放大）
+                // one-finger drag to pan (requires being zoomed in)
                 if (ev.pointerCount == 1 && currentScale() > minScale * 1.05f) {
                     matrix.postTranslate(ev.x - lastX, ev.y - lastY)
                     imageMatrix = matrix
@@ -116,7 +116,7 @@ class ZoomImageView @JvmOverloads constructor(
         override fun onDown(e: MotionEvent): Boolean = true
     }
 
-    /** 點一下（供外部切換 chrome）。 */
+    /** Single tap (lets the outside toggle the chrome). */
     var onSingleTap: (() -> Unit)? = null
 
     private fun currentScale(): Float {
@@ -125,7 +125,7 @@ class ZoomImageView @JvmOverloads constructor(
         return v[Matrix.MSCALE_X]
     }
 
-    /** 防止拖出邊界太多。 */
+    /** Prevent dragging too far out of bounds. */
     private fun constrain() {
         val bm = drawable ?: return
         val dw = bm.intrinsicWidth.toFloat()

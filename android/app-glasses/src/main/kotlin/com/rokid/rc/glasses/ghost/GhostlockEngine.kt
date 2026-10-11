@@ -4,10 +4,10 @@ import android.content.Context
 import com.rokid.rc.glasses.GlassesPaths
 import java.io.File
 
-/** 欲以 root 執行的腳本 payload。 */
+/** The script payload to run as root. */
 data class RootScript(val name: String, val content: String)
 
-/** root 執行結果。 */
+/** root execution result. */
 data class ExecResult(
     val success: Boolean,
     val exitCode: Int,
@@ -23,7 +23,7 @@ data class ExecResult(
     }
 }
 
-/** 觸發流程階段（供失敗診斷）。 */
+/** Trigger flow stages (for failure diagnosis). */
 object Stage {
     const val PREFLIGHT = "preflight"
     const val LAUNCH = "launch"
@@ -32,20 +32,20 @@ object Stage {
     const val DONE = "done"
 }
 
-/** payload 完成標記。payload 腳本末尾 `echo` 此字串到 payload log。 */
+/** Payload completion marker. The payload script `echo`s this string into the payload log at the end. */
 object PayloadMarkers {
     const val DONE = "__GHOSTLOCK_PAYLOAD_DONE__"
 }
 
-/** 引擎共用的檔案路徑（都放在 App 自身可讀寫的 cacheDir）。 */
+/** File paths shared by the engines (all under the app's own readable/writable cacheDir). */
 object GhostlockPaths {
     fun payloadLog(context: Context): File = File(context.cacheDir, "ghostlock_payload.log")
     fun exploitLog(context: Context): File = File(context.cacheDir, "ghostlock_run.log")
 }
 
 /**
- * exploit 觸發參數，對應 run_*_orchestrator.sh 的既有行為。
- * 實機路徑/標記不同時只需調整此處。
+ * exploit trigger parameters, matching the existing behavior of run_*_orchestrator.sh.
+ * When the paths/markers differ on a real device, only this needs adjusting.
  */
 data class ExploitConfig(
     val binaryPath: String = GlassesPaths.GHOSTLOCK_BIN,
@@ -59,12 +59,12 @@ data class ExploitConfig(
     val readyMarker: String = "dropping to root shell",
     val doneMarker: String = PayloadMarkers.DONE,
     val readyTimeoutMs: Long = 90_000L,
-    // exploit 核心階段實測 100–142s（helper 用 200s；再加內部重試餘裕）
+    // measured 100-142 s for the exploit's core stage (the helper uses 200 s; plus headroom for internal retries)
     val doneTimeoutMs: Long = 240_000L,
     val pollIntervalMs: Long = 200L
 )
 
-/** root 橋接 daemon 的參數（對應 deploy/root_bridge.sh）。 */
+/** Parameters of the root bridge daemon (matching deploy/root_bridge.sh). */
 data class BridgeConfig(
     val bridgeDir: String = GlassesPaths.BRIDGE_DIR,
     val timeoutMs: Long = 500_000L,
@@ -72,22 +72,22 @@ data class BridgeConfig(
 )
 
 /**
- * Ghostlock LPE 呼叫層介面。
- * 眼鏡端所有需要 root 的動作（壓制相機隱私 LED）都經由此介面；
- * 手機端的 ghostlock 開關控制 [isEnabled]。
+ * Ghostlock LPE invocation layer interface.
+ * Every glasses-side action that needs root (suppressing the camera privacy LED) goes through this interface;
+ * the phone-side ghostlock switch controls [isEnabled].
  */
 interface GhostlockEngine {
     val isEnabled: Boolean
 
-    /** 是否已成功取得 root（由 [acquireRoot] 設定）。 */
+    /** Whether root has been acquired successfully (set by [acquireRoot]). */
     val rootAcquired: Boolean
 
-    /** 進度回呼（長時操作期間回報階段，供推送給手機顯示）。 */
+    /** Progress callback (reports stages during long operations, for pushing to the phone display). */
     var onProgress: ((com.rokid.rc.shared.protocol.ProgressEvent) -> Unit)?
 
     /**
-     * 送出結構化進度（代碼＋參數），由手機端以**自己的語系**組字。
-     * 眼鏡端不再組中文句子（見 shared `ProgressEvent`／`GhostlockCodes`）。
+     * Send structured progress (code + argument); the phone composes the text in **its own locale**.
+     * The glasses side no longer composes Chinese sentences (see shared `ProgressEvent`/`GhostlockCodes`).
      */
     fun progress(code: String, arg: String? = null) {
         onProgress?.invoke(com.rokid.rc.shared.protocol.ProgressEvent(code, arg))
@@ -95,11 +95,11 @@ interface GhostlockEngine {
 
     fun setEnabled(enabled: Boolean)
 
-    /** payload 完成標記（DONE）要寫入的 log 檔，由引擎決定以確保可被讀到。 */
+    /** The log file the payload completion marker (DONE) is written to; the engine decides it so that it is guaranteed readable. */
     fun doneLog(): File
 
     suspend fun exec(payload: RootScript): ExecResult
 
-    /** 跑一次 LPE 驗證/取得 root（等同跑一個驗證 payload）。 */
+    /** Run the LPE once to verify/acquire root (equivalent to running a verification payload). */
     suspend fun acquireRoot(): ExecResult
 }

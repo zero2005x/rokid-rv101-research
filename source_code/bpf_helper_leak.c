@@ -1,6 +1,6 @@
 /*
  * BPF Info Leak via Helper Functions
- * 利用 helper function return values 洩漏資訊
+ * Leak information through helper function return values
  */
 #define _GNU_SOURCE
 #include <stdio.h>

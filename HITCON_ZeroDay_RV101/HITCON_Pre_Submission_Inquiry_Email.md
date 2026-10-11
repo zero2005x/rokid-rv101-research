@@ -1,5 +1,7 @@
 # 寄給 HITCON ZeroDay 的送件前詢問信
 
+> English: [HITCON_Pre_Submission_Inquiry_Email_EN.md](HITCON_Pre_Submission_Inquiry_Email_EN.md)
+
 > 用途：先確認地域受理、組織指派、公開時程及私密 PoC 處理。尚未寄送。
 
 **To:** `service@zeroday.hitcon.org`  

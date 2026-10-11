@@ -1,26 +1,26 @@
 /*
- * ui_shell.h — ZeroLightRokid Desktop v3.0 自繪外殼
+ * ui_shell.h — ZeroLightRokid Desktop v3.0 custom-drawn shell
  *
- * 由 zero_light_desktop.c 在「裝置操作」之後 include
- * （需要用到 do_* 動作、g_* 狀態與 i18n 的 T()/Tf()）。
+ * Included by zero_light_desktop.c after the "device operations" section
+ * (it needs the do_* actions, the g_* state and i18n's T()/Tf()).
  *
- * 分工：
- *   ui_calc()          依客戶區大小算出所有矩形（繪製與命中測試共用）
- *   ui_paint()         WM_PAINT：雙緩衝繪製整張畫面
- *   ui_hit()           座標 → 元素 id
- *   ui_invoke()        元素 id → 執行動作
- *   ui_sync_children() 把真正的子控制項移到定位
+ * Division of labour:
+ *   ui_calc()          compute every rectangle from the client size (shared by paint and hit test)
+ *   ui_paint()         WM_PAINT: double-buffered rendering of the whole window
+ *   ui_hit()           coordinate -> element id
+ *   ui_invoke()        element id -> action
+ *   ui_sync_children() move the real child controls into place
  *
- * 只有「文字輸入」與「紀錄」使用真正的 Win32 控制項，其餘全部自繪。
+ * Only the text inputs and the log use real Win32 controls; everything else is custom-drawn.
  */
 #ifndef ZL_UI_SHELL_H
 #define ZL_UI_SHELL_H
 
-/* ================= 元素 ================= */
+/* ================= elements ================= */
 
 enum {
     EL_NONE = 0,
-    /* 可點元素：[1, EL_LAST_CLICK] */
+    /* clickable elements: [1, EL_LAST_CLICK] */
     EL_THEME, EL_SETTINGS, EL_HELP,
     EL_REFRESH, EL_DETAIL,
     EL_PRIMARY, EL_REACQUIRE, EL_VERIFY, EL_REBOOT, EL_MANUAL,
@@ -31,7 +31,7 @@ enum {
     EL_CANCEL,
     EL_CLOSE_SET, EL_LANG, EL_THEME_CYCLE, EL_LANG_LIST, EL_BROWSE_APK, EL_CLOSE_LOGPOP,
     EL_LAST_CLICK,
-    /* 以下僅為幾何（子控制項定位用），不可點 */
+    /* the following are geometry only (for positioning child controls); not clickable */
     EL_RECT_ADB, EL_RECT_SERIAL, EL_RECT_APK, EL_RECT_CMD, EL_RECT_LOG, EL_RECT_LOGPOP,
     EL_COUNT
 };
@@ -39,19 +39,19 @@ enum {
 static RECT g_rc[EL_COUNT];
 static int  g_rc_ok[EL_COUNT];
 
-/* ================= UI 狀態 =================
- * 這些全域變數宣告在 zero_light_desktop.c 的全域區（必須早於本 include），
- * 此處不再重複宣告，避免型別衝突。
+/* ================= UI state =================
+ * These globals are declared in zero_light_desktop.c's globals section (which must come before
+ * this include); they are not redeclared here, to avoid type conflicts.
  */
 
-/* 子控制項 ID */
+/* child control IDs */
 #define CID_ADB    2001
 #define CID_SERIAL 2002
 #define CID_APK    2003
 #define CID_CMD    2004
 #define CID_LOG    2005
 
-/* ================= 版面常數 ================= */
+/* ================= layout constants ================= */
 
 static void ui_setrc(int id, int x, int y, int w, int h) {
     if (w < 0) w = 0;
@@ -72,7 +72,7 @@ static int ui_hit(int x, int y) {
     return EL_NONE;
 }
 
-/* ================= 主題套用 ================= */
+/* ================= theme application ================= */
 
 static void ui_apply_theme(int mode) {
     theme_apply(mode);
@@ -81,7 +81,7 @@ static void ui_apply_theme(int mode) {
     if (g_main) InvalidateRect(g_main, NULL, TRUE);
 }
 
-/* ================= 版面 ================= */
+/* ================= layout ================= */
 
 static void ui_calc(void) {
     memset(g_rc_ok, 0, sizeof(g_rc_ok));
@@ -92,7 +92,7 @@ static void ui_calc(void) {
     int y  = S(HDR_H) + S(14);
     int bh = S(30);
 
-    /* ---- 標題列 ---- */
+    /* ---- title bar ---- */
     {
         int bw = S(92);
         ui_setrc(EL_HELP,     cw - S(MARGIN) - bw, S(10), bw, S(28));
@@ -100,7 +100,7 @@ static void ui_calc(void) {
         ui_setrc(EL_THEME,    g_rc[EL_SETTINGS].left - S(8) - bw, S(10), bw, S(28));
     }
 
-    /* ---- 裝置卡 ---- */
+    /* ---- device card ---- */
     {
         int cy = y;
         ui_setrc(EL_REFRESH, x + w - S(PAD) - S(96), cy + S(PAD) - S(6), S(96), bh);
@@ -108,11 +108,11 @@ static void ui_calc(void) {
         y += S(104) + S(GAP);
     }
 
-    /* ---- 主要卡 ---- */
+    /* ---- main card ---- */
     {
         int cardy = y;
         int mh = g_dev.rooted ? S(136) : S(178);
-        int by = cardy + mh - S(PAD) - S(30);       /* 底部列 */
+        int by = cardy + mh - S(PAD) - S(30);       /* bottom row */
         if (g_dev.rooted) {
             ui_setrc(EL_PRIMARY, x + S(PAD), cardy + S(PAD), w - 2 * S(PAD), S(58));
         } else {
@@ -131,28 +131,29 @@ static void ui_calc(void) {
         ui_setrc(EL_REBOOT, x + w - S(PAD) - rw, by, rw, S(30));
         ui_setrc(EL_VERIFY, g_rc[EL_REBOOT].left - S(8) - vw, by, vw, S(30));
         if (g_dev.rooted) {
-            /* 已 root：一鍵降級為次要的「重新取得 root」 */
+            /* already rooted: demote the one-click button to a secondary "reacquire root" */
             int aw = S(140);
             ui_setrc(EL_REACQUIRE, g_rc[EL_VERIFY].left - S(8) - aw, by, aw, S(30));
         }
         y += mh + S(GAP);
     }
 
-    /* ---- 工具卡 ---- */
+    /* ---- tools card ---- */
     {
         int cardy = y, th = S(196);
         int col1 = x + S(PAD);
         int col2 = x + S(PAD) + (w - 2 * S(PAD)) / 2 + S(16);
         int sw = S(44) + S(230);
-        int sy = cardy + S(PAD) + S(20);        /* 開關軌道中心列 */
+        int sy = cardy + S(PAD) + S(20);        /* switch track centre row */
         ui_setrc(EL_SW_OTA,    col1, sy, sw, S(50));
         ui_setrc(EL_SW_SILENT, col2, sy, sw, S(50));
-        sy += S(56);                            /* 列距：兩行文字不互擠 */
+        sy += S(56);                            /* row pitch: keeps the two text lines from crowding */
         ui_setrc(EL_SW_LED,    col1, sy, sw, S(50));
         ui_setrc(EL_SHIZUKU,   col2, sy, sw, S(50));
         ui_setrc(EL_OTACHECK,  col2 + sw + S(12), sy + S(10), S(100), S(30));
         ui_setrc(EL_GLLOG,     g_rc[EL_OTACHECK].right + S(8), sy + S(10), S(104), S(30));
-        /* root 指令列：標籤與輸入框之間留足間距，圓角底不壓到標籤 */
+        /* root command row: leave enough space between label and input so the rounded
+         * background does not overlap the label */
         int cy = cardy + th - S(PAD) - S(32);
         ui_setrc(EL_RUNCMD, x + w - S(PAD) - S(84), cy, S(84), S(32));
         int edit_x = x + S(PAD) + S(104);
@@ -161,7 +162,7 @@ static void ui_calc(void) {
         y += th + S(GAP);
     }
 
-    /* ---- 紀錄卡 ---- */
+    /* ---- log card ---- */
     {
         int cardy = y;
         int avail = ch - S(STATUSH) - S(GAP) - cardy;
@@ -179,17 +180,18 @@ static void ui_calc(void) {
         y += avail + S(GAP);
     }
 
-    /* ---- 狀態列 ---- */
+    /* ---- status bar ---- */
     if (g_busy)
         ui_setrc(EL_CANCEL, cw - S(MARGIN) - S(88), ch - S(STATUSH) + S(3), S(88), S(27));
 
-    /* ---- 紀錄彈跳視窗 ---- */
+    /* ---- log popup ---- */
     if (g_log_popup) {
         int pw = cw - 2 * S(60), ph = ch - 2 * S(48);
         if (pw < S(520)) pw = cw - 2 * S(MARGIN);
         if (ph < S(320)) ph = ch - 2 * S(MARGIN);
         int px = (cw - pw) / 2, py = (ch - ph) / 2;
-        /* 關閉鈕先佔最右側，儲存／清除再往左排 —— 否則 ✕ 會疊在儲存鈕上 */
+        /* the close button takes the far right first, then save/clear go leftwards — otherwise
+         * the ✕ overlaps the save button */
         ui_setrc(EL_CLOSE_LOGPOP, px + pw - S(PAD) - S(30), py + S(12), S(30), S(30));
         int tw = S(60);
         ui_setrc(EL_LOGSAVE,  g_rc[EL_CLOSE_LOGPOP].left - S(12) - tw, py + S(15), tw, S(24));
@@ -198,7 +200,7 @@ static void ui_calc(void) {
                  pw - 2 * S(PAD), ph - S(52) - S(PAD));
     }
 
-    /* ---- 設定浮層 ---- */
+    /* ---- settings overlay ---- */
     if (g_set_open) {
         int pw = S(600), ph = S(300);
         int px = (cw - pw) / 2, py = (ch - ph) / 2;
@@ -207,7 +209,8 @@ static void ui_calc(void) {
         int fw = pw - 2 * S(PAD) - S(96);
         ui_setrc(EL_RECT_ADB,    fx, py + S(58),  fw, S(30));
         ui_setrc(EL_RECT_SERIAL, fx, py + S(98),  fw, S(30));
-        /* APK 欄位右側留「瀏覽…」鈕：手打路徑不切實際 */
+        /* keep a "Browse…" button to the right of the APK field: typing the path by hand is
+         * impractical */
         int bw = S(104);
         ui_setrc(EL_RECT_APK,    fx, py + S(138), fw - bw - S(8), S(30));
         ui_setrc(EL_BROWSE_APK,  fx + fw - bw, py + S(138), bw, S(30));
@@ -222,11 +225,12 @@ static void ui_calc(void) {
     }
 }
 
-/* ================= 子控制項 ================= */
+/* ================= child controls ================= */
 
 /*
- * 只建立「必須是真控制項」的四個：adb 路徑／序號／root 指令／紀錄。
- * 全部無邊框 —— 圓角底與邊框由父視窗自繪，這樣才能配合主題色。
+ * Create only the four that must be real controls: adb path / serial / root command / log.
+ * All borderless — the rounded background and border are custom-drawn by the parent window so
+ * they can follow the theme colours.
  */
 static void ui_create_children(void) {
     DWORD ed = WS_CHILD | ES_AUTOHSCROLL;
@@ -270,20 +274,22 @@ static void ui_sync_children(void) {
     if (!g_main) return;
 
     /*
-     * 子控制項永遠畫在父視窗客戶區之上，自繪浮層蓋不住它們。
+     * Child controls always draw above the parent's client area; a custom-drawn overlay cannot
+     * cover them.
      *
-     * 這裡刻意「先全部隱藏、再逐一顯示該顯示的」，而不是逐一判斷要顯示還是隱藏：
-     * 逐一判斷只要有一處條件寫錯，那個控制項就會浮在浮層上（實測依次踩到
-     * root 指令框與 Shizuku APK 欄位殘留在彈跳紀錄面板上）。
-     * 先歸零再設定，任何殘留都不可能發生。
+     * Deliberately "hide everything first, then show the ones that should be shown" rather than
+     * deciding show/hide per control: with per-control decisions a single wrong condition leaves
+     * that control floating above the overlay (measured in turn with the root command box and
+     * the Shizuku APK field surviving over the log popup).
+     * Zero everything first, then set, and no residue is possible.
      */
     HWND all[] = { g_adb_edit, g_serial_edit, g_apk_edit, g_cmd_edit, g_log };
     for (int i = 0; i < (int)(sizeof(all) / sizeof(all[0])); i++) {
         if (!all[i]) continue;
         /*
-         * 同時 SW_HIDE 並移出畫面：只靠 ShowWindow(SW_HIDE) 實測仍會在
-         * 自繪浮層上留下殘影（EDIT 控制項的文字留在畫面上，要點選才消失）。
-         * 移到畫面外是即使隱藏失效也保證看不見的保險。
+         * SW_HIDE and move off-screen at the same time: ShowWindow(SW_HIDE) alone was measured
+         * to leave ghosts on the custom-drawn overlay (the EDIT control's text stays on screen
+         * until it is clicked). Moving off-screen guarantees invisibility even if hiding fails.
          */
         ShowWindow(all[i], SW_HIDE);
         SetWindowPos(all[i], NULL, -32000, -32000, 0, 0,
@@ -293,11 +299,11 @@ static void ui_sync_children(void) {
     const int overlay = (g_set_open || g_log_popup);
 
     struct { HWND h; int id; int vis; } ctl[] = {
-        { g_adb_edit,    EL_RECT_ADB,    0 },   /* 0 = 只在設定浮層 */
+        { g_adb_edit,    EL_RECT_ADB,    0 },   /* 0 = only in the settings overlay */
         { g_serial_edit, EL_RECT_SERIAL, 0 },
         { g_apk_edit,    EL_RECT_APK,    0 },
-        { g_cmd_edit,    EL_RECT_CMD,    1 },   /* 1 = 只在沒有浮層時 */
-        { g_log,         EL_RECT_LOG,    2 },   /* 2 = 紀錄展開或彈跳時 */
+        { g_cmd_edit,    EL_RECT_CMD,    1 },   /* 1 = only when no overlay is open */
+        { g_log,         EL_RECT_LOG,    2 },   /* 2 = when the log is expanded or popped up */
     };
     for (int i = 0; i < (int)(sizeof(ctl) / sizeof(ctl[0])); i++) {
         HWND h = ctl[i].h;
@@ -315,9 +321,9 @@ static void ui_sync_children(void) {
 }
 
 
-/* ================= 狀態查詢 ================= */
+/* ================= state queries ================= */
 
-/* 忙碌時只有取消可用 */
+/* only cancel is available while busy */
 static int ui_enabled(int id) {
     if (!g_busy) return 1;
     return id == EL_CANCEL;
@@ -329,7 +335,7 @@ static ui_state ui_st(int id) {
     return ST_NORMAL;
 }
 
-/* ================= 繪製 ================= */
+/* ================= painting ================= */
 
 static void ui_paint_body(void) {
     zl_ui *u = &g_ui;
@@ -338,7 +344,7 @@ static void ui_paint_body(void) {
     int x = S(MARGIN), w = cw - 2 * S(MARGIN);
     int cy;
 
-    /* ---- 標題列 ---- */
+    /* ---- title bar ---- */
     fill_round(&u->cv, 0, 0, cw, S(HDR_H), 0, TH(TC_CARD));
     {
         int dotr = S(5);
@@ -365,7 +371,7 @@ static void ui_paint_body(void) {
                   T(STR_BTN_ABOUT), BTN_GHOST, -1, ui_st(EL_HELP));
     }
 
-    /* ---- 裝置卡 ---- */
+    /* ---- device card ---- */
     cy = S(HDR_H) + S(14);
     ui_card(u, x, cy, w, S(104));
     ui_card_title(u, T(STR_CARD_DEVICE), x + S(PAD), cy + S(12));
@@ -387,7 +393,7 @@ static void ui_paint_body(void) {
         tx += cwid + S(14);
         ui_text_l(u, u->font, g_dev.serial, tx, ry, S(220), S(20), TH(TC_TEXT));
 
-        /* chips：靠右 */
+        /* chips: right-aligned */
         int cx = x + w - S(PAD);
         struct { const wchar_t *s; COLORREF c; } ch[4];
         int nc = 0;
@@ -402,7 +408,7 @@ static void ui_paint_body(void) {
             ui_chip(u, cx, ry + S(1), ch[i].s, ch[i].c);
             cx -= S(7);
         }
-        /* 第二行：型號／韌體／Android／開機時間 */
+        /* second line: model / firmware / Android / uptime */
         wchar_t line2[512];
         long up = g_dev.uptime;
         swprintf(line2, 512, L"%ls · %ls · Android %ls · %ld:%02ld:%02ld",
@@ -413,7 +419,7 @@ static void ui_paint_body(void) {
         ui_text_l(u, u->font_s, line2, x + S(PAD), ry + S(24), w - 2*S(PAD), S(18), TH(TC_TEXT2));
     }
 
-    /* ---- 主要卡 ---- */
+    /* ---- main card ---- */
     {
         int cardy = S(HDR_H) + S(14) + S(104) + S(GAP);
         int mh = g_dev.rooted ? S(136) : S(178);
@@ -452,10 +458,10 @@ static void ui_paint_body(void) {
                   T(STR_BTN_REBOOT), BTN_GHOST, IC_POWER, ui_st(EL_REBOOT));
     }
 
-    /* ---- 工具卡 ---- */
+    /* ---- tools card ---- */
     {
         int cardy = S(HDR_H) + S(14) + S(104) + S(GAP) + (g_dev.rooted ? S(136) : S(178)) + S(GAP);
-        int th = S(196);            /* 必須與 ui_calc() 一致 */
+        int th = S(196);            /* must match ui_calc() */
         ui_card(u, x, cardy, w, th);
         ui_card_title(u, T(STR_CARD_TOOLS), x + S(PAD), cardy + S(12));
         ui_switch(u, g_rc[EL_SW_OTA].left, g_rc[EL_SW_OTA].top + S(13), g_dev.ota_locked,
@@ -478,7 +484,7 @@ static void ui_paint_body(void) {
                   T(STR_BTN_OTACHECK), BTN_GHOST, -1, ui_st(EL_OTACHECK));
         ui_button(u, g_rc[EL_GLLOG].left, g_rc[EL_GLLOG].top, RCW(EL_GLLOG), RCH(EL_GLLOG),
                   T(STR_BTN_GLLOG), BTN_GHOST, -1, ui_st(EL_GLLOG));
-        /* root 指令列 */
+        /* root command row */
         int cyy = cardy + th - S(PAD) - S(30);
         ui_text_l(u, u->font_s, T(STR_LBL_ROOT_CMD), x + S(PAD), cyy - S(2),
                   S(96), S(32), TH(TC_TEXT2));
@@ -490,7 +496,7 @@ static void ui_paint_body(void) {
                   T(STR_BTN_CUSTOM), BTN_GHOST, -1, ui_st(EL_RUNCMD));
     }
 
-    /* ---- 紀錄卡 ---- */
+    /* ---- log card ---- */
     {
         int cardy = S(HDR_H) + S(14) + S(104) + S(GAP) + (g_dev.rooted ? S(136) : S(178))
                     + S(GAP) + S(196) + S(GAP);
@@ -514,7 +520,8 @@ static void ui_paint_body(void) {
             ui_text_l(u, u->font, have ? g_last_result : T(STR_ST_READY),
                       x + S(PAD) + S(18), ry, w - 2*S(PAD) - S(18), S(20),
                       have ? TH(TC_TEXT) : TH(TC_TEXT2));
-            /* 預覽最近兩行（淡化），把收合時的留白換成有用資訊 */
+            /* preview the last two lines (dimmed), turning the collapsed blank space into useful
+             * information */
             int py = ry + S(22);
             for (int i = 0; i < g_logtail_n && i < 2; i++) {
                 const wchar_t *ln = g_logtail[i];
@@ -526,7 +533,7 @@ static void ui_paint_body(void) {
         }
     }
 
-    /* ---- 狀態列 ---- */
+    /* ---- status bar ---- */
     {
         int sy = ch - S(STATUSH);
         d_line(&u->cv, 0, sy, cw, sy, TH(TC_LINE));
@@ -546,9 +553,9 @@ static void ui_paint_body(void) {
                       T(STR_BTN_CANCEL), BTN_DANGER, -1, ui_st(EL_CANCEL));
     }
 
-    /* ---- 紀錄彈跳視窗 ---- */
+    /* ---- log popup ---- */
     if (g_log_popup) {
-        /* 遮罩：與設定浮層一致，用 32bpp DIB 才吃得到 alpha */
+        /* scrim: same as the settings overlay, needs a 32bpp DIB for alpha to apply */
         fill_round_a(&u->cv, 0, 0, cw, ch, 0, TH(TC_BG), 210);
         int pw = RCW(EL_RECT_LOGPOP) + 2 * S(PAD);
         int ph = RCH(EL_RECT_LOGPOP) + S(52) + S(PAD);
@@ -567,9 +574,9 @@ static void ui_paint_body(void) {
                   T(STR_BTN_CLEARLOG), BTN_GHOST, -1, ui_st(EL_CLEARLOG));
     }
 
-    /* ---- 設定浮層 ---- */
+    /* ---- settings overlay ---- */
     if (g_set_open) {
-        /* 遮罩：壓暗背景，讓浮層聚焦 */
+        /* scrim: dim the background so the overlay draws focus */
         fill_round_a(&u->cv, 0, 0, cw, ch, 0, TH(TC_BG), 200);
         int pw = S(600), ph = S(292);
         int px = (cw - pw) / 2, py = (ch - ph) / 2;
@@ -609,7 +616,7 @@ static void ui_paint_body(void) {
             ui_button(u, g_rc[EL_THEME_CYCLE].left, g_rc[EL_THEME_CYCLE].top,
                       RCW(EL_THEME_CYCLE), RCH(EL_THEME_CYCLE), tl, BTN_SOFT, -1, ui_st(EL_THEME_CYCLE));
         }
-        /* 語言下拉清單 */
+        /* language dropdown list */
         if (g_lang_open) {
             int lx = g_rc[EL_LANG_LIST].left, ly = g_rc[EL_LANG_LIST].top;
             int lw = RCW(EL_LANG_LIST), lh = RCH(EL_LANG_LIST), ih = S(26);
@@ -629,7 +636,7 @@ static void ui_paint_body(void) {
     }
 }
 
-/* 雙緩衝繪製 */
+/* double-buffered painting */
 static void ui_paint(HWND hwnd) {
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
@@ -639,9 +646,9 @@ static void ui_paint(HWND hwnd) {
 
     HDC     mem = CreateCompatibleDC(dc);
     /*
-     * 用 32bpp DIB section 而非 CreateCompatibleBitmap：
-     * GDI+ 的半透明填色（設定浮層的遮罩）只有在 32bpp 表面上才會正確 alpha 混色，
-     * 相容點陣圖上會退回不透明而讓遮罩完全看不出效果。
+     * Use a 32bpp DIB section rather than CreateCompatibleBitmap: GDI+'s translucent fills (the
+     * settings-overlay scrim) only alpha-blend correctly on a 32bpp surface; on a compatible
+     * bitmap they fall back to opaque and the scrim has no visible effect at all.
      */
     BITMAPINFO bmi;
     memset(&bmi, 0, sizeof(bmi));
@@ -678,9 +685,9 @@ static void ui_paint(HWND hwnd) {
 }
 
 
-/* ================= 動作分派 ================= */
+/* ================= action dispatch ================= */
 
-/* 讀回設定浮層的輸入框內容 */
+/* read back the settings overlay's input fields */
 static void ui_commit_settings(void) {
     if (g_adb_edit)    GetWindowTextW(g_adb_edit, g_adb, MAX_PATH);
     if (g_serial_edit) GetWindowTextW(g_serial_edit, g_serial, 128);
@@ -706,7 +713,7 @@ static void ui_invoke(int id) {
     case EL_SETTINGS:
         g_set_open = !g_set_open;
         g_lang_open = 0;
-        g_log_popup = 0;          /* 兩個浮層互斥 */
+        g_log_popup = 0;          /* the two overlays are mutually exclusive */
         if (g_set_open) {
             if (g_adb_edit)    SetWindowTextW(g_adb_edit, g_adb);
             if (g_serial_edit) SetWindowTextW(g_serial_edit, g_serial);
@@ -764,7 +771,8 @@ static void ui_invoke(int id) {
         return;
 
     case EL_LOGPOP:
-        /* 改開獨立視窗：不再用浮層，徹底避開子控制項 z 序與命中問題 */
+        /* switch to a separate window: no more overlay, avoiding child-control z-order and hit
+         * problems entirely */
         logwin_open();
         return;
 
@@ -801,13 +809,14 @@ static void ui_invoke(int id) {
     case EL_GLLOG:    start_op(OP_GLLOG);    return;
     case EL_SHIZUKU:
         /*
-         * 只有在「確定 Shizuku manager 尚未安裝」且使用者還沒指定 APK 時，
-         * 才需要跳檔案選擇框。舊寫法只要 g_apk 是空的就跳，即使 Shizuku
-         * 早就裝好、根本不需要 APK，每次按都被打斷。
+         * The file picker is only needed when the Shizuku manager is known not to be installed and
+         * the user has not yet chosen an APK. The old code popped it whenever g_apk was empty,
+         * interrupting every click even when Shizuku had long been installed and no APK was needed.
          *
-         * shizuku_installed 由背景輪詢填入（1=已安裝 0=未安裝 -1=還沒探到），
-         * 因此這裡不需要在 UI 執行緒上呼叫 adb。-1 時仍跳框，涵蓋「App 剛
-         * 啟動、第一次輪詢還沒回來」的短暫空窗。
+         * shizuku_installed is filled in by a background poll (1=installed 0=not installed -1=not
+         * probed yet), so no adb call is needed on the UI thread here. It still pops the picker
+         * when the value is -1, covering the brief window right after app start before the first
+         * poll returns.
          */
         if (!g_apk[0] && g_dev.shizuku_installed != 1) {
             wchar_t f[MAX_PATH];
@@ -828,7 +837,7 @@ static void ui_invoke(int id) {
         return;
 
     case EL_SW_OTA:
-        /* 開關即動作：目前已鎖 → 解鎖；未鎖 → 鎖定 */
+        /* the switch is the action: currently locked -> unlock; unlocked -> lock */
         start_op(g_dev.ota_locked ? OP_OTAUNLOCK : OP_OTALOCK);
         return;
 
@@ -865,7 +874,7 @@ static void ui_invoke(int id) {
         return; }
 
     case EL_LANG_LIST: {
-        /* 由點擊的 y 推算選到哪一個 */
+        /* work out which entry was selected from the click's y coordinate */
         POINT pt; GetCursorPos(&pt); ScreenToClient(g_main, &pt);
         int ih = S(26), idx = (pt.y - g_rc[EL_LANG_LIST].top) / (ih ? ih : 1);
         if (idx < 0) idx = 0;

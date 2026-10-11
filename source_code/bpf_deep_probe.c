@@ -1,6 +1,6 @@
 /*
  * Deep BPF Verifier Probe for 5.10.209
- * 探測更細微的 verifier bugs
+ * Probe for subtler verifier bugs
  */
 #define _GNU_SOURCE
 #include <stdio.h>

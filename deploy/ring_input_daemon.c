@@ -1,32 +1,37 @@
 /*
- * ⚠️ 備援實作（未採用）：本版路徑 B 改用裝置內建的 `getevent`（由 root daemon 背景執行、
- *    App 輪詢增量），因此不需要隨 APK 附帶 native binary。保留本檔是為了未來若需要更低延遲
- *    （事件驅動、可讀取 ABS/手勢而非輪詢）時的現成實作；本機 WSL 無 aarch64 linker 且 NDK 為
- *    Windows 版，故未在此環境建置。
+ * ⚠️ Fallback implementation (not adopted): this version's path B uses the device's built-in
+ *    `getevent` instead (run in the background by the root daemon, with the App polling for
+ *    increments), so no native binary needs to ship with the APK. This file is kept as a
+ *    ready-made implementation in case lower latency is needed later (event-driven, able to
+ *    read ABS/gestures instead of polling); it was not built here because the local WSL has no
+ *    aarch64 linker and the NDK is the Windows build.
  */
 /*
- * ring_input_daemon.c — 以 root 直讀 /dev/input/eventX 的手勢守護程式（路徑 B）。
+ * ring_input_daemon.c — gesture daemon that reads /dev/input/eventX directly as root (path B).
  *
- * 為什麼需要它：
- *   眼鏡端 App 是 untrusted_app，讀不到 /dev/input/*；但 reboot 後 root_daemon（root）
- *   可以把它拉起來。本程式：
- *     1. 自動挑選輸入裝置（--name 子字串比對，例如戒指 "RGR" 或眼鏡觸控板 "TP"）
- *     2. 讀 evdev 事件 → 辨識手勢（單擊／雙擊／三擊／長按／滾輪）
- *     3. 把結果以行導向文字寫到 UNIX socket 給 App（可多個 client）
+ * Why it exists:
+ *   The glasses-side App is untrusted_app and cannot read /dev/input/*, but after a reboot
+ *   root_daemon (root) can start this. The program:
+ *     1. picks an input device automatically (--name substring match, e.g. "RGR" for the ring
+ *        or "TP" for the glasses touchpad)
+ *     2. reads evdev events -> recognises gestures (tap / double tap / triple tap / long press
+ *        / wheel)
+ *     3. writes the result as line-oriented text to a UNIX socket for the App (multiple
+ *        clients allowed)
  *
- * 用法：
- *   ring_input_daemon --list                     列出所有輸入裝置後結束
- *   ring_input_daemon [--device /dev/input/eventN] [--name 子字串]
+ * Usage:
+ *   ring_input_daemon --list                     list every input device, then exit
+ *   ring_input_daemon [--device /dev/input/eventN] [--name substring]
  *                      [--socket /data/local/tmp/ring_input.sock]
  *                      [--tap-ms 400] [--double-ms 450] [--long-ms 700]
  *
- * 輸出（每行一筆，ASCII）：
- *   HELLO <device-name>           client 連上時送出
- *   KEY <code> <down|up>          原始按鍵（供「手勢學習」用）
+ * Output (one entry per line, ASCII):
+ *   HELLO <device-name>           sent when a client connects
+ *   KEY <code> <down|up>          raw key (for "gesture learning")
  *   TAP | DOUBLE_TAP | TRIPLE_TAP | LONG_PRESS
  *   SCROLL_UP | SCROLL_DOWN
  *
- * 建置（aarch64）：
+ * Build (aarch64):
  *   <NDK>/toolchains/llvm/prebuilt/<host>/bin/aarch64-linux-android24-clang \
  *       -O2 -o ring_input_daemon ring_input_daemon.c
  */
@@ -56,7 +61,7 @@ static int g_clients[MAX_CLIENTS];
 static int g_nclients = 0;
 static char g_devname[NAME_MAX_LEN] = "unknown";
 
-/* ---- 手勢參數（可由命令列覆寫） ---- */
+/* ---- gesture parameters (overridable from the command line) ---- */
 static long tap_ms = 400;
 static long double_ms = 450;
 static long long_ms = 700;
@@ -83,16 +88,16 @@ static void send_line(const char *fmt, ...) {
             i--;
         }
     }
-    /* 也印到 stdout（由 root_daemon 導向 log 檔） */
+    /* also print to stdout (redirected to a log file by root_daemon) */
     fwrite(buf, 1, (size_t)n, stdout);
     fflush(stdout);
 }
 
-/* 會被視為「點一下」的鍵：觸控板 BTN_TOUCH、滑鼠鍵、確認鍵、自訂鍵 */
+/* Keys treated as a "tap": touchpad BTN_TOUCH, mouse buttons, confirm keys, custom keys */
 static int is_tap_like(unsigned short code) {
     switch (code) {
-        case BTN_TOUCH:      /* 330 觸控板 */
-        case BTN_LEFT:       /* 272 滑鼠左鍵（BTN_MOUSE 同值） */
+        case BTN_TOUCH:      /* 330 touchpad */
+        case BTN_LEFT:       /* 272 mouse left button (same value as BTN_MOUSE) */
         case BTN_RIGHT:      /* 273 */
         case BTN_MIDDLE:     /* 274 */
         case BTN_0:
@@ -130,7 +135,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--long-ms") && i + 1 < argc) long_ms = atol(argv[++i]);
     }
 
-    /* ---- 挑裝置 ---- */
+    /* ---- pick a device ---- */
     char found[256] = "";
     for (int i = 0; i < 32; i++) {
         char path[64];
@@ -150,7 +155,7 @@ int main(int argc, char **argv) {
             continue;
         }
         if (strlen(want_name)) {
-            /* 大小寫無關的子字串比對 */
+            /* case-insensitive substring match */
             char ln[NAME_MAX_LEN], lw[NAME_MAX_LEN];
             snprintf(ln, sizeof(ln), "%s", name);
             snprintf(lw, sizeof(lw), "%s", want_name);
@@ -187,23 +192,23 @@ int main(int argc, char **argv) {
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", sock_path);
     if (bind(srv, (struct sockaddr *)&addr, sizeof(addr)) < 0) { perror("bind"); return 5; }
     /*
-     * 權限：0600（原本是 0777）。
+     * Permissions: 0600 (was 0777).
      *
-     * 0777 會讓**任何 uid**（含其他 App 與 adb shell）連上這個 socket 並讀走
-     * 使用者的手勢串流（等同旁路得知使用者何時按了戒指／觸控板），
-     * 見 reports/ring_capture_security_audit_2026-09-13.md §2 R7。
+     * 0777 lets **any uid** (including other apps and adb shell) connect to this socket and
+     * read the user's gesture stream (equivalent to learning out of band when the user pressed
+     * the ring or touchpad); see reports/ring_capture_security_audit_2026-09-13.md §2 R7.
      *
-     * ⚠ 本檔是**未採用的備援實作**（正式路徑 B 走 root daemon + `getevent`）。
-     *   若日後真的要採用，0600 會讓 untrusted_app 連不上——屆時需要的是一個
-     *   **真正的存取控制設計**（專用 group／SELinux type／每次啟動的權杖），
-     *   而不是把它改回 0777。
+     * ⚠ This file is the **fallback implementation, not adopted** (the shipping path B uses the
+     *   root daemon + `getevent`). If it is ever adopted, 0600 will keep untrusted_app out —
+     *   what is needed then is a **real access-control design** (a dedicated group / SELinux
+     *   type / per-start token), not a revert to 0777.
      */
     chmod(sock_path, 0600);
     if (listen(srv, 8) < 0) { perror("listen"); return 6; }
     printf("INFO listening on %s\n", sock_path);
     fflush(stdout);
 
-    /* ---- 手勢狀態 ---- */
+    /* ---- gesture state ---- */
     long press_at = 0, last_tap_at = 0;
     int pressed = 0, tap_count = 0, long_fired = 0;
 
@@ -243,7 +248,7 @@ int main(int argc, char **argv) {
                             long held = t - press_at;
                             send_line("KEY %u up", ev.code);
                             if (long_fired) continue;
-                            if (held > tap_ms) continue;         /* 按太久：不視為點擊 */
+                            if (held > tap_ms) continue;         /* held too long: not a tap */
                             if (tap_count > 0 && t - last_tap_at <= double_ms) {
                                 tap_count++;
                             } else {
@@ -252,7 +257,7 @@ int main(int argc, char **argv) {
                             last_tap_at = t;
                         }
                     } else if (ev.value == 1 || ev.value == 0) {
-                        /* 其他按鍵只回報原始碼（供學習模式） */
+                        /* other keys only report the raw code (for learning mode) */
                         send_line("KEY %u %s", ev.code, ev.value ? "down" : "up");
                     }
                 } else if (ev.type == EV_REL && (ev.code == REL_WHEEL || ev.code == REL_HWHEEL)) {
@@ -262,7 +267,7 @@ int main(int argc, char **argv) {
             }
         }
 
-        /* 週期性判定：長按 / 連續點擊結束 */
+        /* periodic evaluation: long press / end of a tap run */
         long t = now_ms();
         if (pressed && !long_fired && t - press_at >= long_ms) {
             long_fired = 1;

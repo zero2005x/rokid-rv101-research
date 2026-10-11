@@ -2,41 +2,41 @@ package com.rokid.rc.shared.ring
 
 import android.os.SystemClock
 
-/** 戒指可辨識的手勢。 */
+/** Gestures the ring can recognize. */
 enum class RingGesture {
-    TAP,            // 單擊
-    DOUBLE_TAP,     // 雙擊
-    LONG_PRESS,     // 長按
-    TRIPLE_TAP,     // 三擊（部分戒指用於喚醒／切換模式）
-    SCROLL_UP,      // 滾輪／滑動向前
-    SCROLL_DOWN,    // 滾輪／滑動向後
+    TAP,            // single tap
+    DOUBLE_TAP,     // double tap
+    LONG_PRESS,     // long press
+    TRIPLE_TAP,     // triple tap (some rings use it to wake up / switch mode)
+    SCROLL_UP,      // wheel/swipe forward
+    SCROLL_DOWN,    // wheel/swipe backward
 }
 
-/** 手勢要執行的動作。 */
+/** The action a gesture performs. */
 enum class RingAction {
-    PHOTO,          // 拍照
-    VIDEO_TOGGLE,   // 錄影開始／停止
-    SILENT_TOGGLE,  // 靜音拍攝開關
-    DISPLAY_NEXT,   // 切換眼鏡顯示資訊（下一組）
-    DISPLAY_PREV,   // 切換眼鏡顯示資訊（上一組）
-    NONE,           // 不動作（保留／未指定）
+    PHOTO,          // take a photo
+    VIDEO_TOGGLE,   // start/stop recording
+    SILENT_TOGGLE,  // silent capture switch
+    DISPLAY_NEXT,   // switch the glasses display info (next group)
+    DISPLAY_PREV,   // switch the glasses display info (previous group)
+    NONE,           // no action (reserved/unspecified)
 }
 
 /**
- * 手勢辨識器：把「按下／放開／滾輪」事件序列變成 [RingGesture]。
+ * Gesture recognizer: turns a sequence of "press/release/scroll" events into a [RingGesture].
  *
- * 設計要點：
- *  - 戒指（BLE HID）可能以**鍵盤按鍵**或**滑鼠左鍵**的形式送出「點一下」，
- *    兩者都走同一套 press/release 流程。
- *  - 時間參數可調；預設值依一般觸控戒指的體感調整。
- *  - 執行緒：所有回呼都應在同一執行緒（App 主執行緒）呼叫。
+ * Design points:
+ *  - The ring (BLE HID) may send a "tap" either as a **keyboard key** or as a **left mouse button**;
+ *    both go through the same press/release flow.
+ *  - The timing parameters are tunable; the defaults are adjusted to how ordinary touch rings feel.
+ *  - Threading: every callback should be invoked on the same thread (the app main thread).
  */
 class RingGestureDetector(
     private val onGesture: (RingGesture) -> Unit,
-    private val tapMaxMs: Long = 400L,        // 按下到放開 < 400ms 視為「點」
-    private val doubleGapMs: Long = 450L,     // 兩次點擊間隔 < 450ms 視為雙擊
-    private val tripleGapMs: Long = 450L,     // 第三次點擊間隔（三擊）
-    private val longPressMs: Long = 700L      // 按住超過 700ms 視為長按
+    private val tapMaxMs: Long = 400L,        // press-to-release < 400ms counts as a "tap"
+    private val doubleGapMs: Long = 450L,     // interval between two taps < 450ms counts as a double tap
+    private val tripleGapMs: Long = 450L,     // interval to the third tap (triple tap)
+    private val longPressMs: Long = 700L      // holding longer than 700ms counts as a long press
 ) {
 
     private var pressAt = 0L
@@ -45,11 +45,11 @@ class RingGestureDetector(
     private var tapCount = 0
     private var longPressFired = false
 
-    /** 目前按住的鍵碼（用於忽略其他按鍵的干擾）。 */
+    /** Key code currently held (used to ignore interference from other keys). */
     var activeCode: Int = 0
         private set
 
-    /** 按鍵／滑鼠鍵按下。[atMs] 可傳入事件本身的時間（evdev 事件有時間戳，批次解析時才不會被壓縮）。 */
+    /** Key/mouse button pressed. [atMs] can carry the event's own time (evdev events have timestamps, so batch parsing does not compress them). */
     fun onPress(code: Int, atMs: Long = SystemClock.uptimeMillis()) {
         if (pressed) return
         pressed = true
@@ -58,17 +58,17 @@ class RingGestureDetector(
         longPressFired = false
     }
 
-    /** 按鍵／滑鼠鍵放開。[atMs] 語意同 [onPress]。 */
+    /** Key/mouse button released. [atMs] has the same meaning as in [onPress]. */
     fun onRelease(code: Int, atMs: Long = SystemClock.uptimeMillis()) {
         if (!pressed || code != activeCode) return
         pressed = false
         activeCode = 0
         val now = atMs
         val held = now - pressAt
-        if (longPressFired) return              // 長按已在計時器觸發
-        if (held > tapMaxMs) return             // 按太久但不構成指定長按 → 忽略
+        if (longPressFired) return              // the long press already fired on the timer
+        if (held > tapMaxMs) return             // held too long but not enough for the designated long press → ignore
 
-        // 連續點擊判定
+        // consecutive-tap detection
         if (tapCount > 0 && now - lastTapAt <= if (tapCount >= 2) tripleGapMs else doubleGapMs) {
             tapCount++
         } else {
@@ -78,8 +78,8 @@ class RingGestureDetector(
     }
 
     /**
-     * 週期性呼叫（建議每 50~100ms）：負責在「按住不放」時觸發長按，
-     * 以及把已穩定的點擊數轉成 TAP／DOUBLE_TAP／TRIPLE_TAP。
+     * Called periodically (every 50-100 ms is recommended): fires the long press while a key is held down,
+     * and converts a settled tap count into TAP/DOUBLE_TAP/TRIPLE_TAP.
      */
     fun tick() {
         val now = SystemClock.uptimeMillis()
@@ -99,7 +99,7 @@ class RingGestureDetector(
         }
     }
 
-    /** 滾輪／觸控板滑動。 */
+    /** Wheel/touchpad swipe. */
     fun onScroll(amount: Int) {
         if (amount > 0) onGesture(RingGesture.SCROLL_UP) else onGesture(RingGesture.SCROLL_DOWN)
     }

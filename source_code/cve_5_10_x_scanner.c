@@ -1,7 +1,7 @@
 /*
  * cve_5_10_x_scanner.c
- * Linux 5.10.x 漏洞快速掃描工具
- * 檢測 io_uring、perf_event、BPF 的可用性
+ * Linux 5.10.x vulnerability quick scanner
+ * Checks the availability of io_uring, perf_event and BPF
  */
 
 #include <stdio.h>
@@ -14,7 +14,7 @@
 #include <sys/mman.h>
 
 /*
- * io_uring 系統調用號 (ARM64)
+ * io_uring syscall numbers (ARM64)
  */
 #ifndef __NR_io_uring_setup
 #define __NR_io_uring_setup 425
@@ -27,14 +27,14 @@
 #endif
 
 /*
- * perf_event_open 系統調用號 (ARM64)
+ * perf_event_open syscall numbers (ARM64)
  */
 #ifndef __NR_perf_event_open
 #define __NR_perf_event_open 241
 #endif
 
 /*
- * io_uring 結構體定義
+ * io_uring structure definitions
  */
 struct io_uring_params
 {
@@ -73,7 +73,7 @@ struct io_uring_params
 };
 
 /*
- * perf_event_attr 結構體
+ * perf_event_attr structure
  */
 struct perf_event_attr
 {
@@ -114,7 +114,7 @@ struct perf_event_attr
 #define PERF_COUNT_SW_CPU_CLOCK 0
 
 /*
- * 檢測 io_uring 可用性
+ * Check io_uring availability
  */
 int check_io_uring(void)
 {
@@ -132,7 +132,7 @@ int check_io_uring(void)
                params.sq_entries, params.cq_entries);
         printf("[io_uring] features=0x%x\n", params.features);
 
-        // 嘗試 mmap SQ ring
+        // Try to mmap the SQ ring
         size_t sq_size = params.sq_off.array + params.sq_entries * sizeof(__u32);
         void *sq_ptr = mmap(NULL, sq_size, PROT_READ | PROT_WRITE,
                             MAP_SHARED | MAP_POPULATE, fd, 0);
@@ -159,7 +159,7 @@ int check_io_uring(void)
 }
 
 /*
- * 檢測 perf_event 可用性
+ * Check perf_event availability
  */
 int check_perf_event(void)
 {
@@ -177,7 +177,7 @@ int check_perf_event(void)
     {
         printf("[perf_event] ✅ 成功! fd=%ld\n", fd);
 
-        // 嘗試讀取計數器
+        // Try to read the counter
         long long count;
         if (read(fd, &count, sizeof(count)) == sizeof(count))
         {
@@ -195,7 +195,7 @@ int check_perf_event(void)
 }
 
 /*
- * 檢測 BPF 可用性
+ * Check BPF availability
  */
 int check_bpf(void)
 {
@@ -234,7 +234,7 @@ int check_bpf(void)
 }
 
 /*
- * 讀取 sysctl 值
+ * Read a sysctl value
  */
 int read_sysctl_int(const char *path, int *value)
 {
@@ -252,7 +252,7 @@ int read_sysctl_int(const char *path, int *value)
 }
 
 /*
- * 顯示系統安全配置
+ * Show the system security configuration
  */
 void show_security_config(void)
 {
@@ -335,7 +335,7 @@ void show_security_config(void)
         printf("randomize_va_space = N/A\n");
     }
 
-    // SELinux 狀態
+    // SELinux status
     int selinux_fd = open("/sys/fs/selinux/enforce", O_RDONLY);
     if (selinux_fd >= 0)
     {
@@ -351,7 +351,7 @@ void show_security_config(void)
 }
 
 /*
- * 嘗試 CVE-2024-0582 (io_uring mmap UAF) 的初步探測
+ * Preliminary probe for CVE-2024-0582 (io_uring mmap UAF)
  */
 int probe_cve_2024_0582(void)
 {
@@ -371,14 +371,14 @@ int probe_cve_2024_0582(void)
     printf("[CVE-2024-0582] sq_entries=%u, cq_entries=%u\n",
            params.sq_entries, params.cq_entries);
 
-    // 計算 ring buffer 大小
+    // Compute the ring buffer size
     size_t sq_ring_size = params.sq_off.array + params.sq_entries * sizeof(__u32);
     size_t cq_ring_size = params.cq_off.cqes + params.cq_entries * 16;
 
     printf("[CVE-2024-0582] 預估 SQ ring size: %zu\n", sq_ring_size);
     printf("[CVE-2024-0582] 預估 CQ ring size: %zu\n", cq_ring_size);
 
-    // 嘗試 mmap
+    // Try mmap
     void *sq_ring = mmap(NULL, sq_ring_size, PROT_READ | PROT_WRITE,
                          MAP_SHARED | MAP_POPULATE, fd, 0);
 
@@ -391,17 +391,17 @@ int probe_cve_2024_0582(void)
 
     printf("[CVE-2024-0582] ✅ SQ ring mmap: %p\n", sq_ring);
 
-    // 關閉 fd，但保留 mmap
+    // Close the fd but keep the mmap
     close(fd);
     printf("[CVE-2024-0582] 已關閉 fd，但保留 mmap...\n");
 
-    // 嘗試訪問 mmap 區域 (如果存在 UAF，這可能觸發問題)
-    // 警告：這只是探測，不是實際利用
+    // Try to access the mmap region (if a UAF exists this may trigger it)
+    // WARNING: this is only a probe, not an actual exploit
     volatile unsigned int *ptr = (volatile unsigned int *)sq_ring;
     unsigned int val = *ptr;
     printf("[CVE-2024-0582] 讀取 mmap 區域: 0x%08x\n", val);
 
-    // 清理
+    // Clean up
     munmap(sq_ring, sq_ring_size);
     printf("[CVE-2024-0582] 已 munmap\n");
 
@@ -418,17 +418,17 @@ int main(void)
     printf("   Target: Rokid AR Glasses\n");
     printf("============================================\n\n");
 
-    // 基本系統資訊
+    // Basic system information
     printf("=== 系統資訊 ===\n");
     system("uname -a");
     printf("UID: %d, EUID: %d\n", getuid(), geteuid());
     printf("\n");
 
-    // 安全配置
+    // Security configuration
     show_security_config();
     printf("\n");
 
-    // 功能檢測
+    // Feature checks
     printf("=== 功能檢測 ===\n");
 
     printf("\n[1] io_uring 檢測:\n");
@@ -440,13 +440,13 @@ int main(void)
     printf("\n[3] BPF 檢測:\n");
     int bpf_ok = check_bpf();
 
-    // CVE 探測
+    // CVE probe
     if (io_uring_ok)
     {
         probe_cve_2024_0582();
     }
 
-    // 總結
+    // Summary
     printf("\n============================================\n");
     printf("   掃描結果總結\n");
     printf("============================================\n");

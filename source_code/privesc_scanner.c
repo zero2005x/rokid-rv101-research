@@ -1,7 +1,7 @@
 /*
  * Android Privilege Escalation Scanner
  * =====================================
- * 系統化檢查各種提權向量
+ * Systematically check the various privilege escalation vectors
  */
 
 #define _GNU_SOURCE

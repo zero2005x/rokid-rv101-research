@@ -1,12 +1,12 @@
 /*
  * sf_ib_inject_v2.c - SurfaceFlinger IB Injection via CVE-2025-21479
  *
- * 核心策略：
- * 1. 使用 GPUOBJ_ALLOC 分配我們自己的 GPU 內存
- * 2. 使用 mmap offset 訪問全局 GPU 地址空間中的其他頁面
+ * Core strategy:
+ * 1. Use GPUOBJ_ALLOC to allocate our own GPU memory
+ * 2. Use the mmap offset to reach other pages in the global GPU address space
  * 3. offset = (page_index + 1) * 0x1000
- * 4. 掃描大範圍的 offset 尋找 SurfaceFlinger 的命令緩衝區
- * 5. 識別 PM4 封包並注入惡意指令
+ * 4. Scan a wide range of offsets looking for SurfaceFlinger's command buffer
+ * 5. Identify PM4 packets and inject malicious commands
  */
 
 #include <stdio.h>

@@ -1,5 +1,7 @@
 # 實際抓包驗證報告（Rokid 眼鏡 tcpdump 實測）
 
+> English: [capture-verification-report_EN.md](capture-verification-report_EN.md)
+
 - 設備：Rokid RG-glasses `<DEVICE_SERIAL>`，root（uid=0 / SELinux Permissive）
 - 網路：眼鏡接上公開 WiFi「iTaiwan」（無密碼、經 captive portal 點「我同意&免費上網」後上線）
 - 工具：裝置內建 `/system/bin/tcpdump 4.9.2`（root 執行）+ 主機 tshark 分析

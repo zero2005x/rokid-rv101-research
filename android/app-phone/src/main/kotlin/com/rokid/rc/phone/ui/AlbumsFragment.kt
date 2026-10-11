@@ -22,13 +22,13 @@ import com.rokid.rc.shared.protocol.Album
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/** 相簿分頁：2 欄大封面卡牆 + FAB 新增 + 長按選單。 */
+/** Albums tab: a wall of large cover cards + FAB to add + long-press menu. */
 class AlbumsFragment : Fragment() {
 
     private var rootV: View? = null
     private var allCards: List<AlbumCard> = emptyList()
     private var query: String = ""
-    /** 排序：name（預設）／count／newest */
+    /** Sort: name (default)/count/newest */
     private var sortBy: String = "name"
     private var adapter: AlbumCardAdapter? = null
     private var reloading = false
@@ -43,7 +43,7 @@ class AlbumsFragment : Fragment() {
         val activity = requireActivity() as MainActivity
 
         val rv = v.findViewById<RecyclerView>(R.id.rvAlbums)
-        val cols = 3          // 相簿 3 欄（縮圖密度較高，單本時不會空半邊）
+        val cols = 3          // 3 columns for albums (higher thumbnail density, so a single album does not leave half the row empty)
         rv.layoutManager = GridLayoutManager(context, cols)
         adapter = AlbumCardAdapter(
             coverLoader = { card -> loadCover(card) },
@@ -75,7 +75,7 @@ class AlbumsFragment : Fragment() {
                 setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(text: String?) = false
                     override fun onQueryTextChange(text: String?): Boolean {
-                        // 注意：此處 receiver 是 SearchView，`query` 會解析到它的 getQuery()（val）
+                        // NOTE: here the receiver is the SearchView, so `query` would resolve to its getQuery() (val)
                         this@AlbumsFragment.query = text.orEmpty().trim()
                         applyFilter()
                         return true
@@ -134,7 +134,7 @@ class AlbumsFragment : Fragment() {
         empty = a.mediaCount == 0
     )
 
-    /** 依查詢字串與排序套用到 adapter（搜尋/排序只影響顯示，不動資料）。 */
+    /** Apply the query string and sort to the adapter (search/sort only affect the display, never the data). */
     private fun applyFilter() {
         val a = adapter ?: return
         var list = allCards
@@ -143,13 +143,13 @@ class AlbumsFragment : Fragment() {
         }
         list = when (sortBy) {
             "count" -> list.sortedByDescending { it.badgeCount ?: 0 }
-            "newest" -> list.sortedByDescending { it.id }      // id 為時間序（建立時遞增）
+            "newest" -> list.sortedByDescending { it.id }      // id is chronological (incremented on creation)
             else -> list.sortedBy { it.name.lowercase() }
         }
         a.submit(list)
     }
 
-    /** 排序選單（名稱／項數／最新）。 */
+    /** Sort menu (name/count/newest). */
     private fun showSortDialog() {
         val labels = arrayOf(
             getString(R.string.sort_name),
@@ -170,8 +170,8 @@ class AlbumsFragment : Fragment() {
     }
 
     /**
-     * 封面 = 相簿內最新媒體的縮圖。
-     * **優先挑照片**：影片縮圖常是第一格全黑，看起來像「沒有封面」（實測）。
+     * Cover = thumbnail of the newest media in the album.
+     * **Prefer a photo**: a video thumbnail is often a fully black first frame and looks like "no cover" (measured).
      */
     private suspend fun loadCover(card: AlbumCard): android.graphics.Bitmap? {
         if (card.empty) return null
@@ -182,7 +182,7 @@ class AlbumsFragment : Fragment() {
     }
 
     private fun showState(v: View, icon: Int, msg: String, retry: Boolean) {
-        // 深色主題下圖示需上色，否則幾乎看不見
+        // on a dark theme the icon has to be tinted, otherwise it is nearly invisible
         v.findViewById<View>(R.id.llState).visibility = View.VISIBLE
         v.findViewById<ImageView>(R.id.ivStateIcon).setImageDrawable(ContextCompat.getDrawable(requireContext(), icon))
         v.findViewById<TextView>(R.id.tvStateTitle).text = msg

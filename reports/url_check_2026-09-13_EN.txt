@@ -1,0 +1,68 @@
+# External URL Reachability Spot Check (2026-09-13)
+
+> 中文版：[url_check_2026-09-13.txt](url_check_2026-09-13.txt)
+
+# Source: 178 unique URLs from reports/*.md and docs/*.md; the following are the high-value / most-referenced ones
+
+HTTP   count URL
+401    9      https://ota.rokid.com/v1/extended/ota/check
+404    7      https://ota.rokid.com
+200    3      https://source.android.com/security/bulletin
+200    3      https://github.com/R0rt1z2/fenrir
+000    2      http://ATTACKER_IP/steal'
+200    2      https://global.rokid.com/pages/security-center
+404    2      https://ota.rokid.com/v1/extended/ota/check'
+200    2      https://developer.android.com/studio/releases/platform-tools
+200    2      https://github.com/topjohnwu/Magisk/releases
+200    2      https://github.com/superturtlee/gbl_root_canoe
+200    2      https://source.android.com/docs/core/architecture/bootloader/locking_unlocking
+200    2      https://github.com/atlas4381/qualcomm_avb_exploit_poc
+200    2      https://github.com/kasnria001/qualcomm_noavb_exploit_common
+200    2      https://github.com/Linuxoid-cn/Mi8G3-Unlocker
+200    2      https://github.com/Linuxoid-cn/Mi8G2-Unlocker
+200    2      https://github.com/Linuxoid-cn/Mi8sG4-Unlocker
+200    2      https://github.com/Linuxoid-cn/Mi8sG3orMi7pG3-Unlocker
+200    2      https://github.com/Linuxoid-cn/Mi8E-Unlocker
+200    2      https://github.com/R0rt1z2/lkpatcher
+200    2      https://github.com/kasnria001/pwnage24mtk
+200    2      https://ota-g.rokidcdn.com/YodaOS-Sprite/OS/Rokid/1.14.006-20260204-150203/RVE01-ota-1.14.006-20260204-150203.zip
+000    2      http://10.10.10.10
+404    1      https://global.rokid.com/pages/security-center），特此提交完整報告，期望協助貴公司提升產品安全防護能力。
+200    1      https://rcs.rokid.com/talos/account/getAccountInfo
+404    1      https://googleprojectzero.github.io/
+429    1      https://git.codelinaro.org/clo/la/abl/tianocore/edk2/-/commit/fb8e864254cdc370670233e3cb73a2b18ff33c9f
+429    1      https://git.codelinaro.org/clo/la/abl/tianocore/edk2/-/commit/78297e8cfe091fc59c42fc33d3490e2008910fe2
+200    1      https://t.me/vvb2060_Channel/17
+200    1      https://t.me/vvb2060_Channel/19
+200    1      https://nvd.nist.gov/vuln/detail/CVE-2022-0847
+
+## Other External URL Spot Checks (non-vendor / non-GitHub)
+
+| HTTP | URL |
+|---|---|
+| 000 | http://ATTACKER_IP/steal' |
+| 000 | http://ATTACKER_IP:PORT/steal' |
+| 000 | http://ATTACKER_IP:PORT' |
+| 200 | https://imgs-ac.alipay.com/imgw.htm |
+| 404 | http://evil.com/phish.html |
+| 000 | https://via.placeholder.com/300x400/2563eb/ffffff?text=Rokid+Glasses |
+| 200 | https://bughunters.google.com/blog/6303226026131456/a-deep-dive-into-cve-2023-2163-how-we-found-and-fixed-an-ebpf-linux-kernel-vulnerability |
+| 200 | https://elixir.bootlin.com/linux/v5.10.209/source/kernel/bpf/verifier.c |
+| 200 | https://cdn.kernel.org/pub/linux/kernel/v5.x/ChangeLog-5.10.179 |
+| 200 | https://www.kernel.org/doc/html/latest/bpf/ |
+| 200 | https://zadig.akeo.ie/ |
+| 200 | https://www.facebook.com/groups/1170966655169478 |
+| 200 | https://www.coolapk.com/feed/70655251?s=NTFjZmEwYzkyN2NkOGUyZzY5YzYxOTM4ega1601 |
+| 200 | https://t.me/vvb2060_Channel/17 |
+| 200 | https://t.me/vvb2060_Channel/19 |
+| 200 | https://dirtypipe.cm4all.com/ |
+| 200 | https://www.openwall.com/lists/oss-security/2026/07/08/13 |
+| 200 | https://csrc.nist.gov/pubs/sp/800/101/r1/final |
+| 200 | https://www.magnetforensics.com/resources/magnet-acquire/ |
+| 200 | https://belkasoft.com/x |
+| 429 | https://www.oxygenforensics.com/technical-resources/android-agent/ |
+| 200 | https://android.googlesource.com/platform/bootable/libbootloader/+/refs/heads/main/gbl/docs/gbl_fastboot.md |
+| 200 | https://mitanyan98.hatenablog.com/entry/2026/06/13/095658 |
+| 200 | https://www.mi.com/tw/support/faq/details/KA-21069/ |
+| 200 | https://trust.mi.com/docs/miui-security-white-paper-global/3/1 |
+| 200 | https://4pda.to/forum/index.php?showtopic=721838&st=59800 |

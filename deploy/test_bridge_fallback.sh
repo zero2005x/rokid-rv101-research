@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# test_bridge_fallback.sh — 驗證 Shizuku 不可用時自動回退 bridge helper 提權。
+# test_bridge_fallback.sh — verify the automatic fallback to bridge-helper escalation when Shizuku is unavailable.
 #
-# 前置：殺 Shizuku server（模擬不可用）+ 殺 root_daemon（逼 App 需要新 root）
-#       → deploy/root_bridge.sh 佈署 helper → App(AUTO) 觸發 acquireRoot
-#       → 引擎 preflight 失敗 → fallback → BridgeGhostlockEngine → helper 跑 exploit。
-# 成功判定：root socket 回 uid=0，且 bridge last.out=OK（證明走 bridge 而非 Shizuku）。
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+# Preconditions: kill the Shizuku server (simulate unavailability) + kill root_daemon (force
+#       the App to need new root) -> deploy/root_bridge.sh deploys the helper -> the App (AUTO)
+#       triggers acquireRoot -> the engine preflight fails -> fallback ->
+#       BridgeGhostlockEngine -> the helper runs the exploit.
+# Success: the root socket returns uid=0 and bridge last.out=OK (proving the bridge ran, not
+# Shizuku).
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -20,8 +22,8 @@ check_root() {
 }
 
 echo "===== 前置：Shizuku down + root_daemon down + helper up（乾淨狀態）====="
-# 注意：pkill -f 會自我匹配（adb shell 自身 cmdline 含 pattern），改用
-# 字元類別 regex（"shizuku_serve[r]"）避免自殺，或 pidof+kill。
+# NOTE: pkill -f self-matches (adb shell's own cmdline contains the pattern), so use a
+# character-class regex ("shizuku_serve[r]") to avoid suicide, or pidof+kill.
 adb_s shell "pkill -9 -f 'shizuku_serve[r]' 2>/dev/null; true"
 adb_s shell "for p in \$(pidof root_daemon); do kill -9 \$p 2>/dev/null; done; rm -f /data/local/tmp/root_daemon.sock; true"
 adb_s shell "pkill -9 -f 'ghostlock_bridge_helpe[r]' 2>/dev/null; true"
@@ -33,7 +35,7 @@ echo "  root_daemon:    $(adb_s shell pidof root_daemon 2>/dev/null | tr -d '\r'
 for attempt in 1 2 3; do
   echo "===== bridge fallback attempt $attempt ====="
   if ! device_alive; then wait_device || exit 1; fi
-  # reboot 後 helper 會消失，重佈署
+  # the helper disappears after a reboot; redeploy
   bash "$ROOT_DIR/deploy/root_bridge.sh" 2>&1 | grep -E "^\[|完成" | tail -4
   adb_s shell am force-stop com.rokid.rc.glasses 2>/dev/null
   adb_s logcat -c 2>/dev/null

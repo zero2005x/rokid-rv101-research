@@ -1,4 +1,4 @@
-// find_check.js — 列舉 com.rokid.glass.ota 中與「檢查更新」相關的類別與方法
+// find_check.js — enumerate the classes and methods related to "check for update" in com.rokid.glass.ota
 'use strict';
 Java.perform(function () {
     var classes = Java.enumerateLoadedClassesSync();

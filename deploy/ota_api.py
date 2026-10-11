@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-ota_api.py — 用已破解的簽名直接查 Rokid OTA 版本檢查 API。
+ota_api.py — query the Rokid OTA version-check API directly with the cracked signature.
 
-簽名演算法（逆向自 com.rokid.glass.ota.CheckService）：
+Signature algorithm (reversed from com.rokid.glass.ota.CheckService):
   sign = MD5("key=<key>&device_type_id=<dtid>&device_id=<did>&service=<service>&version=<v>&time=<ts>&secret=<secret>")
   Authorization = "version=<v>;time=<ts>;sign=<sign>;key=<key>;device_type_id=<dtid>;device_id=<did>;service=<service>"
   Body = {"version": <systemVersion>, "osType": "", "cpuType": ""}
 
-回應含最新 version / imageUrl / checksum / changelog / isForceUpdate。
+The response carries the latest version / imageUrl / checksum / changelog / isForceUpdate.
 
-用法：
-  python3 ota_api.py                        # 用預設裝置值
+Usage:
+  python3 ota_api.py                        # use the default device values
   SYSTEM_VERSION=1.22.009-20260710-150201 python3 ota_api.py
 """
 import hashlib

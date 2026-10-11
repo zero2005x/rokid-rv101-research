@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""i18n 品質檢查：TSV ＋ out/*.xml（在 apply_phone_strings.py 之前執行）。
+"""i18n quality check: TSV + out/*.xml (run before apply_phone_strings.py).
 
-檢查項目：
-  1. TSV：68 個 key、每列 3 欄、無重複、zh-TW 與 en 佔位符一致
-  2. out/*.xml：XML 格式正確、key 覆蓋率與順序與 TSV 相同、無重複
-  3. 每個語系的佔位符（%n$s/%n$d）與 TSV 的 en 欄逐 key 一致（順序不拘、數量須相同）
-  4. 保留字面 `\\n`、開頭符號 ✓/✗/⚠/●、不得有未轉義的 & < >
-  5. 各語系術語一致性：WiFi/Bluetooth/メガネ 等是否符合該語系既有慣用詞（見 normalize_locale_terms.py）
-退出碼 0 = 全部通過；1 = 有問題（逐項列出）
+Checks:
+  1. TSV: 68 keys, 3 columns per row, no duplicates, zh-TW and en placeholders match
+  2. out/*.xml: well-formed XML, key coverage and order identical to the TSV, no duplicates
+  3. each locale's placeholders (%n$s/%n$d) match the TSV en column key by key (any order, same
+     count)
+  4. literal `\\n` preserved, leading symbols ✓/✗/⚠/● required, no unescaped & < >
+  5. terminology consistency per locale: do WiFi/Bluetooth/メガネ etc. follow that locale's
+     customary terms (see normalize_locale_terms.py)
+Exit code 0 = everything passes; 1 = problems found (listed one by one)
 """
 import pathlib
 import re
@@ -18,7 +20,8 @@ ROOT = pathlib.Path("/home/kali/rokid_root")
 TSV = ROOT / "scripts/i18n/phone_keys.tsv"
 OUT = ROOT / "scripts/i18n/out"
 
-# 各語系既有檔案的慣用詞（與 normalize_locale_terms.py 對應；此處檢查不得出現禁用寫法）
+# Customary terms from each locale's existing files (matching normalize_locale_terms.py;
+# here we check that no forbidden spelling appears)
 FORBIDDEN = {
     "values-fr": ["WiFi"], "values-de": ["WiFi"], "values-pt": ["WiFi"],
     "values-ja": ["WiFi", "グラス"], "values-ko": ["WiFi", "Bluetooth"],
@@ -60,7 +63,7 @@ def main() -> int:
             problems.append(f"TSV {k}: zh-TW/en 佔位符不一致 {ph(zh)} vs {ph(en)}")
     for f in sorted(OUT.glob("*.xml")):
         raw = f.read_text(encoding="utf-8")
-        # XML 檢查（把 @@ 標記拿掉後逐區塊解析）
+        # XML check (strip the @@ markers, then parse block by block)
         blocks = re.split(r"^@@", raw, flags=re.M)[1:]
         for blk in blocks:
             tag, body = blk.split("\n", 1)

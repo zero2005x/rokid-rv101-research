@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build_adb_relay.sh — 用 NDK（Windows）交叉編譯 adb_tcp_relay（aarch64 Android）
+# build_adb_relay.sh — cross-compile adb_tcp_relay (aarch64 Android) with the Windows NDK
 set -eu
 cd "$(dirname "$0")/.."
 NDK_BIN="${NDK_BIN:-/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/ndk/android-ndk-r27d/toolchains/llvm/prebuilt/windows-x86_64/bin}"

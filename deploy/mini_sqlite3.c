@@ -1,12 +1,13 @@
-/* mini_sqlite3.c — 用 dlopen("/system/lib64/libsqlite.so") 跑 SQL 的極簡 CLI
+/* mini_sqlite3.c — a minimal CLI that runs SQL through dlopen("/system/lib64/libsqlite.so")
  *
- * 為什麼需要：Android 不附 sqlite3 CLI，busybox 也沒有；但要自動化設定
- * LSPosed / Vector 的模組 scope（設定 DB 放在 /data/adb 下的 config 目錄）就必須能寫 SQLite。
- * 與其下載 sqlite amalgamation 靜態編譯，這裡直接借系統既有的 libsqlite.so。
+ * Why: Android ships no sqlite3 CLI and busybox has none either, but automating the
+ * LSPosed / Vector module scope (its config DB lives in a config directory under /data/adb)
+ * requires writing SQLite. Instead of downloading the sqlite amalgamation and building it
+ * statically, this borrows the system's existing libsqlite.so.
  *
- * 用法（裝置上，需 root）：
- *   mini_sqlite3 <db路徑> "<SQL>"            # 執行 SQL，SELECT 以 col|col 逐列印出
- *   mini_sqlite3 <db路徑> "<SQL>" --readonly # 以唯讀開啟
+ * Usage (on the device, root required):
+ *   mini_sqlite3 <db-path> "<SQL>"            # run SQL; SELECT rows print as col|col
+ *   mini_sqlite3 <db-path> "<SQL>" --readonly # open read-only
  */
 #include <dlfcn.h>
 #include <stdio.h>
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
         return 4;
     }
 
-    /* SQLITE_OPEN_READONLY=1 / READWRITE=2 / CREATE=4（唯讀與讀寫互斥，不可同時給） */
+    /* SQLITE_OPEN_READONLY=1 / READWRITE=2 / CREATE=4 (read-only and read-write are mutually exclusive) */
     int readonly = (argc > 3 && strcmp(argv[3], "--readonly") == 0);
     int flags = readonly ? 0x00000001 : (0x00000002 | 0x00000004);
 

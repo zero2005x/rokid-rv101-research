@@ -13,13 +13,13 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
- * 模組狀態頁。
+ * Module status page.
  *
- * <p>刻意<b>不遮蔽自己</b>（模組行程永遠讀真值），所以這一頁顯示的是裝置真實狀態 ——
- * 拿它跟被遮蔽的 App 讀到的值對照，就是最直接的除錯證據。
+ * <p>It deliberately does <b>not mask itself</b> (the module process always reads real values), so this
+ * page shows the device's real state — comparing it with what a masked app reads is the most direct debug evidence.
  *
- * <p>設定只能由 adb/root 寫 {@value MaskConfig#CONF_PATH}（App 無權寫 /data/local/tmp），
- * 因此這裡僅提供檢視與指令說明。
+ * <p>The config can only be written by adb/root at {@value MaskConfig#CONF_PATH} (the app cannot write
+ * /data/local/tmp), so this page only offers a view and usage instructions.
  */
 public final class MainActivity extends Activity {
 
@@ -108,7 +108,7 @@ public final class MainActivity extends Activity {
     }
 
     private String prop(String key) {
-        // android.os.SystemProperties 是隱藏 API，公開 SDK 沒有 → 只能反射
+        // android.os.SystemProperties is a hidden API absent from the public SDK -> reflection is the only way
         try {
             Class<?> sp = Class.forName("android.os.SystemProperties");
             java.lang.reflect.Method get = sp.getMethod("get", String.class, String.class);

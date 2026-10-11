@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  品牌色系 — **淺色模式**（2026-09-12）：白底＋青色 primary（加深以確保對比）＋琥珀 accent。
-  深色模式見 values-night/colors.xml（深藍底）。
+  Brand palette — **light mode** (2026-09-12): white background + cyan primary (darkened to keep contrast) + amber accent.
+  Dark mode is in values-night/colors.xml (dark blue background).
 -->
 <resources>
     <color name="primary">#0E7490</color>
@@ -29,8 +29,8 @@
     <color name="primary_container">#CFFAFE</color>
     <color name="on_primary_container">#083344</color>
 
-    <!-- 封面遮罩上的文字（兩種模式都需白字） -->
+    <!-- Text over the cover scrim (both modes need white text) -->
     <color name="on_scrim">#CCFFFFFF</color>
-    <!-- 媒體項目的選取底色 -->
+    <!-- Selection background of a media item -->
     <color name="accent_soft">#330E7490</color>
 </resources>

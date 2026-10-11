@@ -1,5 +1,7 @@
 # GhostLock (CVE-2026-43499) — 去址化 Before/After 比較
 
+> English: [ghostlock-before-after-redacted_EN.md](ghostlock-before-after-redacted_EN.md)
+
 > **用途**：作為寄給 Rokid（`degang.xu@rokid.com`）的「redacted technical comparison」。
 >
 > **紅線處理**：本文件已移除所有**絕對 kernel 位址**、**裝置序號**與**武器化細節**（heap

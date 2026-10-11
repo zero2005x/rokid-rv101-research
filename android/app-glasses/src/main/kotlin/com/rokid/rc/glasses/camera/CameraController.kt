@@ -39,12 +39,12 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * 以 CameraX 進行拍照/錄影。
+ * Photo/video capture via CameraX.
  *
- * Rokid 的 Qualcomm CHI HAL 對多流組合挑剔，故採「單一 use case」：
- * 拍照只綁 ImageCapture、錄影時 rebind 為 VideoCapture。
+ * Rokid's Qualcomm CHI HAL is picky about multi-stream combinations, so this uses a "single use case":
+ * photos bind only ImageCapture, and recording rebinds to VideoCapture.
  *
- * ghost=true 時，在拍攝前後呼叫 [LedSuppressor] 壓制/還原相機隱私 LED（隱蔽模式）。
+ * With ghost=true it calls [LedSuppressor] before and after capture to suppress/restore the camera privacy LED (stealth mode).
  */
 class CameraController(
     private val context: Context,
@@ -63,24 +63,24 @@ class CameraController(
     private var videoState: VideoState? = null
     private var finalizeCont: CancellableContinuation<MediaItem>? = null
 
-    // ---- 錄影啟動看門狗（P0-2）----
-    /** 等 `VideoRecordEvent.Start` 用的 continuation；逾時會被取消。 */
+    // ---- recording-start watchdog (P0-2) ----
+    /** Continuation used to wait for `VideoRecordEvent.Start`; it is cancelled on timeout. */
     private var startCont: CancellableContinuation<Unit>? = null
 
-    /** 本輪錄影是否真的收到 `Start`。 */
+    /** Whether this recording actually received `Start`. */
     @Volatile private var videoStarted = false
 
-    /** 本輪錄影是否被看門狗中止（Finalize 時要丟棄殘檔、不可回報成功）。 */
+    /** Whether this recording was aborted by the watchdog (Finalize must discard the partial file and must not report success). */
     @Volatile private var videoAborted = false
 
-    // ---- 拍照序列化與最小間隔（P0-3）----
+    // ---- photo serialization and minimum interval (P0-3) ----
     /**
-     * 同一時間只允許一筆拍照。連續 5 筆 `CAPTURE_PHOTO` 曾讓眼鏡端 App 的 RSS 衝到 100 MB
-     * 而被 lowmemorykiller 殺掉（見 reports/aivela_ring_connection_failure_2026-09-13.md）。
+     * Only one photo at a time. Five back-to-back `CAPTURE_PHOTO` requests once pushed the glasses-side app's RSS to 100 MB
+     * and got it killed by the lowmemorykiller (see reports/aivela_ring_connection_failure_2026-09-13.md).
      */
     private val photoLock = Mutex()
 
-    /** 上一次「開始拍照」的時間（uptimeMillis）。 */
+    /** Time of the last "photo started" (uptimeMillis). */
     @Volatile private var lastPhotoAtMs = 0L
 
     val isRecording: Boolean get() = activeRecording != null
@@ -140,21 +140,21 @@ class CameraController(
     }
 
     /**
-     * 拍照。
+     * Take a photo.
      *
-     * 錯誤碼（見 [CameraErrors]）：
-     *  - [CameraErrors.BUSY_RECORDING]：**正在錄影**（單一 use case 設計下拍照不可用）
-     *  - [CameraErrors.NOT_READY]：相機真的還沒就緒
-     *  - [CameraErrors.BUSY]：前一筆拍照還在跑，或距上次不足 [MIN_PHOTO_INTERVAL_MS]
+     * Error codes (see [CameraErrors]):
+     *  - [CameraErrors.BUSY_RECORDING]: **recording is in progress** (photo is unavailable under the single use case design)
+     *  - [CameraErrors.NOT_READY]: the camera really is not ready yet
+     *  - [CameraErrors.BUSY]: the previous photo is still running, or less than [MIN_PHOTO_INTERVAL_MS] has passed since it
      */
     suspend fun takePhoto(ghost: Boolean): Result<MediaItem> {
-        // 1) 先分辨「錄影中」與「未就緒」——這兩者過去共用 "camera not ready"，會誤導成連線問題
+        // 1) distinguish "recording" from "not ready" first — the two used to share "camera not ready", which misled as a connection problem
         val ic = imageCapture ?: return Result.failure(
             IllegalStateException(
                 if (isRecording) CameraErrors.BUSY_RECORDING else CameraErrors.NOT_READY
             )
         )
-        // 2) 序列化 + 最小間隔（TryLock 失敗＝立刻回 busy，不排隊，避免請求堆積造成 OOM）
+        // 2) serialize + minimum interval (a failed TryLock returns busy immediately instead of queueing, so requests cannot pile up into an OOM)
         if (!photoLock.tryLock()) return Result.failure(IllegalStateException(CameraErrors.BUSY))
         try {
             val sinceLast = SystemClock.uptimeMillis() - lastPhotoAtMs
@@ -197,12 +197,12 @@ class CameraController(
         }
     }
 
-    // RECORD_AUDIO 已於 Manifest 宣告並由 MainActivity 請求
+    // RECORD_AUDIO is declared in the Manifest and requested by MainActivity
     @Suppress("MissingPermission")
     suspend fun startVideo(ghost: Boolean): Result<Unit> {
         if (activeRecording != null) return Result.failure(IllegalStateException("already recording"))
-        // 先壓制再 bind：bindVideo 會啟動 streaming → lights_ctrl 發 camera-open 事件點燈，
-        // 若之後才 suppress 會有初始閃一下的間隙（錄影閃爍根因之一）
+        // suppress before bind: bindVideo starts streaming -> lights_ctrl emits a camera-open event and turns the LED on,
+        // so suppressing afterwards leaves an initial flicker gap (one of the root causes of recording flicker)
         if (ghost) led.suppress()
         withContext(Dispatchers.Main) { bindVideo() }
         val rec = recorder ?: return Result.failure(IllegalStateException("recorder not ready"))
@@ -218,9 +218,9 @@ class CameraController(
         activeRecording = recording
         videoState = VideoState(albumId, file, ghost)
 
-        // 看門狗：等 VideoRecordEvent.Start。過去若 Recorder 卡在
-        // "Cached audio data while we wait for video keyframe" 就永遠回不到拍照模式
-        // （imageCapture 已被 bindVideo 清成 null）→ 之後每一筆拍照都失敗。
+        // watchdog: wait for VideoRecordEvent.Start. Previously, if the Recorder got stuck on
+        // "Cached audio data while we wait for video keyframe" it never returned to photo mode
+        // (imageCapture had been cleared to null by bindVideo) -> every later photo failed.
         val started = withTimeoutOrNull(RECORD_START_TIMEOUT_MS) {
             suspendCancellableCoroutine<Unit> { c -> startCont = c }
         }
@@ -258,7 +258,7 @@ class CameraController(
             return
         }
         if (event !is VideoRecordEvent.Finalize) return
-        // 若在 Start 之前就 Finalize（編碼器/權限錯誤），先把 startVideo 叫醒
+        // if Finalize arrives before Start (encoder/permission error), wake startVideo first
         startCont?.let { c ->
             if (c.isActive) {
                 c.resumeWithException(event.cause ?: IllegalStateException("video finalize before start"))
@@ -277,7 +277,7 @@ class CameraController(
             finalizeCont = null
             when {
                 st == null -> cont?.resumeWithException(IllegalStateException("no video state"))
-                // 看門狗已中止：丟棄殘檔，不可對外回報成功
+                // the watchdog aborted it: discard the partial file and never report success
                 aborted -> {
                     runCatching { st.file.delete() }
                     cont?.resumeWithException(IllegalStateException(CameraErrors.RECORD_START_TIMEOUT))
@@ -288,7 +288,7 @@ class CameraController(
                 }
                 else -> cont?.resume(media.addMedia(st.albumId, MediaType.VIDEO, st.file))
             }
-            // 錄影結束後切回拍照模式
+            // switch back to photo mode once recording has ended
             withContext(Dispatchers.Main) { runCatching { bindPhoto() } }
         }
     }
@@ -310,13 +310,13 @@ class CameraController(
     companion object {
         private const val TAG = "CameraController"
 
-        /** 兩次拍照之間的最小間隔（P0-3）。連續 5 筆無間隔請求曾直接把 App 打到被 LMK 殺掉。 */
+        /** Minimum interval between two photos (P0-3). Five back-to-back requests once got the app killed by the LMK outright. */
         private const val MIN_PHOTO_INTERVAL_MS = 800L
 
-        /** 錄影啟動看門狗（P0-2）：等不到 `VideoRecordEvent.Start` 就放棄。 */
+        /** Recording-start watchdog (P0-2): give up when `VideoRecordEvent.Start` never arrives. */
         private const val RECORD_START_TIMEOUT_MS = 5_000L
 
-        /** 中止錄影後，等 Finalize 回收的寬限時間。 */
+        /** Grace period to wait for Finalize to clean up after aborting a recording. */
         private const val RECORD_ABORT_SETTLE_MS = 300L
     }
 }

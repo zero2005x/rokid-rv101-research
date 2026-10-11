@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# buddy_watch.sh — 取樣 /proc/buddyinfo 與 /proc/meminfo，用於判斷 KernelSnitch
-# mm_struct leak 失敗是否與「高階頁面（order>=3）枯竭」相關。
+# buddy_watch.sh — sample /proc/buddyinfo and /proc/meminfo to judge whether the
+# KernelSnitch mm_struct leak failure correlates with exhaustion of high-order
+# pages (order>=3).
 #
-# 用法：
-#   bash buddy_watch.sh <秒數> <間隔秒> <輸出檔>
-# 每個樣本一行（好比對 exploit 執行前後的變化）：
+# Usage:
+#   bash buddy_watch.sh <seconds> <interval-seconds> <output-file>
+# One line per sample (easy to diff before/after the exploit run):
 #   <unixtime> <uptime> <order0..10 free blocks> MemFree Slab SUnreclaim
 source "$(dirname "$0")/env.sh"
 set -u

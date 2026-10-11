@@ -1,5 +1,7 @@
 # Shizuku 整合實機測試報告
 
+> English: [shizuku_integration_test_report_EN.md](shizuku_integration_test_report_EN.md)
+
 > 日期：2026-09-09 · 設備：Rokid RG-glasses（RV101，serial <DEVICE_SERIAL>，fw 1.22.009）
 > 手機：Redmi <PHONE_SERIAL>（app-phone 測試機）
 > 測試人：主代理（經 WSL2 → Windows adb.exe 驅動）

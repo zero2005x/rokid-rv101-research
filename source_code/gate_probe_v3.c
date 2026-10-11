@@ -1,8 +1,8 @@
 /*
  * GateServiced Protocol Probe v3
- * 更精確的協議探測 - 基於 TrustZone 常見協議模式
+ * More precise protocol probing - based on common TrustZone protocol patterns
  *
- * 編譯: aarch64-linux-android21-clang -o gate_probe gate_probe_v3.c
+ * Build: aarch64-linux-android21-clang -o gate_probe gate_probe_v3.c
  */
 
 #include <stdio.h>
@@ -65,7 +65,7 @@ int connect_gate(void)
     return sock;
 }
 
-// 使用 poll 等待回應，更精確地檢測是否有數據
+// Use poll to wait for a response and detect incoming data more precisely
 int recv_with_poll(int sock, void *buf, size_t len, int timeout_ms)
 {
     struct pollfd pfd = {.fd = sock, .events = POLLIN};
@@ -78,7 +78,7 @@ int recv_with_poll(int sock, void *buf, size_t len, int timeout_ms)
     return ret == 0 ? -2 : -1; // -2 = timeout
 }
 
-// 測試連接並等待服務器先說話
+// Test the connection and wait for the server to speak first
 void test_passive(void)
 {
     printf("\n=== Passive Connection Test ===\n");
@@ -111,7 +111,7 @@ void test_passive(void)
     close(sock);
 }
 
-// 測試各種 TrustZone 協議格式
+// Test various TrustZone protocol formats
 void test_tz_protocols(void)
 {
     printf("\n=== TrustZone Protocol Formats ===\n");
@@ -120,10 +120,10 @@ void test_tz_protocols(void)
     char buf[BUF_SIZE];
     int received;
 
-    // 協議格式 1: [magic:4][version:4][cmd:4][len:4][data...]
-    // 協議格式 2: [len:4][cmd:4][data...]
-    // 協議格式 3: [cmd:4][len:4][data...]
-    // 協議格式 4: [type:2][len:2][data...]
+    // Protocol format 1: [magic:4][version:4][cmd:4][len:4][data...]
+    // Protocol format 2: [len:4][cmd:4][data...]
+    // Protocol format 3: [cmd:4][len:4][data...]
+    // Protocol format 4: [type:2][len:2][data...]
 
     struct
     {
@@ -184,7 +184,7 @@ void test_tz_protocols(void)
     }
 }
 
-// 持續連接測試 - 發送後保持連接
+// Persistent connection test - stay connected after sending
 void test_persistent_connection(void)
 {
     printf("\n=== Persistent Connection Test ===\n");
@@ -198,7 +198,7 @@ void test_persistent_connection(void)
 
     char buf[BUF_SIZE];
 
-    // 發送多個命令在同一連接
+    // Send multiple commands on the same connection
     unsigned char cmds[][8] = {
         {0x00, 0x00, 0x00, 0x01}, // cmd 1
         {0x00, 0x00, 0x00, 0x02}, // cmd 2
@@ -223,7 +223,7 @@ void test_persistent_connection(void)
     close(sock);
 }
 
-// 二進制掃描 - 快速掃描可能的命令
+// Binary scan - quickly scan possible commands
 void binary_scan(void)
 {
     printf("\n=== Quick Binary Command Scan ===\n");
@@ -231,7 +231,7 @@ void binary_scan(void)
     char buf[BUF_SIZE];
     int found = 0;
 
-    // 掃描常見的命令範圍
+    // Scan common command ranges
     uint32_t scan_values[] = {
         0,
         1,
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
     printf("=== GateServiced Protocol Probe v3 ===\n");
     printf("Target: %s:%d\n\n", HOST, PORT);
 
-    // 測試連接
+    // Test the connection
     int sock = connect_gate();
     if (sock < 0)
     {

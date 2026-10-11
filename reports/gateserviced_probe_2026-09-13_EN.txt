@@ -1,0 +1,499 @@
+# GateServiced Protocol Semantics & Capability Set — Live Probe
+
+> 中文版：[gateserviced_probe_2026-09-13.txt](gateserviced_probe_2026-09-13.txt)
+
+**Device:** Rokid RV101 (`<DEVICE_SERIAL>`, product `glasses`) · **Date:** 2026-09-13
+**Service:** `GateServiced` pid 1792 (root), binary `/vendor/bin/GateServiced`, listening `0.0.0.0:8341`
+**Instrument:** device-loopback TCP client (validated by controls C1–C3 before use)
+
+---
+
+## 1. Commands run
+
+### Environment / transport
+```
+ADB="/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+"$ADB" version
+"$ADB" devices -l
+"$ADB" -s <DEVICE_SERIAL> forward tcp:8341 tcp:8341
+"$ADB" -s <DEVICE_SERIAL> forward --list
+"$ADB" -s <DEVICE_SERIAL> shell getprop sys.boot_completed
+"$ADB" -s <DEVICE_SERIAL> shell "ps -A | grep -i gate"
+"$ADB" -s <DEVICE_SERIAL> shell "netstat -tlnp 2>/dev/null | grep 8341"
+/mnt/c/Windows/System32/netstat.exe -ano | grep -i 8341
+```
+
+### Instrument validation (controls, device-internal loopback)
+```
+# C1 banner server, C2 silent-hold server, C3 server that closes immediately
+S=$(date +%s); printf "<hex>" | toybox xxd -r -p > /data/local/tmp/.greq
+( toybox cat /data/local/tmp/.greq; toybox sleep <hold> ) | \
+  toybox timeout 25 toybox nc -W 7 127.0.0.1 <port> > /data/local/tmp/.gresp
+RC=$?; E=$(date +%s)
+echo "RC=$RC ELAPSED=$((E-S)) SIZE=$(toybox wc -c < /data/local/tmp/.gresp) OUT=$(toybox xxd -p /data/local/tmp/.gresp)"
+```
+The client is launched in the background and **mid-flight TCP state** is sampled with
+`netstat -tn | grep ':<port> ' | grep -v LISTEN` while the client still holds the socket open.
+
+### Live probes (per probe: `logcat -c` → send → `logcat -d | grep -iE 'GateServiced|GATE CA'`)
+```
+python3 build-cache/run_calibration.py     # controls C1-C3
+python3 build-cache/run_probes.py          # probes P1-P7 + device state after
+```
+Request encoding: `[cmd_id LE32][payload]` — identical to the project scripts' `send_packet()`.
+Python probe harness: `build-cache/gate_probe.py` (+ `run_calibration.py`, `run_probes.py`).
+
+### Capability-mask origin check
+```
+"$ADB" -s <DEVICE_SERIAL> shell 'grep -E "^Name|^Uid|^Gid|^Cap" /proc/1792/status'
+"$ADB" -s <DEVICE_SERIAL> shell 'grep -E "^Name|^Uid|^Gid|^Cap" /proc/self/status'
+"$ADB" -s <DEVICE_SERIAL> shell 'ls -la /system/vendor/bin/qseeproxydaemon /vendor/bin/qseeproxydaemon'
+```
+
+> **Transport note (deviation from the brief).** `adb.exe` is a *Windows* binary, so
+> `adb forward tcp:8341` binds **Windows** `127.0.0.1:8341` only (confirmed:
+> `netstat.exe -ano` → `TCP 127.0.0.1:8341 LISTENING 26688`). WSL2 runs in **NAT** mode
+> (`wslinfo --networking-mode` → `nat`), so WSL cannot reach that loopback: connections to
+> `127.0.0.1:8341` and to the Windows host IP `172.26.96.1:8341` were both **refused**, and
+> the native Linux `adb` (`/home/kali/android-sdk/platform-tools/adb`, its own server on
+> `127.0.0.1:5037`) sees **0 devices** because USB is owned by the Windows adb server.
+> `adb reverse` to a WSL listener also did not deliver. The probes therefore run **inside the
+> device** against `127.0.0.1:8341` — the *same* loopback path the project scripts target.
+> Bytes cross `adb shell` as **hex text**, so nothing is mangled in either direction.
+> `adb devices -l` also shows a *second* device (`<PHONE_SERIAL>`, a Xiaomi phone), contrary
+> to the brief's "only ONE device attached"; every command above pins `-s <DEVICE_SERIAL>`.
+
+---
+
+## 2. Results
+
+Instrument signatures were established by controls **before** any GateServiced probe:
+| Control | Setup | Raw result |
+|---|---|---|
+| C1 banner | server sends `4f4b` | `OUT=4f4b` → **DATA captured** |
+
+| C2 silent-hold | server sends nothing, holds socket | `OUT=` + `ESTABLISHED` → **server holds ⇒ client TIMEOUT** |
+| C3 closes now | server accepts then closes | `OUT=` + no `ESTABLISHED` → **server closed ⇒ client sees EOF/empty** |
+
+| Probe | Request (hex, ≤64B) | Raw response (hex, ≤64B) | Mid-flight TCP | Interpretation |
+|---|---|---|---|---|
+| **P1** valid cmd `UNLOAD_TA` 0x00010004, no payload | `04000100` | `756e6c6f61642074612073756363656564` (17B = `"unload ta succeed"`) | HELD-OPEN | **Real DATA returned.** Logcat: `unload ta called` → `run_unload_ta succeeded.` → `Send: unload ta succeed, send_len:17` |
+| **P2** unknown/malformed id 0x00000001 + 16×`00` | `01000000` + `00`×16 | *(empty)* | HELD-OPEN | No wire reply; **client times out**. Logcat: `cmd_id = 1, input_len = 16, output_len = 20480` → `TA is not already loaded.` → `cmd_dispatch failed, ret:300c` |
+| **P3** malformed id 0xDEADBEEF + 16×`41` | `efbeadde` + `41`×16 | *(empty)* | HELD-OPEN | Same as P2. Logcat: `cmd_id = deadbeef …` → `ret:300c` |
+| **P4** 0x00010001 + 16×`00` | `01000100` + `00`×16 | *(empty)* | HELD-OPEN | Routed to EXEC branch (not LOAD/UNLOAD). Logcat: `ret:300c` |
+| **P5** `LOAD_TA` 0x00010003 + `/does/not/exist.mbn\0` | `03000100` + `2f646f65732f6e6f742f65786973742e6d626e00` | *(empty)* | HELD-OPEN | **ret:`300a`** (NOT 300c). Logcat: `Failed to open file …: No such file or directory (2)` → `load_app … failed: 12292` → `run_load_ta … failed with 12298` → `ret:300a` |
+| **P6** `LOAD_TA` + `/system/bin/sh\0` (exists, non-TA) | `03000100` + `2f73797374656d2f62696e2f736800` | *(empty)* | HELD-OPEN | **ret:`300a`**. Logcat: `Load app /system/bin/sh failed: 12` → `appController is NULL!` → `ret:300a` |
+| **P7** connect only, send no bytes | *(none)* | *(empty)* | HELD-OPEN | Server accepts and waits; on disconnect logs `客户端断开连接`. No cmd dispatch |
+
+**Key raw bytes (ASCII-decoded):**
+- P1 = `"unload ta succeed"` — a genuine, well-formed success response on the wire.
+- P2/P3/P4 error code exists **only** as the logcat token `ret:300c`.
+- P5/P6 `LOAD_TA` failure code is `ret:300a`, **not** `300c`.
+
+---
+
+## 3. Adjudication
+
+### (a) "all commands return 300c" vs "timeout means error" → **both are correct; they are two observation channels of the same event.**
+Not a contradiction. `300c` is an **internal return code logged to logcat**, never transmitted:
+- Every failing probe (P2–P6) produced **zero TCP bytes** while the server **kept the connection open** (`ESTABLISHED` at sample time) — i.e. the client sees a **timeout**, not data, not `300c`, not a close.
+- The same instant produced the logcat line `[GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300c"`.
+
+So: wire truth = **response only on success; timeout = error** (the playbook's own line 166:
+*"handle_client only calls sendto() when cmd_dispatch returns 0 … response = success, timeout = error"*).
+Log truth = the specific error code, e.g. `300c`. The phrase *"all commands return 300c"* is
+**overbroad in two ways**, both now measured:
+1. It is a **logcat** fact, not a wire fact — nothing is sent over TCP on error.
+2. It is **not "all" commands**: `UNLOAD_TA` (P1) **succeeds and returns data** on the wire, and
+   `LOAD_TA` failures return **`300a`**, not `300c`. `300c` is specific to the EXEC branch
+   (`run_exec_cmd_ta`: `TA is not already loaded`, logcat line 234).
+
+### (b) capability set "almost all bits (`000001ffffffffff`)" vs "four named caps" → **category error; the two are different domains and are not comparable.**
+`000001ffffffffff` is a **Linux kernel process-credential mask**, not a GateServiced protocol
+capability advertisement. Measured directly:
+```
+/proc/1792/status   (GateServiced, uid 0)
+  Uid:    0 0 0 0
+  CapPrm: 000001ffffffffff
+  CapEff: 000001ffffffffff
+  CapBnd: 000001ffffffffff
+/proc/self/status   (adb shell, uid 2000)
+  CapEff: 0000000000000000
+  CapBnd: 00000000000000c0
+```
+The mask is a **per-process** attribute that varies by process (root GateServiced = 41 bits;
+shell = 0 effective) and is read from `/proc/<pid>/status` — a kernel interface, not a
+GateServiced query. The "four named caps" describe the service's **protocol vocabulary**
+entirely. Empirically the wire vocabulary is **exactly three branches** (P1, P4–P6):
+| cmd_id | Branch | Evidence |
+|---|---|---|
+| `0x00010003` | LOAD_TA | logcat `load ta called` (P5, P6) |
+| `0x00010004` | UNLOAD_TA | logcat `unload ta called`, success reply (P1) |
+| *any other value* | EXEC_CMD | P2 `cmd_id = 1`, P3 `deadbeef`, P4 `10001` all → `run_exec_cmd_ta` → `300c` |
+The fourth "cap" in the RE report is the **internal** TA-info query (`get_ta_version` /
+`dtxGetAppletInfo`, load cmd `0x1001`) invoked *inside* `run_load_ta`, which is **not
+client-reachable** over TCP. So both statements are true in their own domain; the
+contradiction dissolves once "capability" is disambiguated (kernel credentials vs wire commands).
+
+### Bonus: playbook claim "TA never loads; … qseeproxydaemon missing" → **partly confirmed, refined.**
+- `qseeproxydaemon` **is genuinely absent**: `ls` fails at both `/system/vendor/bin/` and `/vendor/bin/`.
+- `LOAD_TA` **does not succeed** (no `load ta succeed` in any probe; P5/P6 → `300a`).
+- But the failure code is **`300a`**, and the playbook's error table assigns `3001`
+  (GENERAL_ERROR / `get_file_size` returned 0) to a missing file. On this live build a missing
+  file yields **`300a`** via `load_app` → `run_load_ta` — the static error table is **wrong /
+  mis-mapped** for the missing-file path.
+
+---
+
+## 4. Still unknown
+
+1. **No TA was successfully loaded**, so the EXEC "golden path" (TA response `0xAA` + payload)
+   could **not** be exercised. Nothing shows what a *successful* `EXEC_CMD` returns.
+2. **Which TA/path is expected** — `/vendor/firmware_mnt/image/` is `Permission denied` to the
+   `shell` uid, so the TA inventory could not be listed from the host; `GateServiced`
+   (root) can read it. Needed: a root shell (or `adb root`) to enumerate `.mbn` files, or the
+   vendor firmware package, then re-run `LOAD_TA` against a real signed TA.
+3. **Why LOAD_TA fails at 12292/12298** (`load_app`/`run_load_ta`) is unconfirmed — plausibly the
+   missing `qseeproxydaemon` / missing QSEE listener, but not proven.
+4. **The project's own Python scripts could not be executed as-is** (`gate_protocol_test_v2.py
+   conn`, `gate_oracle`, etc.) because they hard-require a host-reachable
+   `127.0.0.1:8341`; the WSL→Windows-loopback path is unavailable. My probe reuses their exact
+   `send_packet` wire format, and their classification would behave as follows under the
+   measured semantics: `conn` (UNLOAD_TA) → `"unload ta succeed"` ✅ OK; any EXEC probe →
+   `resp is None` → their "timeout" path ✅ (correct); **never** their `len(resp)==0` "CRASH"
+   branch, because the server **holds the connection open** rather than closing it.
+   To run them unmodified, a host-side relay into the device (or `adb root`+native adb) is needed.
+5. **Long-run stability / concurrency** of the service under repeated EXEC traffic was not
+   tested (single-shot probes only, deliberately).
+6. **Unaudited device binaries** `/data/local/tmp/{gate_probe,gate_proto_probe,gate_cmd_enum,
+   gate_ta_load}` from an earlier session were **not run** (unknown provenance / not in the
+   approved script set).
+
+---
+
+## 5. Device state after
+
+```
+getprop sys.boot_completed  -> 1
+ps -A | grep -i GateServiced -> root 1792 1 ... S GateServiced      (SAME pid, still alive)
+netstat -tlnp | grep 8341   -> tcp 0 0 0.0.0.0:8341 0.0.0.0:* LISTEN
+/proc/1792/status CapEff    -> 000001ffffffffff
+qseeproxydaemon             -> still absent
+```
+- **GateServiced never crashed or restarted** — pid 1792 before and after all probes.
+- **No connection resets, no tombstones, no error responses other than the logged codes.**
+- Only residual state: normal client-side `TIME_WAIT` sockets to `:8341` (kernel housekeeping).
+- WSL-side/device-side scratch (`.greq`, `.gresp`, calibration listeners on 9902–9905,
+  `adb forward`/`reverse`, local echo server) were cleaned up after the run.
+
+**Bottom line:** contradiction (a) is a *channel* confusion (logcat code vs wire silence — the
+wire rule is "response = success, timeout = error"); contradiction (b) is a *domain* confusion
+(kernel process CapEff vs protocol command vocabulary). No exploit was run; the device is healthy.
+
+==============================================================================
+ RAW TRANSCRIPT (appended 2026-09-13T14:20:50+08:00)
+==============================================================================
+
+------------------------------------------------------------------------------
+ T1. SECOND DEVICE PRESENT (brief said only ONE device)
+------------------------------------------------------------------------------
+$ adb devices -l
+List of devices attached
+<DEVICE_SERIAL>       device product:glasses model:RG_glasses device:glasses transport_id:89
+<PHONE_SERIAL>       authorizing transport_id:94
+
+
+------------------------------------------------------------------------------
+ T2. WINDOWS-SIDE adb forward BIND ADDRESS (why WSL cannot reach 127.0.0.1:8341)
+------------------------------------------------------------------------------
+$ netstat.exe -ano | grep 8341
+  TCP    127.0.0.1:8341         0.0.0.0:0              LISTENING       26688
+$ adb forward --list
+<DEVICE_SERIAL> tcp:8341 tcp:8341
+
+$ native linux adb devices  -> (0 devices; USB owned by Windows adb)
+List of devices attached
+
+$ wslinfo --networking-mode
+nat
+$ ip route show default
+default via 172.26.96.1 dev eth0 proto kernel 
+
+------------------------------------------------------------------------------
+ T3. INSTRUMENT CALIBRATION (controls C1-C3) - full output
+------------------------------------------------------------------------------
+========================================================================
+PHASE C - PRIMARY INSTRUMENT CALIBRATION
+========================================================================
+[C1_banner_server]
+    request  : 48656c6c6f
+    response : 4f4b
+    ascii    : 'OK'
+    mid-flight TCP state: SERVER-CLOSED (no ESTABLISHED conn)
+    netstat  : tcp6       0      0 ::ffff:127.0.0.1:9902   ::ffff:127.0.0.1:42610  TIME_WAIT   | tcp6       0      0 ::ffff:127.0.0.1:9902   ::ffff:127.0.0.1:51750  TIME_WAIT
+    bytes    : size=2
+[C2_server_SILENT_hold]
+    request  : 48656c6c6f
+    response : (EMPTY)
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:53586         127.0.0.1:9903          ESTABLISHED | tcp        0      0 127.0.0.1:50332         127.0.0.1:9903          TIME_WAIT   | tcp6       0      0 ::ffff:127.0.0.1
+    bytes    : size=0
+[C3_server_CLOSES_now]
+    request  : 48656c6c6f
+    response : (EMPTY)
+    mid-flight TCP state: SERVER-CLOSED (no ESTABLISHED conn)
+    netstat  : tcp6       0      0 ::ffff:127.0.0.1:9904   ::ffff:127.0.0.1:43674  TIME_WAIT   | tcp6       0      0 ::ffff:127.0.0.1:9904   ::ffff:127.0.0.1:36370  TIME_WAIT
+    bytes    : size=0
+
+[PASS] C1 DATA: out='4f4b' tcp=SERVER-CLOSED (no ESTABLISHED conn)
+[PASS] C2 SILENT-HOLD: out='' tcp=HELD-OPEN (ESTABLISHED)
+[PASS] C3 SERVER-CLOSED: out='' tcp=SERVER-CLOSED (no ESTABLISHED conn)
+
+INSTRUMENT TRUSTWORTHY
+
+------------------------------------------------------------------------------
+ T4. LIVE PROBES P1-P7 - full output (incl. logcat + device state after)
+------------------------------------------------------------------------------
+========================================================================
+PHASE P - LIVE GateServiced PROBES    2026-09-13T14:19:05.250921
+target: device 127.0.0.1:8341   pid: 1792
+========================================================================
+[P1_UNLOAD_TA_valid]
+    request  : 04000100
+    response : 756e6c6f61642074612073756363656564
+    ascii    : 'unload ta succeed'
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:48898         127.0.0.1:8341          ESTABLISHED
+    bytes    : size=17
+    logcat   : 09-13 14:19:06.644  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+09-13 14:19:06.644  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10004, rsv_len:4"
+09-13 14:19:06.644  1792 12618 E GateServiced: [GATE CA][INFO][cmd_dispatch][38]:"unload ta called"
+09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][run_unload_ta][223]:"run_unload_ta succeeded."
+09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][63]:"cmd_id = 10004, cmd_dispatch, times = 1"
+09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][64]:"Send: unload ta succeed, send_len:17"
+09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+09-13 14:19:13.653  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+09-13 14:19:16.130  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15
+
+[P2_EXEC_unknown_0x00000001]
+    request  : 0100000000000000000000000000000000000000
+    response : (EMPTY)
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:8341          127.0.0.1:37674         ESTABLISHED | tcp        0      0 127.0.0.1:48898         127.0.0.1:8341          TIME_WAIT   | tcp        0      0 127.0.0.1:37674 
+    bytes    : size=0
+    logcat   : 09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 1, rsv_len:20"
+09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 1, input_len = 16, output_len = 20480"
+09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][234]:"TA is not already loaded."
+09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300c"
+09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+09-13 14:19:24.814  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+09-13 14:19:27.360  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15
+
+[P3_EXEC_0xDEADBEEF]
+    request  : efbeadde41414141414141414141414141414141
+    response : (EMPTY)
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:51128         127.0.0.1:8341          ESTABLISHED | tcp        0      0 127.0.0.1:8341          127.0.0.1:51128         ESTABLISHED | tcp        0      0 127.0.0.1:48898 
+    bytes    : size=0
+    logcat   : 09-13 14:19:28.346  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+09-13 14:19:28.347  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: deadbeef, rsv_len:20"
+09-13 14:19:28.347  1792 13033 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = deadbeef, input_len = 16, output_len = 20480"
+09-13 14:19:28.347  1792 13033 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][234]:"TA is not already loaded."
+09-13 14:19:28.348  1792 13033 E GateServiced: [GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300c"
+09-13 14:19:28.348  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+09-13 14:19:35.358  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+09-13 14:19:38.715  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15
+
+[P4_0x00010001]
+    request  : 0100010000000000000000000000000000000000
+    response : (EMPTY)
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:8341          127.0.0.1:42028         ESTABLISHED | tcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT   | tcp        0      0 127.0.0.1:42028 
+    bytes    : size=0
+    logcat   : 09-13 14:19:39.582  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10001, rsv_len:20"
+09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 10001, input_len = 16, output_len = 20480"
+09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][234]:"TA is not already loaded."
+09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300c"
+09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+09-13 14:19:46.590  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+09-13 14:19:50.498  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15
+
+[P5_LOAD_TA_nonexistent]
+    request  : 030001002f646f65732f6e6f742f65786973742e6d626e00
+    response : (EMPTY)
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:36818         127.0.0.1:8341          ESTABLISHED | tcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT   | tcp        0      0 127.0.0.1:42028 
+    bytes    : size=0
+    logcat   : 09-13 14:19:51.517  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+09-13 14:19:51.518  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10003, rsv_len:24"
+09-13 14:19:51.518  1792 13508 E GateServiced: [GATE CA][INFO][cmd_dispatch][26]:"load ta called"
+09-13 14:19:51.525  1792 13508 E GateServiced: [GATE CA][ERRO][get_file_size][18]:"Failed to open file /does/not/exist.mbn: No such file or directory (2)"
+09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][load_app][49]:"Malloc failed while allocating memory to buffer"
+09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][load_app][69]:"Load app /does/not/exist.mbn failed: 12292"
+09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][load_app][71]:"appController is NULL!"
+09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][run_load_ta][200]:"Loading the application failed with 12298!"
+09-13 14:19:51.533  1792 13508 E GateServiced: [GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300a"
+09-13 14:19:51.533  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+09-13 14:19:58.526  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+09-13 14:20:01.114  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15
+
+[P6_LOAD_TA_existing_nonta]
+    request  : 030001002f73797374656d2f62696e2f736800
+    response : (EMPTY)
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:36818         127.0.0.1:8341          TIME_WAIT   | tcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT   | tcp        0      0 127.0.0.1:42028 
+    bytes    : size=0
+    logcat   : 09-13 14:20:02.056  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+09-13 14:20:02.057  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10003, rsv_len:19"
+09-13 14:20:02.057  1792 13714 E GateServiced: [GATE CA][INFO][cmd_dispatch][26]:"load ta called"
+09-13 14:20:02.071  1792 13714 E GateServiced: [GATE CA][ERRO][load_app][69]:"Load app /system/bin/sh failed: 12"
+09-13 14:20:02.071  1792 13714 E GateServiced: [GATE CA][ERRO][load_app][71]:"appController is NULL!"
+09-13 14:20:02.072  1792 13714 E GateServiced: [GATE CA][ERRO][run_load_ta][200]:"Loading the application failed with 12298!"
+09-13 14:20:02.076  1792 13714 E GateServiced: [GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300a"
+09-13 14:20:02.076  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+09-13 14:20:09.067  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+09-13 14:20:11.599  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15
+
+[P7_connect_only_no_bytes]
+    request  : (none - connect only)
+    response : (EMPTY)
+    mid-flight TCP state: HELD-OPEN (ESTABLISHED)
+    netstat  : tcp        0      0 127.0.0.1:49372         127.0.0.1:8341          ESTABLISHED | tcp        0      0 127.0.0.1:8341          127.0.0.1:49372         ESTABLISHED | tcp        0      0 127.0.0.1:36818 
+    bytes    : size=0
+    logcat   : 09-13 14:20:12.531  1792 13916 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:8"
+09-13 14:20:19.537  1792 13916 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+09-13 14:20:22.085  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15
+
+========================================================================
+DEVICE STATE AFTER
+========================================================================
+boot_completed : 1
+gate pid       : root          1792     1 2184376   3468 0                   0 S GateServiced
+listener       : tcp        0      0 0.0.0.0:8341            0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:49372         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:36818         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:42028         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:55270         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:37674         127.0.0.1:8341          TIME_WAIT   -
+qseeproxydaemon: ls: /system/vendor/bin/qseeproxydaemon: No such file or directory
+ls: /vendor/bin/qseeproxydaemon: No such file or directory
+CapEff(pid)    : Name:	GateServiced
+Uid:	0	0	0	0
+CapEff:	000001ffffffffff
+
+[saved] build-cache/probe_results.json
+
+------------------------------------------------------------------------------
+ T5. RAW STRUCTURED RESULTS (build-cache/probe_results.json)
+------------------------------------------------------------------------------
+[
+  {
+    "label": "P1_UNLOAD_TA_valid",
+    "hex": "04000100",
+    "state_raw": "tcp        0      0 127.0.0.1:48898         127.0.0.1:8341          ESTABLISHED",
+    "raw_output": "SIZE=17 OUT=756e6c6f61642074612073756363656564",
+    "size": "17",
+    "resp_hex": "756e6c6f61642074612073756363656564",
+    "resp_ascii": "unload ta succeed",
+    "tcp": "HELD-OPEN (ESTABLISHED)",
+    "logcat": "09-13 14:19:06.644  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:4\"\n09-13 14:19:06.644  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][53]:\"Received, cmd_id: 10004, rsv_len:4\"\n09-13 14:19:06.644  1792 12618 E GateServiced: [GATE CA][INFO][cmd_dispatch][38]:\"unload ta called\"\n09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][run_unload_ta][223]:\"run_unload_ta succeeded.\"\n09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][63]:\"cmd_id = 10004, cmd_dispatch, times = 1\"\n09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][64]:\"Send: unload ta succeed, send_len:17\"\n09-13 14:19:06.645  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:4\"\n09-13 14:19:13.653  1792 12618 E GateServiced: [GATE CA][INFO][handle_client][44]:\"\u5ba2\u6237\u7aef\u65ad\u5f00\u8fde\u63a5\"\n09-13 14:19:16.130  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15",
+    "note": "valid command, no payload"
+  },
+  {
+    "label": "P2_EXEC_unknown_0x00000001",
+    "hex": "0100000000000000000000000000000000000000",
+    "state_raw": "tcp        0      0 127.0.0.1:8341          127.0.0.1:37674         ESTABLISHED\ntcp        0      0 127.0.0.1:48898         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:37674         127.0.0.1:8341          ESTABLISHED",
+    "raw_output": "SIZE=0 OUT=",
+    "size": "0",
+    "resp_hex": "",
+    "resp_ascii": "",
+    "tcp": "HELD-OPEN (ESTABLISHED)",
+    "logcat": "09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:5\"\n09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][53]:\"Received, cmd_id: 1, rsv_len:20\"\n09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:\"cmd_id = 1, input_len = 16, output_len = 20480\"\n09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][234]:\"TA is not already loaded.\"\n09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][ERRO][handle_client][59]:\"cmd_dispatch failed, ret:300c\"\n09-13 14:19:17.805  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:5\"\n09-13 14:19:24.814  1792 12831 E GateServiced: [GATE CA][INFO][handle_client][44]:\"\u5ba2\u6237\u7aef\u65ad\u5f00\u8fde\u63a5\"\n09-13 14:19:27.360  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15",
+    "note": "unknown id -> EXEC_CMD branch"
+  },
+  {
+    "label": "P3_EXEC_0xDEADBEEF",
+    "hex": "efbeadde41414141414141414141414141414141",
+    "state_raw": "tcp        0      0 127.0.0.1:51128         127.0.0.1:8341          ESTABLISHED\ntcp        0      0 127.0.0.1:8341          127.0.0.1:51128         ESTABLISHED\ntcp        0      0 127.0.0.1:48898         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:37674         127.0.0.1:8341          TIME_WAIT",
+    "raw_output": "SIZE=0 OUT=",
+    "size": "0",
+    "resp_hex": "",
+    "resp_ascii": "",
+    "tcp": "HELD-OPEN (ESTABLISHED)",
+    "logcat": "09-13 14:19:28.346  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:4\"\n09-13 14:19:28.347  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][53]:\"Received, cmd_id: deadbeef, rsv_len:20\"\n09-13 14:19:28.347  1792 13033 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:\"cmd_id = deadbeef, input_len = 16, output_len = 20480\"\n09-13 14:19:28.347  1792 13033 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][234]:\"TA is not already loaded.\"\n09-13 14:19:28.348  1792 13033 E GateServiced: [GATE CA][ERRO][handle_client][59]:\"cmd_dispatch failed, ret:300c\"\n09-13 14:19:28.348  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:4\"\n09-13 14:19:35.358  1792 13033 E GateServiced: [GATE CA][INFO][handle_client][44]:\"\u5ba2\u6237\u7aef\u65ad\u5f00\u8fde\u63a5\"\n09-13 14:19:38.715  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15",
+    "note": "malformed id"
+  },
+  {
+    "label": "P4_0x00010001",
+    "hex": "0100010000000000000000000000000000000000",
+    "state_raw": "tcp        0      0 127.0.0.1:8341          127.0.0.1:42028         ESTABLISHED\ntcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:42028         127.0.0.1:8341          ESTABLISHED\ntcp        0      0 127.0.0.1:48898         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:37674         127.0.0.1:8341          TIME_WAIT",
+    "raw_output": "SIZE=0 OUT=",
+    "size": "0",
+    "resp_hex": "",
+    "resp_ascii": "",
+    "tcp": "HELD-OPEN (ESTABLISHED)",
+    "logcat": "09-13 14:19:39.582  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:5\"\n09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][53]:\"Received, cmd_id: 10001, rsv_len:20\"\n09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:\"cmd_id = 10001, input_len = 16, output_len = 20480\"\n09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][234]:\"TA is not already loaded.\"\n09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][ERRO][handle_client][59]:\"cmd_dispatch failed, ret:300c\"\n09-13 14:19:39.583  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:5\"\n09-13 14:19:46.590  1792 13244 E GateServiced: [GATE CA][INFO][handle_client][44]:\"\u5ba2\u6237\u7aef\u65ad\u5f00\u8fde\u63a5\"\n09-13 14:19:50.498  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15",
+    "note": "near LOAD/UNLOAD range"
+  },
+  {
+    "label": "P5_LOAD_TA_nonexistent",
+    "hex": "030001002f646f65732f6e6f742f65786973742e6d626e00",
+    "state_raw": "tcp        0      0 127.0.0.1:36818         127.0.0.1:8341          ESTABLISHED\ntcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:42028         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:8341          127.0.0.1:36818         ESTABLISHED\ntcp        0      0 127.0.0.1:48898         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:37674         127.0.0.1:8341          TIME_WAIT",
+    "raw_output": "SIZE=0 OUT=",
+    "size": "0",
+    "resp_hex": "",
+    "resp_ascii": "",
+    "tcp": "HELD-OPEN (ESTABLISHED)",
+    "logcat": "09-13 14:19:51.517  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:4\"\n09-13 14:19:51.518  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][53]:\"Received, cmd_id: 10003, rsv_len:24\"\n09-13 14:19:51.518  1792 13508 E GateServiced: [GATE CA][INFO][cmd_dispatch][26]:\"load ta called\"\n09-13 14:19:51.525  1792 13508 E GateServiced: [GATE CA][ERRO][get_file_size][18]:\"Failed to open file /does/not/exist.mbn: No such file or directory (2)\"\n09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][load_app][49]:\"Malloc failed while allocating memory to buffer\"\n09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][load_app][69]:\"Load app /does/not/exist.mbn failed: 12292\"\n09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][load_app][71]:\"appController is NULL!\"\n09-13 14:19:51.526  1792 13508 E GateServiced: [GATE CA][ERRO][run_load_ta][200]:\"Loading the application failed with 12298!\"\n09-13 14:19:51.533  1792 13508 E GateServiced: [GATE CA][ERRO][handle_client][59]:\"cmd_dispatch failed, ret:300a\"\n09-13 14:19:51.533  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:4\"\n09-13 14:19:58.526  1792 13508 E GateServiced: [GATE CA][INFO][handle_client][44]:\"\u5ba2\u6237\u7aef\u65ad\u5f00\u8fde\u63a5\"\n09-13 14:20:01.114  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15",
+    "note": "LOAD_TA missing file"
+  },
+  {
+    "label": "P6_LOAD_TA_existing_nonta",
+    "hex": "030001002f73797374656d2f62696e2f736800",
+    "state_raw": "tcp        0      0 127.0.0.1:36818         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:42028         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:55270         127.0.0.1:8341          ESTABLISHED\ntcp        0      0 127.0.0.1:48898         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:37674         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:8341          127.0.0.1:55270         ESTABLISHED",
+    "raw_output": "SIZE=0 OUT=",
+    "size": "0",
+    "resp_hex": "",
+    "resp_ascii": "",
+    "tcp": "HELD-OPEN (ESTABLISHED)",
+    "logcat": "09-13 14:20:02.056  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:5\"\n09-13 14:20:02.057  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][53]:\"Received, cmd_id: 10003, rsv_len:19\"\n09-13 14:20:02.057  1792 13714 E GateServiced: [GATE CA][INFO][cmd_dispatch][26]:\"load ta called\"\n09-13 14:20:02.071  1792 13714 E GateServiced: [GATE CA][ERRO][load_app][69]:\"Load app /system/bin/sh failed: 12\"\n09-13 14:20:02.071  1792 13714 E GateServiced: [GATE CA][ERRO][load_app][71]:\"appController is NULL!\"\n09-13 14:20:02.072  1792 13714 E GateServiced: [GATE CA][ERRO][run_load_ta][200]:\"Loading the application failed with 12298!\"\n09-13 14:20:02.076  1792 13714 E GateServiced: [GATE CA][ERRO][handle_client][59]:\"cmd_dispatch failed, ret:300a\"\n09-13 14:20:02.076  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:5\"\n09-13 14:20:09.067  1792 13714 E GateServiced: [GATE CA][INFO][handle_client][44]:\"\u5ba2\u6237\u7aef\u65ad\u5f00\u8fde\u63a5\"\n09-13 14:20:11.599  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15",
+    "note": "LOAD_TA existing non-TA file"
+  },
+  {
+    "label": "P7_connect_only_no_bytes",
+    "hex": null,
+    "state_raw": "tcp        0      0 127.0.0.1:49372         127.0.0.1:8341          ESTABLISHED\ntcp        0      0 127.0.0.1:8341          127.0.0.1:49372         ESTABLISHED\ntcp        0      0 127.0.0.1:36818         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:51128         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:42028         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:55270         127.0.0.1:8341          TIME_WAIT  \ntcp        0      0 127.0.0.1:37674         127.0.0.1:8341          TIME_WAIT",
+    "raw_output": "SIZE=0 OUT=",
+    "size": "0",
+    "resp_hex": "",
+    "resp_ascii": "",
+    "tcp": "HELD-OPEN (ESTABLISHED)",
+    "logcat": "09-13 14:20:12.531  1792 13916 E GateServiced: [GATE CA][INFO][handle_client][39]:\"wait for client data, client_fd:8\"\n09-13 14:20:19.537  1792 13916 E GateServiced: [GATE CA][INFO][handle_client][44]:\"\u5ba2\u6237\u7aef\u65ad\u5f00\u8fde\u63a5\"\n09-13 14:20:22.085  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'GateServiced|GATE CA' | tail -15",
+    "note": "connect, send nothing"
+  }
+]
+------------------------------------------------------------------------------
+ T6. FINAL DEVICE STATE
+------------------------------------------------------------------------------
+$ getprop sys.boot_completed
+1
+$ ps -A | grep -i gate
+system         605     1 2238216   4024 0                   0 S android.hardware.gatekeeper@1.0-service-qti
+system         976     1 2200956   4604 0                   0 S gatekeeperd
+root          1792     1 2184376   3468 0                   0 S GateServiced
+$ netstat -tlnp | grep 8341
+tcp        0      0 0.0.0.0:8341            0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:49372         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:36818         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:55270         127.0.0.1:8341          TIME_WAIT   -
+$ grep -E "^(Name|Uid|Cap)" /proc/1792/status
+Name:	GateServiced
+Uid:	0	0	0	0
+CapInh:	0000000000000000
+CapPrm:	000001ffffffffff
+CapEff:	000001ffffffffff
+CapBnd:	000001ffffffffff
+CapAmb:	0000000000000000

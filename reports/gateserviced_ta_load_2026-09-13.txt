@@ -1,4 +1,5 @@
 # GateServiced — LOAD_TA success & the EXEC_CMD path (LIVE device)
+> English: [gateserviced_ta_load_2026-09-13_EN.txt](gateserviced_ta_load_2026-09-13_EN.txt)
 **Device:** Rokid RV101 `<DEVICE_SERIAL>` (product `glasses`) · **Date:** 2026-09-13 · **Firmware:** `1.22.009-20260710-150201`
 **Service:** `GateServiced` pid **1792** (uid 0, SELinux `u:r:tee:s0`), listening `0.0.0.0:8341`
 **Root transport:** `deploy/run_root.sh` equivalent — `printf '<cmd>' | nc -U /data/local/tmp/root_daemon.sock` → `uid=0(root) context=u:r:kernel:s0`

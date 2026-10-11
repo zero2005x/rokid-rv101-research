@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-# check_index_state.sh — 確認眼鏡媒體索引狀態，並修掉「驗證中斷」可能留下的痕跡。
+# check_index_state.sh — check the glasses media index state and repair traces an interrupted
+# verification may have left.
 #
-# 背景：`verify_index_resilience.sh` 的 A 步驟會**刻意**把 `albums[0].name` 移除（測逐筆容錯）。
-# 若該次執行中途 adb 斷線，裝置上可能仍留著這個被改過的索引。因為 App 的 `reconcileWithDisk()`
-# 會在下次啟動時**從磁碟重建** album 與 media（只增不減），資料不會遺失，但**專輯名稱會變成目錄 id**
-# （`alb-3b6dfe09` 而不是 `Camera`）。本腳本負責檢查並把名稱修回。
+# Background: step A of `verify_index_resilience.sh` **deliberately** removes `albums[0].name`
+# (to test per-entry fault tolerance). If adb drops mid-run, the modified index can stay on the
+# device. Because the app's `reconcileWithDisk()` **rebuilds** albums and media from disk on the
+# next start (only adding, never removing), no data is lost, but **the album name becomes the
+# directory id** (`alb-3b6dfe09` instead of `Camera`). This script checks for that and restores the
+# name.
 #
-# 用法：bash scripts/check_index_state.sh [--fix]
-#   不帶 --fix：只檢查並印出狀態（唯讀）
-#   帶   --fix：若偵測到 album 名稱異常，寫回正確名稱並重啟 App 驗證
+# Usage: bash scripts/check_index_state.sh [--fix]
+#   without --fix: check and print the state only (read-only)
+#   with --fix: if an abnormal album name is detected, write the correct name back and restart
+#   the app to verify
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/../deploy/env.sh"
@@ -79,7 +83,7 @@ PY
   fi
 fi
 
-# 重啟 App 讓 reconcile 跑一次，再確認三方一致
+# restart the app so reconcile runs once, then confirm the three sides agree
 sh_ "input keyevent KEYCODE_WAKEUP; am force-stop com.rokid.rc.glasses" >/dev/null
 sleep 2
 "$ADB" -s "$SERIAL" logcat -c >/dev/null 2>&1

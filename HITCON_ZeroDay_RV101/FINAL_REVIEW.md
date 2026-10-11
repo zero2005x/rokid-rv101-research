@@ -1,5 +1,7 @@
 # HITCON 版最終檢查
 
+> English: [FINAL_REVIEW_EN.md](FINAL_REVIEW_EN.md)
+
 > 檢查日期：2026-08-22。結論：**文件包完成，但尚未達到可直接按下「回報」的狀態。**
 
 ## 1. 技術檢查

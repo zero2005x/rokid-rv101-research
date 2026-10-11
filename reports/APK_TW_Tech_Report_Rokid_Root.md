@@ -1,4 +1,7 @@
 # 【技術分享】Rokid AR Glasses Root 權限攻略 - Bootloader 已解鎖仍遇阻的深度研究
+
+> English: [APK_TW_Tech_Report_Rokid_Root_EN.md](APK_TW_Tech_Report_Rokid_Root_EN.md)
+
 > ⚠ **2026-09-13 狀態更正（對外文件尤須注意）**：本檔寫作時 **root 尚未取得**；**2026-08-22 起已由 GhostLock LPE（CVE-2026-43499）取得執行期 root**（`uid=0(root)`、`context=u:r:kernel:s0`、**SELinux Permissive**）。文中「SELinux Enforcing／Root Access: None」僅代表當時狀態；現行流程見 `docs/deploy.md`（每 boot 以 adb 武裝一次）。
 
 

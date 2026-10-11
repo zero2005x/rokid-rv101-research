@@ -1,10 +1,10 @@
 /*
- * adsprpc_ioctl_test.c - 測試 ADSPRPC ioctl 操作
+ * adsprpc_ioctl_test.c - testing ADSPRPC ioctl operations
  *
- * 發現: /dev/adsprpc-smd 可以 O_RDONLY 打開！
- * 測試: ioctl 是否需要 write 權限
+ * Finding: /dev/adsprpc-smd can be opened O_RDONLY!
+ * Test: whether ioctl requires write permission
  *
- * 編譯:
+ * Build:
  * $CC -static -O2 -o adsprpc_ioctl adsprpc_ioctl_test.c
  */
 
@@ -19,7 +19,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
-/* FASTRPC IOCTL 定義 (來自 kernel headers) */
+/* FASTRPC IOCTL definitions (from kernel headers) */
 #define FASTRPC_IOCTL_MAGIC 'R'
 
 #define FASTRPC_IOCTL_INIT _IOWR(FASTRPC_IOCTL_MAGIC, 0, unsigned int)
@@ -34,7 +34,7 @@
 #define FASTRPC_IOCTL_MUNMAP_FD _IOWR(FASTRPC_IOCTL_MAGIC, 15, void *)
 #define FASTRPC_IOCTL_GET_DSP_INFO _IOWR(FASTRPC_IOCTL_MAGIC, 17, void *)
 
-/* fastrpc_ioctl_init 結構 */
+/* fastrpc_ioctl_init structure */
 struct fastrpc_ioctl_init
 {
     unsigned int flags;     /* one of FASTRPC_INIT_* macros */
@@ -44,7 +44,7 @@ struct fastrpc_ioctl_init
     unsigned long long mem;
 };
 
-/* fastrpc_ioctl_init_attrs 結構 */
+/* fastrpc_ioctl_init_attrs structure */
 struct fastrpc_ioctl_init_attrs
 {
     struct fastrpc_ioctl_init init;
@@ -52,7 +52,7 @@ struct fastrpc_ioctl_init_attrs
     int siglen;
 };
 
-/* DSP 資訊結構 */
+/* DSP info structure */
 struct fastrpc_ioctl_dsp_capabilities
 {
     unsigned int domain;
@@ -60,7 +60,7 @@ struct fastrpc_ioctl_dsp_capabilities
     unsigned int capability;
 };
 
-/* GETINFO 結構 */
+/* GETINFO structure */
 struct fastrpc_ioctl_getinfo
 {
     unsigned int domain;
@@ -74,7 +74,7 @@ void test_ioctl_readonly(int fd)
 
     printf("\n[*] Testing IOCTL on read-only fd=%d...\n", fd);
 
-    // 測試 GETINFO - 這通常是只讀操作
+    // Test GETINFO - this is usually a read-only operation
     struct fastrpc_ioctl_getinfo info = {0};
     info.domain = 0; // ADSP domain
     info.attribute_ID = 1;
@@ -87,7 +87,7 @@ void test_ioctl_readonly(int fd)
         printf("    -> capability = 0x%x\n", info.capability);
     }
 
-    // 測試 GET_DSP_INFO
+    // Test GET_DSP_INFO
     struct fastrpc_ioctl_dsp_capabilities dsp_cap = {0};
     dsp_cap.domain = 0;
     dsp_cap.attribute_ID = 0;
@@ -101,7 +101,7 @@ void test_ioctl_readonly(int fd)
                dsp_cap.domain, dsp_cap.attribute_ID, dsp_cap.capability);
     }
 
-    // 測試 INIT (這需要 write 權限)
+    // Test INIT (this requires write permission)
     struct fastrpc_ioctl_init_attrs init_attrs = {0};
     init_attrs.init.flags = 0;
     init_attrs.init.file_size = 0;
@@ -112,7 +112,7 @@ void test_ioctl_readonly(int fd)
     printf("  FASTRPC_IOCTL_INIT_ATTRS: ret=%d, errno=%d (%s)\n",
            ret, errno, ret < 0 ? strerror(errno) : "OK");
 
-    // 測試基本 INIT
+    // Test basic INIT
     struct fastrpc_ioctl_init init = {0};
     init.flags = 0;
 
@@ -127,7 +127,7 @@ void test_ioctl_rdwr(int fd)
 
     printf("\n[*] Testing IOCTL on read-write fd=%d...\n", fd);
 
-    // 測試 GETINFO
+    // Test GETINFO
     struct fastrpc_ioctl_getinfo info = {0};
     info.domain = 0;
 
@@ -135,7 +135,7 @@ void test_ioctl_rdwr(int fd)
     printf("  FASTRPC_IOCTL_GETINFO: ret=%d, errno=%d (%s)\n",
            ret, errno, ret < 0 ? strerror(errno) : "OK");
 
-    // 測試 INIT
+    // Test INIT
     struct fastrpc_ioctl_init init = {0};
     init.flags = 0;
 
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     printf("Testing if read-only fd can perform ioctl\n");
     printf("==========================\n");
 
-    // 嘗試 read-only 打開
+    // Try opening read-only
     printf("\n[*] Opening /dev/adsprpc-smd O_RDONLY...\n");
     fd_ro = open("/dev/adsprpc-smd", O_RDONLY);
     if (fd_ro >= 0)
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
         printf("[-] O_RDONLY failed: %s\n", strerror(errno));
     }
 
-    // 嘗試 read-write 打開
+    // Try opening read-write
     printf("\n[*] Opening /dev/adsprpc-smd O_RDWR...\n");
     fd_rw = open("/dev/adsprpc-smd", O_RDWR);
     if (fd_rw >= 0)
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
         printf("[-] O_RDWR failed: %s (this is expected)\n", strerror(errno));
     }
 
-    // 總結
+    // Summary
     printf("\n=== Results ===\n");
     if (fd_ro >= 0)
     {

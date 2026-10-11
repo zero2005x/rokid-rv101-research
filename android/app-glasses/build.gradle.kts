@@ -4,17 +4,18 @@ plugins {
 }
 
 /*
- * 提權「安全武裝」開關（2026-09-13）。
+ * Escalation "safe arming" switch (2026-09-13).
  *
- * 背景：GhostLock 每次嘗試約有 50% 機率以 kernel panic 收場 → 裝置在 2–5 分鐘後自動重開機
- * （見 reports/glasses_reboot_after_adb_unplug_2026-09-13.md）。原本的自動提權會在每次開機、
- * 每 5 分鐘無限重試，等於反覆去賭那個機率，可能形成開機迴圈。
+ * Background: each GhostLock attempt ends in a kernel panic roughly 50% of the time → the device reboots by itself
+ * after 2-5 minutes (see reports/glasses_reboot_after_adb_unplug_2026-09-13.md). The original auto-escalation retried
+ * without limit on every boot and every 5 minutes, effectively gambling on that probability over and over, which can
+ * produce a boot loop.
  *
- * `-PsafeArming=true`（預設）→ 啟用四道保護：開機迴圈斷路器、每次開機重試上限＋指數退避、
- * 僅充電時自動武裝、開機後延遲（uptime > 150 s）。
- * `-PsafeArming=false` → 完全維持原行為（供 A/B 對照）。
+ * `-PsafeArming=true` (default) → enables four protections: boot-loop breaker, per-boot retry cap + exponential
+ * backoff, auto-arm only while charging, delay after boot (uptime > 150 s).
+ * `-PsafeArming=false` → keeps the original behavior exactly (for A/B comparison).
  *
- * 兩個版本的 APK 會被複製到 dist/ 並以檔名與 versionName 區分。
+ * The two APK variants are copied to dist/ and distinguished by file name and versionName.
  */
 val safeArming: Boolean = (project.findProperty("safeArming") as String?)?.toBoolean() ?: true
 
@@ -26,7 +27,7 @@ android {
         applicationId = "com.rokid.rc.glasses"
         minSdk = 26
         targetSdk = 34
-        // 兩個版本可互相覆蓋安裝（同 applicationId），但版本字串不同以便辨識
+        // the two variants can overwrite each other when installed (same applicationId), but the version string differs so they can be told apart
         versionCode = if (safeArming) 8 else 1
         versionName = if (safeArming) "1.0-safe.6" else "1.0"
 
@@ -34,7 +35,7 @@ android {
     }
 
     buildFeatures {
-        // Shizuku UserService 的自訂 AIDL（ICommandService/ICommandCallback）
+        // Shizuku UserService's custom AIDL (ICommandService/ICommandCallback)
         aidl = true
         buildConfig = true
     }
@@ -65,8 +66,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-service:2.8.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    // Shizuku：shell 身份執行通道（ShizukuGhostlockEngine / CommandService）
-    // api=MIT、Shizuku 主體=Apache-2.0；provider 為 client 端接收 binder 所需。
+    // Shizuku: the shell-identity execution channel (ShizukuGhostlockEngine / CommandService)
+    // api=MIT, Shizuku itself=Apache-2.0; the provider is what the client needs to receive the binder.
     val shizukuVersion = "13.1.5"
     implementation("dev.rikka.shizuku:api:$shizukuVersion")
     implementation("dev.rikka.shizuku:provider:$shizukuVersion")

@@ -1,0 +1,30 @@
+# Device Fact Forensics: ramoops / uptime conditions / system baseline
+> 中文版：[device_facts_ramoops_uptime_2026-09-13.txt](device_facts_ramoops_uptime_2026-09-13.txt)
+# Date: 2026-09-13 14:08:58  Device: <DEVICE_SERIAL> (1.22.009 / 5.10.209-perf-gd908d71a0404)
+
+## 1) kernel cmdline (ramoops / pstore / console)
+
+## 2) ramoops registration (dmesg)
+[    0.000000] [    T0] Kernel command line: stack_depot_disable=on kasan.stacktrace=off cgroup_disable=pressure cgroup.memory=nokmem console=ttyMSM0,115200n8 log_buf_len=256K kernel.panic_on_rcu_stall=1 loop.max_part=7 pcie_ports=compat service_locator.enable=1 msm_rtb.filter=0x237 allow_mismatched_32bit_el0 kasan=off rcupdate.rcu_expedited=1 rcu_nocbs=0-7 pstore.compress=none kpti=off swiotlb=noforce cgroup.memory=nokmem,nosocket allow_file_spec_access cpufreq.default_governor=performance disable_dma32=on ftrace_dump_on_oops net.ifnames=0 quiet loglevel=0 nosyslog audit=0 audit_backlog=0 video=vfb:640x400,bpp=32,memsize=3072000 printk.devkmsg=on androidboot.hardware=qcom androidboot.memcg=1 androidboot.usbcontroller=a600000.dwc3 msm_geni_serial.con_enabled=0 androidboot.selinux=enforcing bootconfig buildvariant=user  androidboot.touchfw=true androidboot.HWID=5 androidboot.verifiedbootstate=orange androidboot.keymaster=1 androidboot.vbmeta.device=PARTUUID=51dbf5c1-dcd6-07eb-e302-49
+[    0.226958] [    T1] pstore: Registered ramoops as persistent store backend
+[    0.226963] [    T1] ramoops: using 0x200000@0xf8e00000, ecc: 0
+[    3.993859] [    T1] init: Command 'chown system log /sys/fs/pstore/console-ramoops-0' action=init (/system/etc/init/hw/init.rc:477) took 60ms and succeeded
+
+## 3) /sys/fs/pstore mount and contents
+pstore on /sys/fs/pstore type pstore (rw,seclabel,nosuid,nodev,noexec,relatime)
+--- contents ---
+total 0
+dr-xr-x---  2 system log  0 1970-01-14 01:56 .
+drwxr-xr-x 10 root   root 0 1970-01-01 08:00 ..
+
+## 4) System baseline (uptime / loadavg / limits / thread count)
+uptime=916.15 s
+loadavg=2.02 13.11 17.39 5/1337 2486
+threads-max=13217 pid_max=32768
+thread_dirs=2126
+
+## 5) Whether the exploit reads uptime (whole-tree grep)
+
+## 6) uptime of today's successful root acquisition (counter-evidence to >400s)
+[2026-09-13 13:56:24] [boot] 裝置已上線，uptime=159s
+[2026-09-13 13:59:10] ===== ROOT 已達成並驗證（boot 1, trigger 1）=====

@@ -1,5 +1,7 @@
 # 桌面工具：開機迴圈保護（2026-09-13）
 
+> English: [desktop-loop-protection_EN.md](desktop-loop-protection_EN.md)
+
 > **為什麼桌面板也要做**：眼鏡 App 側的 `ArmPolicy` 只保護 **App 自己的自動武裝路徑**。
 > 桌面工具走自己的 `_desktop` helper **直接**跑 exploit，**完全繞過**那道保護。
 > 一次「一鍵取得 root」最多 `MAX_BOOTS(6) × TRIGGERS_PER_BOOT(2) = 12` 次嘗試，

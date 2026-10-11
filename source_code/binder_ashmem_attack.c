@@ -537,7 +537,7 @@ void test_binder_ioctl_scan(void)
 
 int main(int argc, char **argv)
 {
-    // 禁用緩衝，讓 printf 立即輸出（避免崩潰時日誌丟失）
+    // Disable buffering so printf outputs immediately (avoid losing logs on crash)
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 

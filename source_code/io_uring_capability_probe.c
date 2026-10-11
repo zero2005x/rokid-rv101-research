@@ -1,12 +1,12 @@
 ﻿/*
  * io_uring_capability_probe.c
- * CVE-2024-0582 ?�利?�性探測工??
+ * CVE-2024-0582 exploitability probe tool
  *
- * 測試?��?:
- * 1. IORING_REGISTER_BUFFERS - CVE-2024-0582 ?��??��?
- * 2. IORING_REGISTER_FILES - ?�件註�??�能
- * 3. IORING_OP_PROVIDE_BUFFERS - ?��?緩�??�?��?
- * 4. Ring buffer mmap ?�能
+ * Test items:
+ * 1. IORING_REGISTER_BUFFERS - the key feature of CVE-2024-0582
+ * 2. IORING_REGISTER_FILES - file registration feature
+ * 3. IORING_OP_PROVIDE_BUFFERS - buffer provide feature
+ * 4. Ring buffer mmap feature
  */
 
 #define _GNU_SOURCE
@@ -21,7 +21,7 @@
 #include <stdint.h>
 
 /*
- * io_uring 系統調用??(ARM64)
+ * io_uring syscall numbers (ARM64)
  */
 #ifndef __NR_io_uring_setup
 #define __NR_io_uring_setup 425
@@ -34,7 +34,7 @@
 #endif
 
 /*
- * io_uring 結�?體�?�?
+ * io_uring structure definitions
  */
 struct io_uring_params
 {
@@ -137,7 +137,7 @@ struct io_uring_cqe
 };
 
 /*
- * iovec 結�?�?
+ * iovec structure definition
  */
 struct iovec
 {
@@ -146,7 +146,7 @@ struct iovec
 };
 
 /*
- * io_uring register ?��?�?
+ * io_uring register opcodes
  */
 #define IORING_REGISTER_BUFFERS 0
 #define IORING_UNREGISTER_BUFFERS 1
@@ -165,7 +165,7 @@ struct iovec
 #define IORING_UNREGISTER_PBUF_RING 23
 
 /*
- * io_uring ?��?�?
+ * io_uring opcodes
  */
 #define IORING_OP_NOP 0
 #define IORING_OP_READV 1
@@ -224,7 +224,7 @@ struct iovec
 #define IORING_OFF_SQES 0x10000000ULL
 
 /*
- * io_uring_probe 結�?
+ * io_uring_probe structure
  */
 struct io_uring_probe_op
 {
@@ -246,7 +246,7 @@ struct io_uring_probe
 #define IO_URING_OP_SUPPORTED (1U << 0)
 
 /*
- * 系統調用封�?
+ * syscall wrappers
  */
 static int io_uring_setup(unsigned entries, struct io_uring_params *p)
 {
@@ -265,7 +265,7 @@ static int io_uring_enter(int fd, unsigned to_submit, unsigned min_complete,
 }
 
 /*
- * �?? features 標�?
+ * print the features flags
  */
 void print_features(uint32_t features)
 {
@@ -295,7 +295,7 @@ void print_features(uint32_t features)
 }
 
 /*
- * 主�?�?
+ * Main function
  */
 int main(void)
 {
@@ -309,7 +309,7 @@ int main(void)
     printf("============================================================\n\n");
 
     /*
-     * 測試 1: io_uring_setup
+     * Test 1: io_uring_setup
      */
     printf("[TEST 1] io_uring_setup()\n");
     total_tests++;
@@ -331,7 +331,7 @@ int main(void)
     success_count++;
 
     /*
-     * 測試 2: mmap SQ/CQ rings
+     * Test 2: mmap SQ/CQ rings
      */
     printf("\n[TEST 2] mmap SQ/CQ rings\n");
     total_tests++;
@@ -358,7 +358,7 @@ int main(void)
     }
 
     /*
-     * 測試 3: IORING_REGISTER_BUFFERS (CVE-2024-0582 ?��??��?)
+     * Test 3: IORING_REGISTER_BUFFERS (the key feature of CVE-2024-0582)
      */
     printf("\n[TEST 3] IORING_REGISTER_BUFFERS (?��? CVE-2024-0582 ?�鍵?�能)\n");
     total_tests++;
@@ -387,7 +387,7 @@ int main(void)
             printf("  ?�� CVE-2024-0582 漏�??�已?�露!\n");
             success_count++;
 
-            // ?�試註銷
+            // Try to unregister
             ret = io_uring_register(ring_fd, IORING_UNREGISTER_BUFFERS, NULL, 0);
             printf("  UNREGISTER_BUFFERS: %s\n", ret < 0 ? "failed" : "success");
         }
@@ -395,7 +395,7 @@ int main(void)
     }
 
     /*
-     * 測試 4: IORING_REGISTER_FILES
+     * Test 4: IORING_REGISTER_FILES
      */
     printf("\n[TEST 4] IORING_REGISTER_FILES\n");
     total_tests++;
@@ -417,14 +417,14 @@ int main(void)
             printf("  ??SUCCESS! ?�件已註?�\n");
             success_count++;
 
-            // 註銷
+            // Unregister
             io_uring_register(ring_fd, IORING_UNREGISTER_FILES, NULL, 0);
         }
         close(file_fd);
     }
 
     /*
-     * 測試 5: IORING_REGISTER_PROBE (?�詢?�援?��?�?
+     * Test 5: IORING_REGISTER_PROBE (query the supported features)
      */
     printf("\n[TEST 5] IORING_REGISTER_PROBE (?�詢?�援?��?�?\n");
     total_tests++;
@@ -448,7 +448,7 @@ int main(void)
             printf("  ??SUCCESS! last_op=%d, ops_len=%d\n", probe->last_op, probe->ops_len);
             success_count++;
 
-            // 檢查?�鍵?��?
+            // Check the key features
             printf("  ?�鍵?��??�援?�??\n");
 
             const char *critical_ops[] = {
@@ -469,7 +469,7 @@ int main(void)
                 }
             }
 
-            // ?�別檢查 PROVIDE_BUFFERS ??REMOVE_BUFFERS
+            // Check PROVIDE_BUFFERS and REMOVE_BUFFERS separately
             if (IORING_OP_PROVIDE_BUFFERS < probe->ops_len)
             {
                 int supported = probe->ops[IORING_OP_PROVIDE_BUFFERS].flags & IO_URING_OP_SUPPORTED;
@@ -487,7 +487,7 @@ int main(void)
     }
 
     /*
-     * 測試 6: 多緩衝�?註�? (壓�?測試)
+     * Test 6: multiple buffer registration (stress test)
      */
     printf("\n[TEST 6] 多緩衝�?註�? (壓�?測試)\n");
     total_tests++;
@@ -526,43 +526,43 @@ int main(void)
             printf("  ??SUCCESS! 已註??%d ?�緩衝�?\n", NUM_BUFS);
             success_count++;
 
-            // 註銷
+            // Unregister
             io_uring_register(ring_fd, IORING_UNREGISTER_BUFFERS, NULL, 0);
         }
     }
 
-    // 清�?
+    // Clean up
     for (int i = 0; i < NUM_BUFS && bufs[i] != MAP_FAILED; i++)
     {
         munmap(bufs[i], 4096);
     }
 
     /*
-     * 測試 7: ?�交一??NOP ?��?
+     * Test 7: submit a single NOP request
      */
     printf("\n[TEST 7] ?�交 NOP ?��? (驗�?完整 I/O 路�?)\n");
     total_tests++;
 
     if (sq_ring != MAP_FAILED && sqes != MAP_FAILED)
     {
-        // ?��? ring ?��?
+        // Get the ring pointers
         uint32_t *sq_head = (uint32_t *)((char *)sq_ring + params.sq_off.head);
         uint32_t *sq_tail = (uint32_t *)((char *)sq_ring + params.sq_off.tail);
         uint32_t *sq_array = (uint32_t *)((char *)sq_ring + params.sq_off.array);
         uint32_t sq_mask = params.sq_entries - 1;
 
-        // 填�? SQE
+        // Fill in the SQE
         struct io_uring_sqe *sqe = &((struct io_uring_sqe *)sqes)[*sq_tail & sq_mask];
         memset(sqe, 0, sizeof(*sqe));
         sqe->opcode = IORING_OP_NOP;
         sqe->user_data = 0x1234;
 
-        // ?�新 sq_array ??tail
+        // Update sq_array and tail
         sq_array[*sq_tail & sq_mask] = *sq_tail & sq_mask;
         __sync_synchronize(); // memory barrier
         (*sq_tail)++;
 
-        // ?�交
+        // Submit
         ret = io_uring_enter(ring_fd, 1, 1, 0, NULL);
         if (ret < 0)
         {
@@ -580,7 +580,7 @@ int main(void)
     }
 
     /*
-     * 清�?
+     * Clean up
      */
     if (sq_ring != MAP_FAILED)
         munmap(sq_ring, sq_ring_size);
@@ -589,7 +589,7 @@ int main(void)
     close(ring_fd);
 
     /*
-     * 總�?
+     * Summary
      */
     printf("\n============================================================\n");
     printf("  測試結�?總�?\n");

@@ -1,4 +1,7 @@
 # 移交 Prompt — GhostLock RV101 (CVE-2026-43499) 第五任智能體
+
+> English: [NEXT_AGENT_PROMPT_V4_EN.md](NEXT_AGENT_PROMPT_V4_EN.md)
+
 > ⚠ **歷史文件（非現況）**：本文為當時的紀錄；專案其後已有重大變化（root 已取得、引擎改執行期探測、手機 UI 重做、i18n 193 key）。
 > 現行狀態請看 `README.md`、`MANIFEST.md`、`docs/deploy.md`。
 

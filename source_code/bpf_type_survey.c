@@ -1,6 +1,6 @@
 /*
  * BPF Program Type Survey
- * 測試不同程式類型的可用性和 helper functions
+ * Test the availability of different program types and helper functions
  */
 #define _GNU_SOURCE
 #include <stdio.h>

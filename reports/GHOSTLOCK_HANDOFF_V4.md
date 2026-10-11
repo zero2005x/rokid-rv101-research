@@ -1,5 +1,7 @@
 # GhostLock RV101 — 工作狀態交接文件 v4
 
+> English: [GHOSTLOCK_HANDOFF_V4_EN.md](GHOSTLOCK_HANDOFF_V4_EN.md)
+
 > 本文件更新於第四任智能體工作結束時（2026-08-17 凌晨）。
 > v1/v2/v3 交接（GHOSTLOCK_HANDOVER_PROMPT.md / GHOSTLOCK_HANDOFF_V2.md /
 > GHOSTLOCK_HANDOFF_V3.md）仍為有效背景，但 v3 的兩個關鍵假設已被本輪推翻（見 §2）。

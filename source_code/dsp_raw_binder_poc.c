@@ -18,7 +18,7 @@ struct binder_write_read {
     unsigned long read_consumed;
 };
 
-// 簡易 Parcel 結構 (實際需更複雜的 buffer 管理)
+// Simple Parcel structure (real code needs more complex buffer management)
 typedef struct {
     char *data;
     size_t size;
@@ -50,25 +50,25 @@ int main() {
 
     printf("[+] /dev/hwbinder opened\n");
 
-    // TODO: 先在裝置上執行以下指令取得關鍵資訊
+    // TODO: first run the following commands on the device to obtain the key information
     // adb shell lshal -l | grep dsp
     // adb shell lshal --debug vendor.qti.hardware.dsp@1.0::IDspService/default
 
     const char *interface = "vendor.qti.hardware.dsp@1.0::IDspService";
-    // 假設 openSession 的 transaction code (需 reverse 取得，通常是 1~N)
-    uint32_t transaction_code = 1;   // <--- 需要逆向修改
+    // Assumed openSession transaction code (must be obtained by reversing, usually 1~N)
+    uint32_t transaction_code = 1;   // <--- needs to be changed after reversing
 
     Parcel request;
     parcel_init(&request, 4096);
 
-    // 寫入 interface descriptor
+    // Write the interface descriptor
     parcel_write_string(&request, interface);
 
-    // 寫入 method code
+    // Write the method code
     memcpy(request.data + request.size, &transaction_code, 4);
     request.size += 4;
 
-    // TODO: 加入參數 (例如 client_id = 0)
+    // TODO: add arguments (for example client_id = 0)
 
     struct binder_write_read bwr = {
         .write_buffer = (unsigned long)request.data,

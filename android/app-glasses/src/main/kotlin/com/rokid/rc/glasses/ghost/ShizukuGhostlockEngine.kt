@@ -20,27 +20,28 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * ghostlock LPE 觸發層（Shizuku/UserService 版）。
+ * ghostlock LPE trigger layer (Shizuku/UserService version).
  *
- * 背景（研究結論，見 docs/shizuku-feasibility-report.md）：
- *  - exploit 必須以 shell (uid 2000) 執行；App（untrusted_app）直跑會 kernel panic。
- *  - Shizuku server 以 adb shell 啟動時，UserService 進程 = uid 2000 + u:r:shell:s0，
- *    等同 adb shell → 是 App 內唯一乾淨的 shell 身份通道。
- *  - server 以 root 啟動時子程序變 uid 0/kernel context（exploit 要 unprivileged 起跑，
- *    不可用）→ 偵測到時改用 run_shell 包裝降權，或明確報錯。
+ * Background (research conclusion, see docs/shizuku-feasibility-report.md):
+ *  - the exploit must run as shell (uid 2000); running it directly from the app (untrusted_app) kernel-panics.
+ *  - when the Shizuku server is started through adb shell, the UserService process = uid 2000 + u:r:shell:s0,
+ *    equivalent to adb shell → the only clean shell-identity channel inside the app.
+ *  - when the server is started as root, the child process becomes uid 0/kernel context (the exploit must start
+ *    unprivileged, so this is unusable) → on detecting that, wrap it in run_shell to drop privilege, or report an explicit error.
  *
- * 流程與 ShellGhostlockEngine 相同（launch → ready → install → done）：
+ * The flow is the same as ShellGhostlockEngine (launch → ready → install → done):
  *   LAUNCH : userService.runCommandStream("ENV… /data/local/tmp/ghostlock_rv101")
- *   READY  : 輪詢 rootScriptPath 出現 readyMarker
+ *   READY  : poll rootScriptPath for the readyMarker
  *   INSTALL: userService.writeFile(rootScriptPath, payload, exec=true)
- *            （或 useDirectPayloadWrite=true 時 App 直寫，需 setup_direct.sh 的 symlink）
- *   DONE   : 輪詢 payloadLog 出現 doneMarker
- *   ⚠ 順序不可顛倒：exploit 啟動 ~2s 會寫出自己的預設腳本，先寫 payload 會被覆蓋。
+ *            (or, with useDirectPayloadWrite=true, the app writes directly, requiring the symlink from setup_direct.sh)
+ *   DONE   : poll payloadLog for the doneMarker
+ *   ⚠ The order must not be reversed: the exploit writes its own default script ~2 s after launch, so a payload
+ *     written earlier would be overwritten.
  *
- * kernel-panic/重啟偵測：執行前記錄 /proc/uptime，逾時路徑比對是否倒退。
+ * kernel-panic/reboot detection: /proc/uptime is recorded before execution, and the timeout path compares it for a decrease.
  *
- * fallback：preflight 失敗（server 未啟動/未授權/綁定失敗）時，若 [fallback] 非空
- * （AppGraph 會注入 BridgeGhostlockEngine），自動委託既有 bridge helper 流程。
+ * fallback: when preflight fails (server not started / not authorized / bind failed), if [fallback] is non-null
+ * (AppGraph injects BridgeGhostlockEngine), it delegates to the existing bridge helper flow automatically.
  */
 class ShizukuGhostlockEngine(
     private val context: Context,
@@ -80,7 +81,7 @@ class ShizukuGhostlockEngine(
     }
 
     override suspend fun exec(payload: RootScript): ExecResult = withContext(Dispatchers.IO) {
-        // 0. preflight：Shizuku binder / 權限 / UserService 綁定
+        // 0. preflight: Shizuku binder / permission / UserService bind
         if (!Shizuku.pingBinder()) {
             return@withContext fallbackExec(
                 Stage.PREFLIGHT, payload,
@@ -108,7 +109,7 @@ class ShizukuGhostlockEngine(
 
     // ---- internals ----
 
-    /** exploit 輸出流是否已結束（行程死亡）。onExit 回呼設定，供 fast-fail 偵測。 */
+    /** Whether the exploit output stream has ended (process died). Set by the onExit callback, for fast-fail detection. */
     @Volatile
     private var streamEnded = false
 
@@ -122,7 +123,7 @@ class ShizukuGhostlockEngine(
         exploitLog.delete()
         val bootStamp = currentUptime()
 
-        // 身份驗證：server 必須是 shell(2000)；若 root 啟動則用 run_shell 降權
+        // identity check: the server must be shell (2000); if it was started as root, drop privilege with run_shell
         val id = svc.service.runCommand("id")
         val runPrefix: String = when {
             id.contains("uid=2000") -> ""
@@ -143,16 +144,16 @@ class ShizukuGhostlockEngine(
             }
         }
 
-        // 內部重試（同 helper 的 MAX_TRY=3 行為）：
-        // exploit 被 OOM 殺 / FOPS install failed / ready 逾時 → 清殘留行程重試；
-        // kernel panic（uptime 倒退）→ 無法同 boot 繼續，直接回報失敗。
+        // internal retry (the same MAX_TRY=3 behavior as the helper):
+        // exploit killed by the OOM killer / FOPS install failed / ready timed out → clear leftover processes and retry;
+        // kernel panic (uptime went backwards) → cannot continue within the same boot, report failure directly.
         val envPrefix = config.env.joinToString(" ")
         val cmd = "$envPrefix $runPrefix${config.binaryPath}"
 
         for (attempt in 1..MAX_INTERNAL_TRY) {
             progress(GhostlockCodes.ATTEMPT_SHIZUKU, "$attempt/$MAX_INTERNAL_TRY")
             streamEnded = false
-            // 清上次殘留（同 helper：跑前 rm -f 預設腳本與 log）
+            // clear the previous leftovers (same as the helper: rm -f the default script and log before running)
             svc.service.runCommand("rm -f ${config.rootScriptPath} 2>/dev/null || true")
             svc.service.runCommandStream(cmd, streamCallback(exploitLog))
 
@@ -193,7 +194,7 @@ class ShizukuGhostlockEngine(
                 }
                 return ExecResult.fail(Stage.DONE, ProgressCodec.encode(GhostlockCodes.PAYLOAD_TIMEOUT, readTail(payloadLog, 800)))
             }
-            // 成功：清殘留 idle exploit 行程（同 helper 行為；root_daemon 不受影響）
+            // success: clear leftover idle exploit processes (same as the helper; root_daemon is unaffected)
             killExploit(svc)
             return ExecResult.ok(Stage.DONE, readTail(payloadLog, 4000))
         }
@@ -201,11 +202,11 @@ class ShizukuGhostlockEngine(
     }
 
     private fun killExploit(svc: BoundService) {
-        // 同 helper 的 pkill 行為：清殘留 exploit 行程後重試
+        // same pkill behavior as the helper: clear leftover exploit processes, then retry
         runCatching { svc.service.runCommand("pkill -9 -f ghostlock_rv101 2>/dev/null || true") }
     }
 
-    /** 流式回呼：全量寫入 exploitLog，僅已知關鍵行轉送給 onProgress（避免洗版）。 */
+    /** Streaming callback: write everything to exploitLog, forwarding only known key lines to onProgress (to avoid log spam). */
     private fun streamCallback(log: File): ICommandCallback =
         object : ICommandCallback.Stub() {
             override fun onLine(line: String) {
@@ -222,7 +223,7 @@ class ShizukuGhostlockEngine(
             }
 
             override fun onExit(exitCode: Int) {
-                // 僅紀錄；流程判定以 ready/done 標記為準（exploit 完成前不會正常退出）
+                // record only; the flow decision is made from the ready/done markers (the exploit does not exit cleanly before it has finished)
                 Log.i(TAG, "exploit process exited code=$exitCode")
                 streamEnded = true
             }
@@ -270,7 +271,7 @@ class ShizukuGhostlockEngine(
         return BoundService(args, conn, svc)
     }
 
-    /** Shizuku 路徑不可用時委託 fallback（AppGraph 注入 BridgeGhostlockEngine）。 */
+    /** Delegate to the fallback when the Shizuku path is unavailable (AppGraph injects BridgeGhostlockEngine). */
     private suspend fun fallbackExec(stage: String, payload: RootScript, message: String): ExecResult {
         val fb = fallback
         if (fb != null) {
@@ -308,7 +309,7 @@ class ShizukuGhostlockEngine(
     private fun bootChanged(prev: Double): Boolean {
         if (prev < 0) return false
         val cur = currentUptime()
-        return cur < prev // uptime 倒退 = 已重啟（kernel panic）
+        return cur < prev // uptime went backwards = already rebooted (kernel panic)
     }
 
     private fun waitFor(timeoutMs: Long, cond: () -> Boolean): Boolean {

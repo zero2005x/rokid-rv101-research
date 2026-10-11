@@ -1,5 +1,7 @@
 # 回信草稿 — 致 degang.xu@rokid.com（2026-09-06）
 
+> English: [reply-to-rokid-2026-09-06_EN.md](reply-to-rokid-2026-09-06_EN.md)
+
 > 寄出前檢查：
 > - [ ] 附件換成 `docs/ghostlock-before-after-redacted.md`（先補完所有 `[待補]`）。
 > - [ ] 確認全篇無絕對 kernel 位址、無序列號、無武器化細節。

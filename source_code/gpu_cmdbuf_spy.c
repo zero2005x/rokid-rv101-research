@@ -1,14 +1,14 @@
 /*
  * gpu_cmdbuf_spy.c - GPU Command Buffer Real-time Spy
  *
- * 利用 CVE-2025-21479 Cross-FD GPU Memory Access 持續監控
- * SurfaceFlinger 和其他 GPU 進程的命令緩衝區活動。
+ * Uses CVE-2025-21479 Cross-FD GPU Memory Access to continuously monitor
+ * the command buffer activity of SurfaceFlinger and other GPU processes.
  *
- * 功能：
- * 1. 實時檢測 GPU 內存中的變化
- * 2. 識別活動的命令緩衝區
- * 3. 追蹤 IB (Indirect Buffer) 提交模式
- * 4. 記錄可注入的窗口時機
+ * Features:
+ * 1. Detect changes in GPU memory in real time
+ * 2. Identify active command buffers
+ * 3. Track IB (Indirect Buffer) submission patterns
+ * 4. Record injectable window timing
  */
 
 #include <stdio.h>

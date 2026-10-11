@@ -1,5 +1,7 @@
 # Rokid Capture / Remote 品牌圖示
 
+> English: [README_EN.md](README_EN.md)
+
 ## 設計概念
 AR 眼鏡 × 相機 × 隱私：左鏡片為**相機光圈**（拍攝能力），右鏡片為**隱私遮斷**（ghostlock 隱蔽模式）——涵蓋本專案兩大核心：遙控拍攝與隱私指示燈控制。
 

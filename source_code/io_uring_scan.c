@@ -1,6 +1,6 @@
 /*
  * io_uring Vulnerability Scanner for Kernel 5.10.209
- * 測試 io_uring 相關 CVE
+ * Test io_uring-related CVEs
  */
 #define _GNU_SOURCE
 #include <stdio.h>

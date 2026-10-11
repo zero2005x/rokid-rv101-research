@@ -1,5 +1,7 @@
 # 漏洞檢測實作稽核（CVE 描述 ↔ Repo 程式對照）
 
+> English: [VULN_IMPLEMENTATION_AUDIT_EN.md](VULN_IMPLEMENTATION_AUDIT_EN.md)
+
 > 目標：確認 repo 中各「檢測/PoC」是否**依照權威 CVE 描述的必要條件與觸發鏈**來實作，並能否支持你表格中的「PASS」結論。
 >
 > 來源真值：以 NVD / cve.org 的 CVE Record **Description** 為主（必要條件、典型觸發鏈、受影響版本區間）。

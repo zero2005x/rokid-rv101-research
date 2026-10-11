@@ -1,5 +1,7 @@
 # 操作租約與 App 看守的互動
 
+> English: [lease-and-keeper_EN.md](lease-and-keeper_EN.md)
+
 ZeroLightRokidDesktop（PC）與眼鏡 App 的 `RootDaemonKeeper` 都會驅動同一套 exploit。
 本文件記錄兩者的共用契約、實際衝突、以及一次**失敗的端到端實測**。
 

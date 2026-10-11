@@ -1,4 +1,4 @@
-// dump_intent.js — 診斷：dump Intent.getStringExtra 的 key/value，找出正確 broadcast key
+// dump_intent.js — diagnostic: dump Intent.getStringExtra key/value to find the right broadcast key
 'use strict';
 Java.perform(function () {
     try {

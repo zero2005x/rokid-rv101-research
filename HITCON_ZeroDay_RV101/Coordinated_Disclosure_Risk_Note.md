@@ -1,5 +1,7 @@
 # HITCON 平台與協調揭露風險
 
+> English: [Coordinated_Disclosure_Risk_Note_EN.md](Coordinated_Disclosure_Risk_Note_EN.md)
+
 ## 結論
 
 本包可以用於 HITCON ZeroDay 初次審核，但**不建議在未確認公開時程與受理範圍前直接送出完整 exploit material**。

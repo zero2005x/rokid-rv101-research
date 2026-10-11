@@ -2,7 +2,7 @@
 # boot_run_loop.sh — reboot -> gate on nr_threads -> run W2 (timeout-capped) -> grep success.
 # Usage: boot_run_loop.sh <max_boots> <tag> <version> <success_grep> <env_vars> <binary_args...>
 set -u
-source "$(dirname "$0")/../deploy/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/../deploy/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 MAX_BOOTS="$1"; TAG="$2"; VER="$3"; SUCCESS_GREP="$4"; ENV_VARS="$5"; shift 5
 BINARGS="$*"

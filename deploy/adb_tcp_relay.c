@@ -1,32 +1,37 @@
 /*
- * adb_tcp_relay.c — 把「TCP 進來的 adb client」接到裝置上真正的 adbd。
+ * adb_tcp_relay.c — connect an adb client arriving over TCP to the device's real adbd.
  *
- * 背景：RV101（Rokid RG-glasses, Android 12 / ro.debuggable=0）的 adbd 不綁 TCP
- *       （service.adb.tcp.port / persist.adb.tcp.port 皆無效，實測 0 listener），
- *       但 **adbd 本身是完好的**——它只是把 transport 綁在 USB（FunctionFS）上。
- *       本程式在裝置端開一個 TCP listener，把每條連線原封不動接到 adbd 的
- *       local socket（/dev/socket/adbd），於是 PC／手機／筆電就能用
- *       標準 `adb connect <ip>:<port>` 連進來，**認證、shell、sync、forward
- *       全部由原廠 adbd 處理**（含 adb_keys 授權），不需自製 ADB 協定。
+ * Background: on the RV101 (Rokid RG-glasses, Android 12 / ro.debuggable=0) adbd does not
+ *       bind TCP (service.adb.tcp.port / persist.adb.tcp.port are both ineffective, 0
+ *       listeners measured), but **adbd itself is intact** — it just binds its transport to
+ *       USB (FunctionFS). This program opens a TCP listener on the device and forwards every
+ *       connection verbatim to adbd's local socket (/dev/socket/adbd), so a PC / phone /
+ *       laptop can connect with the standard `adb connect <ip>:<port>` and **authentication,
+ *       shell, sync and forward are all handled by the stock adbd** (including adb_keys
+ *       authorisation), with no need to reimplement the ADB protocol.
  *
- * 為什麼不是「重啟 adbd」：本 build 重啟 adbd 會掉 USB 列舉（已記載的坑），
- *       且 init 會把它拉回 USB-only。本程式是**額外**開一個入口，不動原 process。
+ * Why not "restart adbd": restarting adbd on this build loses USB enumeration (a documented
+ *       pitfall) and init pulls it back to USB-only. This program opens an **additional**
+ *       entry point and leaves the original process alone.
  *
- * 邊界條件（不是萬靈丹）：
- *   - 若 adbd 根本沒開 local socket（純 FunctionFS），relay 會 connect 失敗。
- *     此時的替代路線是 `adbd_tcp.sh`（自己再跑一個 adbd 只聽 TCP）。
- *   - relay 以誰的身分跑，不影響 shell 的 uid：adbd 一律降成 shell(2000)，
- *     除非 build 允許 `adb root`。要 root shell 請走 root_daemon.sock。
- *   - 沒有加密、沒有來源驗證：能連到這個 port 的人就等同插上 USB。
- *     限定內網（SoftAP 192.168.43.0/24）或搭配 bind 位址使用。
+ * Limitations (it is not a silver bullet):
+ *   - If adbd does not open a local socket at all (pure FunctionFS), the relay's connect
+ *     fails. The alternative then is `adbd_tcp.sh` (run a second adbd that only listens on
+ *     TCP).
+ *   - Whichever identity the relay runs as does not change the shell uid: adbd always drops
+ *     to shell(2000) unless the build allows `adb root`. For a root shell use
+ *     root_daemon.sock.
+ *   - No encryption and no source authentication: whoever can reach this port is equivalent
+ *     to plugging in USB. Restrict it to an internal network (SoftAP 192.168.43.0/24) or use
+ *     it together with the bind address.
  *
- * 建置（本工作區；靜態 aarch64）：
+ * Build (this workspace; static aarch64):
  *   bash deploy/build_probe_zig.sh deploy/adb_tcp_relay.c adb_tcp_relay
  *
- * 用法：
+ * Usage:
  *   adb_tcp_relay [-p PORT] [-s UNIX_SOCKET] [-b BIND_ADDR] [-l LOGFILE] [-d]
- *   預設：PORT=5555, UNIX_SOCKET=/dev/socket/adbd, BIND_ADDR=0.0.0.0（-d 前景）
- *   PC：adb connect <glasses-ip>:5555
+ *   defaults: PORT=5555, UNIX_SOCKET=/dev/socket/adbd, BIND_ADDR=0.0.0.0 (-d foreground)
+ *   PC: adb connect <glasses-ip>:5555
  */
 #define _GNU_SOURCE
 #include <arpa/inet.h>
@@ -50,7 +55,7 @@
 #define DEF_PORT   5555
 #define DEF_SOCK   "/dev/socket/adbd"
 #define BUF_SIZE   65536
-#define DRAIN_SECS 5    /* 單邊 EOF 後，另一邊最多再撐幾秒把殘檔傳完 */
+#define DRAIN_SECS 5    /* after a one-sided EOF, how many more seconds the other side may drain */
 
 static volatile sig_atomic_t g_stop = 0;
 static void on_term(int sig) { (void)sig; g_stop = 1; }
@@ -70,13 +75,13 @@ static int set_nonblock(int fd) {
     return fcntl(fd, F_SETFL, fl | O_NONBLOCK);
 }
 
-/* 連到裝置上的 adbd local socket。成功回 fd，失敗回 -1。
+/* Connect to the device's adbd local socket. Returns an fd on success, -1 on failure.
  *
- * ⚠ 2026-09-20 實測（RV101 / Android 12）：**adbd 的 local socket 是 SOCK_SEQPACKET，
- *   不是 SOCK_STREAM**。用 SOCK_STREAM 連會得到 EPROTOTYPE（errno 91），
- *   即使 socket() 本身正確建立 AF_UNIX/SOCK_STREAM 也一樣。
- *   （`/proc/net/unix` 的型別欄位在本機顯示 `0002`，與此結論不符，**不可作為判準**；
- *     以實際 connect() 結果為準。）
+ * ⚠ Measured 2026-09-20 (RV101 / Android 12): **adbd's local socket is SOCK_SEQPACKET, not
+ *   SOCK_STREAM**. Connecting with SOCK_STREAM gives EPROTOTYPE (errno 91), even when
+ *   socket() correctly creates AF_UNIX/SOCK_STREAM.
+ *   (The type field in `/proc/net/unix` shows `0002` on this machine, which contradicts this
+ *     conclusion and **must not be used as a criterion**; trust the actual connect() result.)
  */
 static int connect_unix(const char *path) {
     int fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
@@ -85,7 +90,7 @@ static int connect_unix(const char *path) {
         return -1;
     }
 
-    /* 診斷：確認拿到的真的是 AF_UNIX */
+    /* diagnostic: confirm what we got really is AF_UNIX */
     struct sockaddr_storage ss;
     socklen_t sl = sizeof(ss);
     if (getsockname(fd, (struct sockaddr *)&ss, &sl) == 0) {
@@ -109,7 +114,8 @@ static int connect_unix(const char *path) {
     return fd;
 }
 
-/* 單向搬運。回傳 1 = 來源 EOF（已 shutdown 目的端寫入），0 = 無事，-1 = 致命錯誤。 */
+/* One-way pump. Returns 1 = source EOF (destination write side shut down), 0 = nothing to
+ * do, -1 = fatal error. */
 static int pump(int from, int to, int *eof) {
     char buf[BUF_SIZE];
     for (;;) {
@@ -130,7 +136,7 @@ static int pump(int from, int to, int *eof) {
             if (w < 0) {
                 if (errno == EINTR) continue;
                 if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                    /* 對端塞住：短暫等待後重試（TCP 對 Unix socket 都適用） */
+                    /* peer is backed up: wait briefly and retry (applies to TCP and Unix sockets) */
                     fd_set wf;
                     FD_ZERO(&wf);
                     FD_SET(to, &wf);
@@ -146,7 +152,7 @@ static int pump(int from, int to, int *eof) {
     }
 }
 
-/* 一條連線：雙向搬運直到兩邊都收完或逾時。 */
+/* One connection: pump both ways until both sides finish or the drain timeout hits. */
 static void handle(int client, const char *unix_path) {
     struct sockaddr_storage peer;
     socklen_t plen = sizeof(peer);
@@ -183,7 +189,7 @@ static void handle(int client, const char *unix_path) {
         int maxfd = -1;
         if (!eof_c2u) { FD_SET(client, &rf); if (client > maxfd) maxfd = client; }
         if (!eof_u2c) { FD_SET(up, &rf);     if (up > maxfd)     maxfd = up; }
-        if (maxfd < 0) break;   /* 兩邊都 EOF */
+        if (maxfd < 0) break;   /* both sides EOF */
 
         struct timeval tv = {1, 0};
         int rc = select(maxfd + 1, &rf, NULL, NULL, &tv);
@@ -243,11 +249,11 @@ int main(int argc, char **argv) {
     signal(SIGINT, on_term);
     signal(SIGHUP, SIG_IGN);
 
-    /* 守護化（未指定 -d 時） */
+    /* daemonise (when -d is not given) */
     if (!foreground) {
         pid_t pid = fork();
         if (pid < 0) { perror("fork"); return 1; }
-        if (pid > 0) return 0;          /* 父行程立刻返回 */
+        if (pid > 0) return 0;          /* the parent returns immediately */
         setsid();
         if (logfile) {
             int lf = open(logfile, O_WRONLY | O_CREAT | O_APPEND, 0666);
@@ -258,7 +264,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    /* 先驗證 adbd local socket 是否真的在（早失敗、清楚回報） */
+    /* verify the adbd local socket really exists first (fail early, report clearly) */
     int probe = connect_unix(unix_path);
     if (probe < 0) {
         logmsg("[relay] 致命：adbd socket %s 不可連（%s）", unix_path, strerror(errno));

@@ -1,8 +1,8 @@
 /*
- * GateServiced 協議探測器
- * 發送各種命令格式來分析回應
+ * GateServiced protocol prober
+ * Sends various command formats and analyzes the responses
  *
- * 編譯: NDK cross-compile for ARM64
+ * Build: NDK cross-compile for ARM64
  * clang --target=aarch64-linux-android21 -o gate_proto_probe gate_proto_probe.c
  */
 
@@ -19,7 +19,7 @@
 #define HOST "127.0.0.1"
 #define BUF_SIZE 4096
 
-// 協議結構假設
+// Assumed protocol structure
 struct gate_cmd
 {
     uint32_t cmd_id;
@@ -37,7 +37,7 @@ void hexdump(const void *data, size_t size)
         printf("%02x ", p[i]);
         if ((i + 1) % 16 == 0 || i == size - 1)
         {
-            // 填充空格
+            // Pad with spaces
             for (size_t j = (i % 16) + 1; j < 16; j++)
                 printf("   ");
             printf(" |");
@@ -90,8 +90,8 @@ int send_and_recv(int sock, const void *data, size_t len, void *resp, size_t res
         return -1;
     }
 
-    // 等待回應
-    struct timeval tv = {2, 0}; // 2秒超時
+    // Wait for the response
+    struct timeval tv = {2, 0}; // 2 second timeout
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
     ssize_t received = recv(sock, resp, resp_size, 0);
@@ -119,13 +119,13 @@ int send_and_recv(int sock, const void *data, size_t len, void *resp, size_t res
     return received;
 }
 
-// 探測函數
+// Probe functions
 void probe_cmd_format(void)
 {
     printf("\n=== Testing Command Formats ===\n");
     char resp[BUF_SIZE];
 
-    // 測試 1: 簡單 4 字節命令 ID
+    // Test 1: simple 4-byte command IDs
     printf("\n--- Test 1: Simple 4-byte command IDs ---\n");
     uint32_t simple_cmds[] = {0, 1, 2, 0x100, 0x1000, 0x10000, 0xFFFFFFFF};
     for (int i = 0; i < sizeof(simple_cmds) / sizeof(simple_cmds[0]); i++)
@@ -141,7 +141,7 @@ void probe_cmd_format(void)
         usleep(100000);
     }
 
-    // 測試 2: 8 字節頭 (cmd_id + length)
+    // Test 2: 8-byte header (cmd_id + length)
     printf("\n--- Test 2: 8-byte header (cmd_id + length) ---\n");
     struct
     {
@@ -168,12 +168,12 @@ void probe_cmd_format(void)
         usleep(100000);
     }
 
-    // 測試 3: 帶 payload 的命令
+    // Test 3: commands with payload
     printf("\n--- Test 3: Commands with payload ---\n");
     char cmd_with_payload[256];
     memset(cmd_with_payload, 0, sizeof(cmd_with_payload));
 
-    // 格式: cmd_id(4) + length(4) + payload
+    // Format: cmd_id(4) + length(4) + payload
     uint32_t *p = (uint32_t *)cmd_with_payload;
     p[0] = 0x00000001; // cmd_id = 1
     p[1] = 16;         // payload length
@@ -187,7 +187,7 @@ void probe_cmd_format(void)
         close(sock);
     }
 
-    // 測試 4: 字符串命令
+    // Test 4: string commands
     printf("\n--- Test 4: String commands ---\n");
     const char *str_cmds[] = {
         "hello",
@@ -212,7 +212,7 @@ void probe_cmd_format(void)
     }
 }
 
-// 深度命令 ID 枚舉
+// Deep command ID enumeration
 void deep_cmd_enum(uint32_t start, uint32_t count)
 {
     printf("\n=== Deep Command ID Enumeration ===\n");
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
     printf("=== GateServiced Protocol Probe ===\n");
     printf("Target: %s:%d\n", HOST, PORT);
 
-    // 測試連接
+    // Test the connection
     int sock = connect_gate();
     if (sock < 0)
     {
@@ -274,10 +274,10 @@ int main(int argc, char *argv[])
     printf("[+] Connected successfully!\n");
     close(sock);
 
-    // 執行探測
+    // Run the probes
     probe_cmd_format();
 
-    // 深度枚舉 (可選)
+    // Deep enumeration (optional)
     if (argc > 1 && strcmp(argv[1], "-deep") == 0)
     {
         uint32_t start = 0;

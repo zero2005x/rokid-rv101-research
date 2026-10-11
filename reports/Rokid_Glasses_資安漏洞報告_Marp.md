@@ -32,6 +32,9 @@ style: |
 
 # 🔒 Rokid Glasses 資訊安全漏洞評估報告
 
+> English: [Rokid_Glasses_資安漏洞報告_Marp_EN.md](Rokid_Glasses_%E8%B3%87%E5%AE%89%E6%BC%8F%E6%B4%9E%E5%A0%B1%E5%91%8A_Marp_EN.md)
+
+
 **評估日期：** 2026年1月30日  
 **設備型號：** RG-glasses (RV101)  
 **韌體版本：** 1.12.009-20260109-150201  

@@ -1,4 +1,7 @@
 # Rokid AR Glasses - 研究發現總結
+
+> English: [RESEARCH_FINDINGS_20260202_EN.md](RESEARCH_FINDINGS_20260202_EN.md)
+
 > ⚠ **2026-09-13 更正**：本文提及的 **Fastboot／Magisk／boot.img 刷機路線已確認不可行**（取不到 boot.img：`fastboot fetch` 不支援、`dd` 需 root、無相容 recovery／OTA 來源），且 **root 已於 2026-08-22 由 GhostLock LPE 取得**（執行期，每 boot 以 adb 武裝一次）。請以下列段落為歷史評估，勿照做刷機步驟。
 
 

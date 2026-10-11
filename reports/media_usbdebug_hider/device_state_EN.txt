@@ -1,0 +1,29 @@
+> 中文版：[device_state.txt](device_state.txt)
+=== Device ===
+21091116UG
+13
+33
+Redmi/pissarropro_global/pissarropro:13/TP1A.220624.014/V816.0.18.0.TKTMIXM:user/release-keys
+
+=== Framework modules ===
+    "version": "v2.4 (289-08080ef-release)",
+    "name": "NeoZygisk",
+    "id": "zygisksu"
+    "name": "Vector",
+    "version": "v2.2 (3080-88f8e1fa-JingMatrix-Vector)",
+    "id": "zygisk_vector",
+
+=== Vector status ===
+Framework Version: 2.2
+Version Code: 3080
+API Version: 102
+Enabled Modules: 1
+Status Notification: true
+
+=== scope entry count ===
+165
+
+=== Actual values from the shell's perspective ===
+1
+adb
+running

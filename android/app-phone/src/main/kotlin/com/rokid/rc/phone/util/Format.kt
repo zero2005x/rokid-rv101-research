@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** 顯示格式化工具。 */
+/** Display formatting helpers. */
 object Format {
 
     private val dateFmt = SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.US)
@@ -15,7 +15,7 @@ object Format {
         else -> "$bytes B"
     }
 
-    /** ms → mm:ss（超過一小時顯示 h:mm:ss）。 */
+    /** ms → mm:ss (shows h:mm:ss beyond one hour). */
     fun duration(ms: Long): String {
         val totalSec = ms / 1000
         val h = totalSec / 3600
@@ -27,7 +27,7 @@ object Format {
 
     fun date(epochMs: Long): String = dateFmt.format(Date(epochMs))
 
-    /** 媒體類型標籤（影片／照片）對應的字串資源 id；由呼叫端以 getString 取在地化文字。 */
+    /** String resource id for the media type label (video/photo); the caller uses getString to get the localized text. */
     fun typeLabelRes(type: com.rokid.rc.shared.protocol.MediaType): Int =
         if (type == com.rokid.rc.shared.protocol.MediaType.VIDEO) com.rokid.rc.phone.R.string.media_type_video
         else com.rokid.rc.phone.R.string.media_type_photo

@@ -1,5 +1,7 @@
 # ZeroLightRokid Desktop — Windows 原生 LPE 輔助工具（GUI）v3.0
 
+> English: [README_EN.md](README_EN.md)
+
 > 純 Win32 API（C 語言）撰寫的桌面板工具，把 Rokid 眼鏡（RV101）的 GhostLock
 > （CVE-2026-43499）root 流程包成按鈕操作。**無需 bash / Python / 任何 runtime**，
 > 只要 Windows + `adb.exe`。

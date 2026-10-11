@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# 共用環境設定：**唯一**的 adb 路徑與裝置序號來源。
+# Shared environment setup: the **single** source of the adb path and device serial.
 #
-# 為什麼需要：原本 10 支腳本各自寫死 `/mnt/c/Users/<user>/AppData/.../adb.exe` 與
-# 眼鏡序號 `<DEVICE_SERIAL>`，換電腦或換裝置就得逐檔修改（見 scripts/audit_hardcode.py）。
+# Why: previously 10 scripts each hardcoded `/mnt/c/Users/<user>/AppData/.../adb.exe` and
+# the glasses serial `<DEVICE_SERIAL>`, so changing machine or device meant editing every
+# file (see scripts/audit_hardcode.py).
 #
-# 用法（在腳本開頭）：
+# Usage (at the top of a script):
 #   source "$(dirname "$0")/env.sh"
-# 可用環境變數覆寫：ADB、SERIAL、WIN_ADB_DIR
+# Overridable environment variables: ADB, SERIAL, WIN_ADB_DIR
 set -u
 
-# Windows 端 adb（WSL）；可用 ADB 環境變數覆寫
+# Windows-side adb (WSL); overridable with the ADB environment variable
 WIN_ADB_DIR="${WIN_ADB_DIR:-/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools}"
 ADB="${ADB:-$WIN_ADB_DIR/adb.exe}"
 
-# 裝置序號：預設抓 adb devices 的第一台，可用 SERIAL 覆寫
+# Device serial: defaults to the first device from adb devices; overridable with SERIAL
 if [ -z "${SERIAL:-}" ]; then
   SERIAL="$("$ADB" devices 2>/dev/null | awk 'NR>1 && $2=="device" {print $1; exit}')"
 fi
-SERIAL="${SERIAL:-<DEVICE_SERIAL>}"   # 最後手段：已知眼鏡序號
+SERIAL="${SERIAL:-<DEVICE_SERIAL>}"   # last resort: the known glasses serial
 
-# 常用路徑
+# Common paths
 export ADB SERIAL WIN_ADB_DIR

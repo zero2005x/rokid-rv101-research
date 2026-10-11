@@ -1,5 +1,7 @@
 # dist/ — 可安裝的 APK
 
+> English: [README_EN.md](README_EN.md)
+
 | 檔案 | 版本 | 說明 |
 |------|------|------|
 | `app-glasses-v1.0-safe.6.apk` | `1.0-safe.6` (code 8) | **眼鏡端．目前版本**。在 `1.0-safe.5` 之上新增**開發模式**：`net/WifiJoin`（A：`WifiNetworkSuggestion`／B：`cmd wifi connect-network`）＋`net/DevModeController`（狀態機 `OFF→JOINING→ACTIVE→REVERTING→OFF`、idle 逾時自動關、失敗回退並還原 SoftAP）＋`DebugReceiver` 指令 `DEV_MODE_START/STOP/STATUS`、`WIFI_SET_CRED`。敏感指令加**來源守衛**（只允許本 App／adb shell uid 2000／同簽章權限）並在 manifest 宣告 `com.rokid.rc.glasses.permission.DEV_MODE`（signature）。**實測**：路徑 B 成功讓眼鏡加入 `LouisaCoffee`（`wlan0=10.0.0.120/24`）→ PC `adb connect` 得 `uid=2000(shell)`；路徑 A 在 headless 眼鏡失敗（系統通知無法點擊）。詳見 [`docs/wireless-adb-solution-design.md`](../docs/wireless-adb-solution-design.md) §4.1 |

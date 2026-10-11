@@ -1,5 +1,8 @@
 # ZeroLightRokid Desktop（Windows GUI）實機測試報告
 
+> English: [zero_light_desktop_test_report_EN.md](zero_light_desktop_test_report_EN.md)
+
+
 > 日期：2026-09-11 / 09-12 · 設備：Rokid RG-glasses（RV101，serial <DEVICE_SERIAL>，fw 1.22.009-20260710-150201，Android 12）
 > 測試環境：Windows 11 build 26200（2880×1620 @ 200% 縮放），經 WSL2 → Windows `adb.exe` / PowerShell interop 驅動
 > 受測版本：`ZeroLightRokidDesktop` v2.0.0（Win32 C，單一 exe，14 語系）

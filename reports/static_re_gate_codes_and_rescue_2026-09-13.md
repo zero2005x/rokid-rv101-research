@@ -1,5 +1,7 @@
 # Static RE: GateServiced error codes + rescued-binary classification
 
+> English: [static_re_gate_codes_and_rescue_2026-09-13_EN.md](static_re_gate_codes_and_rescue_2026-09-13_EN.md)
+
 **Date**: 2026-09-13
 **Scope**: (A) instruction-level resolution of the `load_app 12292` / `run_load_ta 12298` codes in
 `/vendor/bin/GateServiced`; (B) classification of the 12 files in `binaries/device_rescue/`.

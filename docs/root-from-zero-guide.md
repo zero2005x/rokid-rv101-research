@@ -1,5 +1,7 @@
 # 從零開始：用自己的腳本讓 Rokid 眼鏡取得 Root（新手教學）
 
+> English: [root-from-zero-guide_EN.md](root-from-zero-guide_EN.md)
+
 > 版本：2026-09-08 · 適用韌體：`1.22.009-20260710-150201`（漏洞版）
 > 對象：資工系一年級小白也能照著做。名詞都會先白話解釋。
 >

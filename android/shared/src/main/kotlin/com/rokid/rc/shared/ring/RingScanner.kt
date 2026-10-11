@@ -13,20 +13,22 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 
 /**
- * BLE 掃描器（戒指探索／辨識用）。
+ * BLE scanner (for ring discovery/identification).
  *
- * 用途：
- *  1. 找出戒指的**廣告名稱**（手機系統設定頁只顯示 MAC，對 BLE 周邊常常無名）。
- *  2. 取得 RSSI／service UUID／是否可連線，作為配對與後續 GATT 通訊的依據。
+ * Purpose:
+ *  1. Find the ring's **advertising name** (the phone settings page only shows the MAC, and BLE
+ *     peripherals are often nameless there).
+ *  2. Obtain RSSI / service UUID / connectability, as the basis for pairing and later GATT communication.
  *
- * 由 `DebugReceiver` 的 `SCAN_RING` 指令或 UI 觸發；結果同時寫入 logcat（tag `RingScanner`）
- * 與回呼，方便用 `adb logcat -s RingScanner:*` 直接看。
+ * Triggered by the `SCAN_RING` command of `DebugReceiver` or by the UI; results go both to logcat
+ * (tag `RingScanner`) and to the callback, so `adb logcat -s RingScanner:*` shows them directly.
  */
 class RingScanner(private val context: Context) {
 
-    /** 一筆掃描結果（同一 MAC 只保留 RSSI 最強者）。 */
+    /** One scan result (only the strongest RSSI is kept per MAC). */
     data class Found(
-        /** 掃描結果帶回的 BluetoothDevice（**保留 address type**；用字串重建會變成 public → 連線 133）。 */
+        /** The BluetoothDevice returned by the scan (**keeps the address type**; rebuilding it
+         *  from a string turns it public -> connection 133). */
         val device: android.bluetooth.BluetoothDevice? = null,
         val mac: String,
         val name: String?,
@@ -56,8 +58,9 @@ class RingScanner(private val context: Context) {
     private val found = LinkedHashMap<String, Found>()
 
     /**
-     * 掃描 [durationMs] 毫秒後回呼結果（依 RSSI 由強到弱）。
-     * 缺少 BLUETOOTH_SCAN 權限或藍牙未開啟時，回呼空清單並記錄原因。
+     * Scan for [durationMs] milliseconds and then call back with the results (strongest RSSI first).
+     * Without the BLUETOOTH_SCAN permission, or when Bluetooth is off, it calls back an empty list
+     * and logs the reason.
      */
     fun scan(
         durationMs: Long = 12_000L,
@@ -120,7 +123,7 @@ class RingScanner(private val context: Context) {
         }, durationMs)
     }
 
-    /** 只找名稱含 ring/rokid 的裝置（快速辨識用）。 */
+    /** Find only devices whose name contains ring/rokid (for quick identification). */
     fun findRingLike(durationMs: Long = 12_000L, onDone: (List<Found>) -> Unit) {
         scan(durationMs) { all ->
             onDone(

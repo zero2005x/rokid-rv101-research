@@ -3,15 +3,16 @@ package com.rokid.rc.shared.protocol
 import org.json.JSONObject
 
 /**
- * 眼鏡端儀表板「顯示內容」配置（五類資訊，手機端可遠端設定、眼鏡端持久化）。
- * 預設全顯示（全部 true）；允許全隱藏（只剩摺疊條）。
+ * Glasses-side dashboard "displayed content" configuration (five kinds of information; settable remotely from the
+ * phone, persisted on the glasses). All shown by default (all true); hiding everything is allowed (leaving only the
+ * collapsed bar).
  */
 data class DisplayConfig(
-    val conn: Boolean = true,      // 連線狀態（BT/WiFi）
-    val root: Boolean = true,      // root/ghostlock 狀態
-    val camera: Boolean = true,    // 相機狀態
-    val storage: Boolean = true,   // 儲存空間
-    val led: Boolean = true        // LED 狀態
+    val conn: Boolean = true,      // connection state (BT/WiFi)
+    val root: Boolean = true,      // root/ghostlock state
+    val camera: Boolean = true,    // camera state
+    val storage: Boolean = true,   // storage space
+    val led: Boolean = true        // LED state
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("conn", conn)

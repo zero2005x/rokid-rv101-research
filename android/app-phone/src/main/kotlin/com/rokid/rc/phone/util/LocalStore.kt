@@ -8,7 +8,7 @@ import com.rokid.rc.shared.protocol.MediaType
 import org.json.JSONObject
 import java.io.File
 
-/** 本機相簿資料（單一「相簿夾」）。 */
+/** Local album data (a single album folder). */
 data class LocalAlbum(
     val albumId: String,
     val name: String,
@@ -20,9 +20,9 @@ data class LocalAlbum(
 )
 
 /**
- * 手機端已下載媒體的管理：目錄掃描、albumId→名稱索引、偽 MediaItem 映射。
- * 位置：getExternalFilesDir(null)/albums/<albumId>/<file>
- * 索引：getExternalFilesDir(null)/albums_index.json
+ * Management of media downloaded on the phone: directory scanning, albumId->name index, pseudo MediaItem mapping.
+ * Location: getExternalFilesDir(null)/albums/<albumId>/<file>
+ * Index: getExternalFilesDir(null)/albums_index.json
  */
 object LocalStore {
 
@@ -31,11 +31,12 @@ object LocalStore {
     fun rootDir(): File = File(ctx.getExternalFilesDir(null), "albums")
 
     /**
-     * 清掉中斷／逾時傳輸留下的暫存檔（`*.part`）。
+     * Clean up leftover partial files (`*.part`) from interrupted/timed-out transfers.
      *
-     * 傳輸是「先寫 `<transferId>.part`，完成才 rename 成正式檔」，所以任何一次失敗或取消都會留下
-     * 一整個檔案的殘骸（實測藍牙逾時那次留下 16.7 MB，累積已有 63 MB）。單筆傳輸的逾時上限
-     * 約 4 小時（664 MB ÷ 45 KB/s），故以 24 小時為界不可能誤刪進行中的檔案。
+     * A transfer writes `<transferId>.part` first and renames it to the real file only on completion,
+     * so every failure or cancellation leaves a whole file behind (measured: the Bluetooth timeout
+     * case left 16.7 MB, 63 MB accumulated). A single transfer's timeout is about 4 hours
+     * (664 MB / 45 KB/s), so a 24-hour threshold cannot delete an in-progress file by mistake.
      */
     fun cleanupStaleParts(maxAgeMs: Long = 24 * 60 * 60 * 1000L) {
         val now = System.currentTimeMillis()
@@ -84,7 +85,7 @@ object LocalStore {
         }
     }
 
-    /** 下載時記錄 albumId 對應的名稱。 */
+    /** Record the name associated with an albumId when downloading. */
     fun rememberAlbumName(albumId: String, name: String) {
         val map = readIndex()
         if (map[albumId] != name) {
@@ -93,7 +94,7 @@ object LocalStore {
         }
     }
 
-    /** 以最新連線取得的相簿清單覆寫索引（相簿更名後名稱同步）。 */
+    /** Overwrite the index with the album list from the latest connection (names sync after an album rename). */
     fun syncNamesFromRemote(remoteAlbums: List<com.rokid.rc.shared.protocol.Album>) {
         if (remoteAlbums.isEmpty()) return
         val map = readIndex()
@@ -126,7 +127,7 @@ object LocalStore {
         }.sortedByDescending { it.newestAt }
     }
 
-    /** 把某相簿的本機檔案映射成偽 MediaItem（id = 檔名，供 UI 共用）。 */
+    /** Map an album's local files to pseudo MediaItems (id = file name, shared with the UI). */
     fun localMediaItems(albumId: String): List<MediaItem> {
         val dir = File(rootDir(), albumId)
         val files = dir.listFiles()?.filter { it.isFile && !MediaTypes.isPartial(it.name) } ?: emptyList()
@@ -149,7 +150,7 @@ object LocalStore {
     fun localFilePath(albumId: String, fileName: String): File =
         File(File(rootDir(), albumId), fileName)
 
-    /** 刪除單一媒體檔；資料夾空了就一併移除。 */
+    /** Delete one media file; remove the folder too once it is empty. */
     fun deleteLocalFile(albumId: String, fileName: String): Boolean {
         val dir = File(rootDir(), albumId)
         val f = File(dir, fileName)

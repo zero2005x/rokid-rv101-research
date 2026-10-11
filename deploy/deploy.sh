@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -u
 
-# ===================== 依你的環境調整 =====================
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
-GLASSES_SERIAL="${SERIAL:?請設定 SERIAL 或讓 env.sh 自動偵測}"   # 眼鏡設備序列號 (adb devices)
-PHONE_SERIAL=""                    # 手機序列號（留空 = 用唯一已連線設備）
+# ===================== adjust to your environment =====================
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
+GLASSES_SERIAL="${SERIAL:?請設定 SERIAL 或讓 env.sh 自動偵測}"   # glasses device serial (adb devices)
+PHONE_SERIAL=""                    # phone serial (empty = use the only connected device)
 GLASSES_APK="/home/kali/rokid_root/android/app-glasses/build/outputs/apk/debug/app-glasses-debug.apk"
 PHONE_APK="/home/kali/rokid_root/android/app-phone/build/outputs/apk/debug/app-phone-debug.apk"
 GLASSES_PKG="com.rokid.rc.glasses"

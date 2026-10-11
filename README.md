@@ -1,5 +1,7 @@
 # Rokid 雙 Android 遙控拍攝系統
 
+> English: [README_EN.md](README_EN.md)
+
 自有 Rokid 眼鏡 + Android 手機的遙控拍攝／相簿管理系統，同時是 RV101 眼鏡的 root 安全研究專案。
 
 > **本 repo 為 monorepo**：主體是 `rokid_root` 研究專案，Windows 桌面工具置於 [`desktop/`](desktop/README.md)。
@@ -11,6 +13,10 @@
 > - [`MANIFEST.md`](MANIFEST.md) — 原始工作區版面清單與分類原則
 >
 > 完整工作區（含工具鏈、APK 標的、反編譯輸出、建置快取與影片製作區，約 17 GB）仍保留在本機 `~/rokid_root/`。
+
+> **英文版慣例**：本 repo 的文件一律提供英文版，命名為 `NAME_EN.md`、與中文原檔同目錄並存，
+> 兩者以標題下方的互連連結互相指向。程式碼的中文註解則是**直接改寫為英文**（不另建檔案）。
+> 因此：看到任何中文文件，把檔名加上 `_EN` 就是英文版。
 
 - **眼鏡端 App**：CameraX 拍照／錄影、相簿索引、`ghostlock_rv101`（CVE-2026-43499）LPE 提權、
   隱私燈壓制（ghostlock）、**靜音拍攝（壓制快門/錄影提示音）**、**全透明資訊儀表板**、WiFi 媒體 TCP server、

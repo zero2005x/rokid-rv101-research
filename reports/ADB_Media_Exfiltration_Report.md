@@ -1,4 +1,7 @@
 # 🔴 Rokid Glasses — ADB Media Exfiltration Assessment
+
+> English: [ADB_Media_Exfiltration_Report_EN.md](ADB_Media_Exfiltration_Report_EN.md)
+
 > ⚠ **2026-09-13 更正**：本文假設的 **Fastboot／Magisk／刷 boot.img 路線不可行**（取不到 boot.img、無 Magisk、無持久 root）；**root 已由 GhostLock LPE（CVE-2026-43499）於執行期取得**。
 
 

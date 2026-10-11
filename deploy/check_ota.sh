@@ -1,45 +1,49 @@
 #!/usr/bin/env bash
 # =============================================================================
-# check_ota.sh — Rokid 眼鏡 OTA「一條龍」檢查 + GhostLock 補丁比對
+# check_ota.sh — one-stop Rokid glasses OTA check + GhostLock patch comparison
 #
-# 流程（預設）：
-#   1. 讀取眼鏡目前版本/SPL + 簽名參數（ro.boot.key / secret / devicetypeid / serialno）。
-#   2. 用「已破解簽名」直接呼叫 ota.rokid.com/v1/extended/ota/check 查最新版本。
-#   3. 下載最新 OTA，解析 META-INF/com/android/metadata 的 post-security-patch-level。
-#   4. 將 SPL 與 GhostLock (CVE-2026-43499) 補丁發布時間比較，給出「是否修補」結論。
+# Flow (default):
+#   1. Read the glasses' current version/SPL + signing parameters
+#      (ro.boot.key / secret / devicetypeid / serialno).
+#   2. Call ota.rokid.com/v1/extended/ota/check with the cracked signature to get the latest
+#      version.
+#   3. Download the latest OTA and parse post-security-patch-level from
+#      META-INF/com/android/metadata.
+#   4. Compare the SPL with the GhostLock (CVE-2026-43499) patch release time and conclude
+#      whether it is patched.
 #
-# 簽名演算法（逆向自 com.rokid.glass.ota.component.CheckService.generateSignature）：
+# Signature algorithm (reversed from com.rokid.glass.ota.component.CheckService.generateSignature):
 #   sign = MD5("key=<key>&device_type_id=<dtid>&device_id=<did>&service=<service>&version=<v>&time=<ts>&secret=<secret>")
 #   Authorization = "version=<v>;time=<ts>;sign=<sign>;key=<key>;device_type_id=<dtid>;device_id=<did>;service=<service>"
 #
-# 依賴：Windows adb、curl、unzip、md5sum、date +%s。
+# Depends on: Windows adb, curl, unzip, md5sum, date +%s.
 #
-# 用法：
-#   ./check_ota.sh                 # 一條龍：查最新 → 下載 → 比對 SPL
-#   ./check_ota.sh --api           # 只查最新版本（不下載）
-#   ./check_ota.sh --url <URL>     # 直接分析指定 OTA zip URL
-#   ./check_ota.sh --prefs         # 讀 ota_sp.xml 的 URL 並分析（不需外網）
-#   ./check_ota.sh --trigger       # 先觸發裝置端 OTA 檢查，再讀取並分析
-#   GHOSTLOCK_SPL=2026-08-05 ./check_ota.sh   # 覆寫「修補門檻」的 SPL
+# Usage:
+#   ./check_ota.sh                 # one-stop: query latest -> download -> compare SPL
+#   ./check_ota.sh --api           # query the latest version only (no download)
+#   ./check_ota.sh --url <URL>     # analyse the given OTA zip URL directly
+#   ./check_ota.sh --prefs         # read the URL from ota_sp.xml and analyse it (no internet)
+#   ./check_ota.sh --trigger       # trigger the device-side OTA check first, then read and analyse
+#   GHOSTLOCK_SPL=2026-08-05 ./check_ota.sh   # override the SPL of the "patch threshold"
 # =============================================================================
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -euo pipefail
 
-# ============================ 可調參數 ========================================
+# ============================ tunables ========================================
 SERIAL="${SERIAL:-<DEVICE_SERIAL>}"
 OTA_PREFS="/data/data/com.rokid.glass.ota/shared_prefs/ota_sp.xml"
 SOCK="/data/local/tmp/root_daemon.sock"
 API_BASE="${API_BASE:-https://ota.rokid.com}"
 API_PATH="/v1/extended/ota/check"
-# 簽名參數：留空則從裝置 getprop 讀取；也可用環境變數覆寫
+# signing parameters: empty means read them from the device getprop; also overridable by environment
 KEY="${KEY:-}"
 SECRET="${SECRET:-}"
 DTID="${DTID:-}"
 DID="${DID:-}"
 SERVICE="${SERVICE:-ota}"
 SVER="${SVER:-1.0}"
-# GhostLock (CVE-2026-43499) rtmutex UAF 補丁約 2026-07-09 釋出；
-# Android SPL 慣例取當月 05 日，故預設門檻 2026-07-05。
+# The GhostLock (CVE-2026-43499) rtmutex UAF patch shipped around 2026-07-09; Android SPLs
+# conventionally use the 5th of the month, hence the default threshold 2026-07-05.
 GHOSTLOCK_SPL="${GHOSTLOCK_SPL:-2026-07-05}"
 CVE="CVE-2026-43499 (GhostLock, rtmutex UAF)"
 WORKDIR="$(mktemp -d /tmp/check_ota.XXXXXX)"
@@ -54,7 +58,7 @@ err()  { echo "[x] $*"; }
 cleanup() { rm -rf "$WORKDIR"; }
 trap cleanup EXIT
 
-# ---- 以 root 執行單一命令（優先用 root daemon socket，其次 adb root）----
+# ---- run a single command as root (prefer the root daemon socket, then adb root) ----
 root_sh() {
     local cmd="$1"
     if adb_s shell "[ -S $SOCK ]" 2>/dev/null; then
@@ -67,7 +71,7 @@ root_sh() {
     fi
 }
 
-# ---- 讀取裝置目前版本 / SPL ----
+# ---- read the device's current version / SPL ----
 check_device() {
     log "讀取裝置目前版本..."
     if ! adb_s get-state >/dev/null 2>&1; then
@@ -83,7 +87,7 @@ check_device() {
     echo
 }
 
-# ---- 讀取簽名參數（可被環境變數覆寫）----
+# ---- read the signing parameters (overridable by environment variables) ----
 read_signing_props() {
     KEY="${KEY:-$(adb_s shell getprop ro.boot.key 2>/dev/null | tr -d '\r')}"
     SECRET="${SECRET:-$(adb_s shell getprop ro.boot.secret 2>/dev/null | tr -d '\r')}"
@@ -94,14 +98,14 @@ read_signing_props() {
     fi
 }
 
-# ---- 簽名計算（逆向自 CheckService.generateSignature）----
+# ---- signature computation (reversed from CheckService.generateSignature) ----
 sign_ota() {
     local ts="$1"
     printf '%s' "key=$KEY&device_type_id=$DTID&device_id=$DID&service=$SERVICE&version=$SVER&time=$ts&secret=$SECRET" \
         | md5sum | awk '{print $1}'
 }
 
-# ---- 查詢最新版本（已破解簽名）----
+# ---- query the latest version (with the cracked signature) ----
 query_latest() {
     log "查詢最新版本（已破解簽名）: $API_BASE$API_PATH"
     local ts sign auth body resp
@@ -135,7 +139,7 @@ query_latest() {
     echo
 }
 
-# ---- 讀取 OTA app shared_prefs ----
+# ---- read the OTA app shared_prefs ----
 read_ota_prefs() {
     log "讀取 OTA app shared_prefs ($OTA_PREFS)..."
     local xml
@@ -152,7 +156,7 @@ read_ota_prefs() {
     echo
 }
 
-# ---- 觸發裝置端 OTA 檢查（best-effort）----
+# ---- trigger the device-side OTA check (best effort) ----
 trigger_ota_check() {
     warn "真正的 OTA 版本查詢需裝置認證（由 Rokid Glasses App / assist server 觸發）。"
     warn "建議：先在手機 Rokid Glasses App 檢查更新，再跑本腳本讀取 ota_sp.xml。"
@@ -162,7 +166,7 @@ trigger_ota_check() {
     sleep 15
 }
 
-# ---- 下載並分析 OTA ----
+# ---- download and analyse the OTA ----
 analyze_ota() {
     local url="$1"
     local expect_sum="${2:-}"
@@ -194,7 +198,8 @@ analyze_ota() {
         return 1
     fi
     local post_inc pre_inc post_spl ota_type
-    # 注意：完整包 OTA 可能沒有 pre-build-incremental；grep 無匹配會回 1，加 || true 避免 set -e 誤殺
+    # NOTE: a full OTA may have no pre-build-incremental; grep returns 1 when it does not
+    # match, so || true keeps set -e from killing the script
     post_inc="$(printf '%s' "$meta" | grep -o 'post-build-incremental=[^ ]*' | cut -d= -f2- || true)"
     pre_inc="$(printf '%s' "$meta" | grep -o 'pre-build-incremental=[^ ]*' | cut -d= -f2- || true)"
     post_spl="$(printf '%s' "$meta" | grep -o 'post-security-patch-level=[^ ]*' | cut -d= -f2- || true)"
@@ -206,7 +211,7 @@ analyze_ota() {
     ok "目標 SPL            = ${post_spl:-?}"
     echo
 
-    # ---- SPL vs GhostLock 門檻 ----
+    # ---- SPL vs the GhostLock threshold ----
     if [ -z "$post_spl" ]; then
         warn "metadata 沒有 post-security-patch-level，無法判斷（可能非標準 OTA）"
     elif [ "$(printf '%s\n' "$post_spl" "$GHOSTLOCK_SPL" | sort | head -1)" = "$GHOSTLOCK_SPL" ]; then

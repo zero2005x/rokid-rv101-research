@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-# test_extended_paths.sh — 驗證三條先前未測的路徑
+# test_extended_paths.sh — verify three previously untested paths
 #
-#   1. Shizuku 引擎 root 路徑   —— 桌面工具功能（OP_SHIZUKU → do_shizuku()）
-#   2. DebugReceiver 廣播       —— 眼鏡 App 的除錯介面（桌面工具透過「root 指令」欄驅動）
-#   3. WiFi 媒體通道（眼鏡端）  —— 手機↔眼鏡功能，桌面工具只能驗證眼鏡端狀態
+#   1. Shizuku engine root path  -- desktop tool feature (OP_SHIZUKU -> do_shizuku())
+#   2. DebugReceiver broadcast   -- the glasses app's debug interface (driven from the desktop
+#                                   tool's "root command" field)
+#   3. WiFi media channel (glasses side) -- a phone<->glasses feature; the desktop tool can
+#                                   only verify the glasses-side state
 #
-# 用法：  ./test_extended_paths.sh [序號]
-# 結束碼：0 = 全部通過，1 = 有項目失敗，2 = 裝置未連線
+# Usage:  ./test_extended_paths.sh [serial]
+# Exit codes: 0 = all passed, 1 = some item failed, 2 = device not connected
 #
-# 注意：adb 一定要直接執行。透過 PowerShell 包裝呼叫 adb 實測會逾時
-#       （曾因此誤判裝置離線），故本腳本以 bash 直接呼叫 adb.exe。
+# NOTE: adb must be executed directly. Calling adb through a PowerShell wrapper was measured
+#       to time out (which once made the device look offline), so this script calls adb.exe
+#       straight from bash.
 set -u
 
 SER="${1:-<DEVICE_SERIAL>}"
@@ -26,7 +29,7 @@ no()   { printf '  \033[31m✗\033[0m %s\n' "$1"; fail=$((fail+1)); }
 sk()   { printf '  \033[33m–\033[0m %s\n' "$1"; skip=$((skip+1)); }
 head_() { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
 
-# 所有 adb 呼叫都在這裡統一加上 -s 與逾時
+# every adb call goes through here to get -s and a timeout
 sh_() { timeout 45 "$ADB" -s "$SER" shell "$1" 2>/dev/null | tr -d '\r'; }
 adbx() { timeout 45 "$ADB" -s "$SER" "$@" 2>&1 | tr -d '\r'; }
 
@@ -41,14 +44,14 @@ ok "裝置已連線：$SER"
 
 SELINUX=$(sh_ 'getenforce')
 ROOTED=0
-# 注意：必須比對「輸出」而不是 sh_ 的退出碼 —— sh_ 是管線，退出碼幾乎永遠是 0，
-# 用它會讓未 root 的裝置被誤判成已 root。
+# NOTE: compare the "output", not sh_'s exit code — sh_ is a pipeline, so its exit code is
+# almost always 0, and using it would report a non-rooted device as rooted.
 #
-# 注意 2（2026-09-13 實測修正）：**不可要求剛好等於 1**。
-# /proc/net/unix 對同一個 socket 會有「listening」與「已連線」兩種 entry，
-# 只要有客戶端連著（眼鏡 App 的 RootDaemonKeeper 每 30 秒探一次、keepalive、
-# 或 adb 的 nc），計數就會變成 2 → 舊寫法 `= "1"` 會把**已 root 的裝置誤判成未 root**。
-# 實測 10 次取樣中就出現過一次 count=2，屬間歇性偽陰性。改判 `>= 1`。
+# NOTE 2 (measured fix, 2026-09-13): **do not require exactly 1**.
+# /proc/net/unix has both a "listening" and a "connected" entry for the same socket, so as soon
+# as a client is attached (the glasses app's RootDaemonKeeper probes every 30 s, keepalive, or
+# adb's nc) the count becomes 2 -> the old `= "1"` reported a **rooted device as not rooted**.
+# One count=2 appeared in 10 measured samples: an intermittent false negative. Test `>= 1`.
 if [ "$(sh_ 'grep -c root_daemon.sock /proc/net/unix; true')" -ge 1 ] 2>/dev/null; then ROOTED=1; fi
 if [ "$ROOTED" = 1 ] && [ "$SELINUX" = "Permissive" ]; then
   ok "已 root（SELinux=$SELINUX，root_daemon socket 存在）"
@@ -73,7 +76,7 @@ else
     [ -f "$SHIZUKU_APK" ] && ok "本機找得到 APK" || no "本機找不到 APK"
   fi
 
-  # libshizuku.so 必須存在且可執行，do_shizuku() 靠這個路徑直接啟動
+  # libshizuku.so must exist and be executable; do_shizuku() launches it from this path
   if [ -n "$APKPATH" ]; then
     LIB=$(printf '%s' "${APKPATH#package:}" | sed 's#base\.apk$#lib/arm64/libshizuku.so#')
     if [ "$(sh_ "[ -x '$LIB' ] && echo yes || echo no")" = "yes" ]; then
@@ -95,22 +98,23 @@ else
 fi
 
 # ------------------------------------------------------------------
-# 讓眼鏡 App 進入「前景」。
+# Bring the glasses app to the foreground.
 #
-# 為什麼不能只下 am start-service：
+# Why am start-service alone is not enough:
 #   am start-service        → Error: app is in background ... idle change:cached
 #   am start-foreground-service → Error: Not found; no service started.
-# 兩者都會被 Android 的背景執行限制擋下。CaptureService 是在
-# MainActivity.onResume() 裡才 startForegroundService 的（原始碼註解明寫
-# 「activity 進入前景後才啟動 FGS，避免 Background start not allowed」），
-# 所以正確做法是把 MainActivity 帶到前景，讓它自己拉起服務。
+# Both are blocked by Android's background execution limits. CaptureService is only started with
+# startForegroundService from MainActivity.onResume() (the source comment says outright "start
+# the FGS only after the activity reaches the foreground, to avoid Background start not
+# allowed"), so the right approach is to bring MainActivity to the foreground and let it start
+# the service itself.
 # ------------------------------------------------------------------
 ensure_app_foreground() {
   if [ "$(sh_ "ps -A -o ARGS 2>/dev/null | grep -c '$PKG_GLASSES'")" -gt 0 ] &&
      sh_ "dumpsys activity activities 2>/dev/null | grep -q 'topResumedActivity.*$PKG_GLASSES'"; then
     return 0
   fi
-  sh_ 'input keyevent KEYCODE_WAKEUP' >/dev/null 2>&1   # 頭盔螢幕可能睡著
+  sh_ 'input keyevent KEYCODE_WAKEUP' >/dev/null 2>&1   # the headset screen may be asleep
   sleep 1
   sh_ "am start -W -n $PKG_GLASSES/.MainActivity" >/dev/null 2>&1
   for _ in 1 2 3 4 5 6 7 8; do
@@ -132,11 +136,12 @@ else
                         || no "manifest 中找不到 DebugReceiver"
 
   # ------------------------------------------------------------------
-  # 關鍵：眼鏡 App 若沒在執行，Android 會以「背景執行限制」拒收廣播 ——
+  # Key point: if the glasses app is not running, Android rejects the broadcast under its
+  # "background execution limits" —
   #   W BroadcastQueue: Background execution Third-Party APP not allowed:
   #     receiving Intent { act=com.rokid.rc.glasses.DEBUG ... }
-  # 此時 am broadcast 仍回報 "Broadcast completed"，但接收器根本沒被叫起來，
-  # logcat 自然什麼都沒有。所以必須先確保 App 程序活著。
+  # am broadcast still reports "Broadcast completed", but the receiver is never invoked, so
+  # logcat naturally shows nothing. The app process must therefore be alive first.
   # ------------------------------------------------------------------
   ensure_app_foreground
   if [ "$(sh_ "ps -A -o ARGS 2>/dev/null | grep -c '$PKG_GLASSES'")" -gt 0 ]; then
@@ -145,7 +150,7 @@ else
     no "眼鏡 App 拉不起來，DebugReceiver 廣播會被背景限制擋掉"
   fi
 
-  # 用「明確指定 component」送廣播，避免被背景限制擋掉
+  # send the broadcast with an explicit component so background limits cannot drop it
   BCAST="am broadcast -n $PKG_GLASSES/.DebugReceiver -a $PKG_GLASSES.DEBUG"
   sh_ "logcat -c" >/dev/null 2>&1
 
@@ -158,11 +163,11 @@ else
     fi
   done
 
-  # 還原：SET_LOCALE 不帶 lang = 跟隨系統；SET_DISPLAY 全 true = 預設
+  # restore: SET_LOCALE without lang = follow the system; SET_DISPLAY all true = defaults
   sh_ "$BCAST --es cmd SET_LOCALE"       >/dev/null 2>&1
   sh_ "$BCAST --es cmd SET_DISPLAY --ez conn true --ez root true --ez camera true --ez storage true --ez led true" >/dev/null 2>&1
 
-  # logcat 緩衝有延遲，重試幾次再判定，避免偽陰性
+  # the logcat buffer lags; retry a few times before judging, to avoid false negatives
   LOGS=""
   for _ in 1 2 3 4 5; do
     sleep 3
@@ -173,14 +178,14 @@ else
   if printf '%s' "$LOGS" | grep -q 'display set'; then ok "logcat 確認 SET_DISPLAY 生效"; else no "logcat 沒有 SET_DISPLAY 的紀錄"; fi
   if printf '%s' "$LOGS" | grep -q 'panel toggled'; then
     ok "logcat 確認 TOGGLE_PANEL 生效"
-    # panel toggled (activity=false) 代表 MainActivity 沒在前面，屬於預期行為
+    # panel toggled (activity=false) means MainActivity was not in front; that is expected
     printf '%s' "$LOGS" | grep -q 'activity=false' && \
       printf '      （activity=false：MainActivity 未前景化，屬預期）\n'
   else
     no "logcat 沒有 TOGGLE_PANEL 的紀錄"
   fi
 
-  # 若仍無紀錄，檢查是否又是背景執行限制
+  # if there is still no record, check whether background limits blocked it again
   if ! printf '%s' "$LOGS" | grep -q 'display set'; then
     if sh_ "logcat -d 2>/dev/null | grep -q 'Background execution Third-Party APP not allowed.*rokid.rc.glasses'"; then
       printf '      ↳ 偵測到背景執行限制擋下廣播（App 未執行）\n'
@@ -188,15 +193,15 @@ else
   fi
 fi
 
-# ------------------------------------------------- 3. WiFi 媒體通道（眼鏡端）
+# ------------------------------------------------- 3. WiFi media channel (glasses side)
 head_ "3. WiFi 媒體通道（眼鏡端，可完整驗證）"
 printf '  來源依據：WifiHotspot.kt 註解「實測 adb shell(uid 2000) 也可執行 start-softap」，\n'
 printf '            CaptureService 需由 MainActivity 進前景後自行拉起（背景限制）。\n'
 printf '            因此這條路徑不需要手機在場也能完整驗證。\n'
 
 WIFI_DID=0
-# 註：cmd wifi start-softap 由 adb shell(uid 2000) 執行即可，不需要 root
-#     （見 WifiHotspot.kt 註解），所以本段不因未 root 而略過。
+# NOTE: cmd wifi start-softap works from adb shell (uid 2000) and needs no root (see the
+#     WifiHotspot.kt comment), so this section is not skipped when unrooted.
   ensure_app_foreground
   APPUP=$(sh_ "ps -A -o ARGS 2>/dev/null | grep -c '$PKG_GLASSES'")
   [ "${APPUP:-0}" -gt 0 ] && ok "眼鏡 App 已在前景執行" || sk "眼鏡 App 拉不起來"
@@ -217,7 +222,7 @@ WIFI_DID=0
     fi
   fi
 
-  # 3b. SoftAP（root；本韌體 STA 與 SoftAP 不可同時維持）
+  # 3b. SoftAP (root; this firmware cannot keep STA and SoftAP up at the same time)
   APIP=$(sh_ 'ip -o addr show 2>/dev/null | grep -o "192\.168\.43\.[0-9]*" | head -1')
   if [ -z "$APIP" ]; then
     sh_ 'cmd wifi start-softap RokidCam wpa2 rokid1234 >/dev/null 2>&1 &' >/dev/null 2>&1
@@ -234,10 +239,10 @@ WIFI_DID=0
     no "SoftAP 90 秒內未起來"
   fi
 
-  # 3c. 功能驗證：實際連線，確認 server 接受
+  # 3c. functional check: actually connect and confirm the server accepts
   if [ -n "$APIP" ] && [ "$(sh_ "netstat -tln 2>/dev/null | grep -c ':$WIFI_PORT '")" -gt 0 ]; then
     sh_ "logcat -c" >/dev/null 2>&1
-    # 注意：Android 的 sh 是 mksh，不支援 bash 的 /dev/tcp；要用 toybox 的 nc。
+    # NOTE: Android's sh is mksh and does not support bash's /dev/tcp; use toybox's nc.
     C=$(sh_ "echo '' | timeout 5 nc -w 3 $APIP $WIFI_PORT >/dev/null 2>&1 && echo OK || echo FAIL")
     sleep 3
     if printf '%s' "$C" | grep -q OK; then
@@ -252,7 +257,8 @@ WIFI_DID=0
     fi
   fi
 
-  # 3d. 還原：SoftAP 不跨 reboot，且開著會踢掉 STA，測完關閉
+  # 3d. restore: SoftAP does not survive a reboot and drops STA while up, so turn it off after
+  # the test
   if [ "$WIFI_DID" = 1 ] || [ -n "$APIP" ]; then
     sh_ 'cmd wifi stop-softap >/dev/null 2>&1; true' >/dev/null 2>&1
     sleep 3
@@ -264,7 +270,7 @@ WIFI_DID=0
   fi
   printf '  已知限制：本韌體 STA 與 SoftAP 不可同時維持，開熱點會踢掉既有 WiFi STA。\n'
 
-# ------------------------------------------------------------------ 總結
+# ------------------------------------------------------------------ summary
 head_ "結果"
 printf '  通過 %d  失敗 %d  略過 %d\n' "$pass" "$fail" "$skip"
 [ "$fail" -eq 0 ] && exit 0 || exit 1

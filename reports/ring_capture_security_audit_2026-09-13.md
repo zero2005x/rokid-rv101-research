@@ -1,5 +1,7 @@
 # 戒指操控拍照／攝影 — 來源授權與硬編碼資安稽核
 
+> English: [ring_capture_security_audit_2026-09-13_EN.md](ring_capture_security_audit_2026-09-13_EN.md)
+
 - **日期**：2026-09-13
 - **範圍**：`android/shared/.../ring/`（5 檔）、`android/app-glasses/.../ring/`（2 檔）、
   `android/app-phone/.../ring/`（2 檔）、`deploy/ring_input_daemon.c`、

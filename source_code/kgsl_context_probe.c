@@ -1,10 +1,10 @@
 /*
- * kgsl_context_probe.c - 探測正確的 KGSL context 創建方式
+ * kgsl_context_probe.c - probing the correct way to create a KGSL context
  *
- * 發現: "legacy context switch not supported"
- * 需要使用新的 context 創建 API
+ * Finding: "legacy context switch not supported"
+ * The new context creation API must be used
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_context_probe kgsl_context_probe.c
  */
 
@@ -23,7 +23,7 @@
 /* KGSL Magic */
 #define KGSL_IOC_TYPE 0x09
 
-/* Context 創建 flags */
+/* Context creation flags */
 #define KGSL_CONTEXT_NO_GMEM_ALLOC 0x00000001
 #define KGSL_CONTEXT_SUBMIT_IB_LIST 0x00000002
 #define KGSL_CONTEXT_CTX_SWITCH 0x00000008
@@ -54,14 +54,14 @@
 #define KGSL_CONTEXT_TYPE_SHIFT 16
 #define KGSL_CONTEXT_TYPE_MASK 0x01F0000
 
-/* 標準 ioctl (從 kgsl.h) */
+/* Standard ioctls (from kgsl.h) */
 #define IOCTL_KGSL_DRAWCTXT_CREATE 0xc0080913
 
-/* 可能的新 context 創建 ioctl */
-#define IOCTL_KGSL_DRAWCTXT_CREATE_V2 0xc0080946 // 可能的新版本
+/* Possible new context creation ioctls */
+#define IOCTL_KGSL_DRAWCTXT_CREATE_V2 0xc0080946 // possible new version
 #define IOCTL_KGSL_DRAWCTXT_CREATE_V3 0xc0100946 // 16 bytes
 
-/* 不同的結構嘗試 */
+/* Different structure attempts */
 struct kgsl_drawctxt_create_v1
 {
     unsigned int flags;
@@ -99,7 +99,7 @@ void test_context_creation(int fd)
 {
     printf("\n=== Testing Context Creation with Various Flags ===\n");
 
-    // 嘗試各種 flags 組合
+    // Try various flag combinations
     try_context_with_flags(fd, 0, "default");
     try_context_with_flags(fd, KGSL_CONTEXT_NO_GMEM_ALLOC, "NO_GMEM_ALLOC");
     try_context_with_flags(fd, KGSL_CONTEXT_SUBMIT_IB_LIST, "SUBMIT_IB_LIST");
@@ -110,7 +110,7 @@ void test_context_creation(int fd)
     try_context_with_flags(fd, KGSL_CONTEXT_IFH_NOP, "IFH_NOP");
     try_context_with_flags(fd, KGSL_CONTEXT_SPARSE, "SPARSE");
 
-    // 組合 flags
+    // Combine flags
     try_context_with_flags(fd,
                            KGSL_CONTEXT_NO_GMEM_ALLOC | KGSL_CONTEXT_PER_CONTEXT_TS,
                            "NO_GMEM|PER_CONTEXT_TS");
@@ -119,18 +119,18 @@ void test_context_creation(int fd)
                            KGSL_CONTEXT_SUBMIT_IB_LIST | KGSL_CONTEXT_PER_CONTEXT_TS,
                            "SUBMIT_IB|PER_CONTEXT_TS");
 
-    // 帶優先級
+    // With a priority
     unsigned int priority_flags = KGSL_CONTEXT_PRIORITY_MEDIUM << KGSL_CONTEXT_PRIORITY_SHIFT;
     try_context_with_flags(fd, priority_flags, "PRIORITY_MEDIUM");
 
-    // 帶 type
+    // With a type
     unsigned int type_gl = KGSL_CONTEXT_TYPE_GL << KGSL_CONTEXT_TYPE_SHIFT;
     try_context_with_flags(fd, type_gl, "TYPE_GL");
 
     unsigned int type_cl = KGSL_CONTEXT_TYPE_CL << KGSL_CONTEXT_TYPE_SHIFT;
     try_context_with_flags(fd, type_cl, "TYPE_CL");
 
-    // 組合所有
+    // Combine everything
     try_context_with_flags(fd,
                            KGSL_CONTEXT_SUBMIT_IB_LIST | KGSL_CONTEXT_PER_CONTEXT_TS | type_gl | priority_flags,
                            "SUBMIT_IB|PER_TS|GL|MED_PRI");
@@ -142,7 +142,7 @@ void scan_context_ioctls(int fd)
 
     struct kgsl_drawctxt_create_v2 ctx = {0};
 
-    // 掃描 0x09XX 範圍，尋找 context 相關的 ioctl
+    // Scan the 0x09XX range for context-related ioctls
     for (int nr = 0x10; nr <= 0x20; nr++)
     {
         unsigned int cmd = 0xc0080000 | (0x09 << 8) | nr;
@@ -165,7 +165,7 @@ void scan_context_ioctls(int fd)
         }
     }
 
-    // 也檢查 0x40-0x50 範圍
+    // Also check the 0x40-0x50 range
     printf("\n[*] Scanning 0x40-0x50 range:\n");
     for (int nr = 0x40; nr <= 0x50; nr++)
     {
@@ -191,7 +191,7 @@ void test_gpu_operations_without_context(int fd)
 {
     printf("\n=== Testing GPU Operations Without Context ===\n");
 
-    /* 嘗試直接分配記憶體，不需要 context */
+    /* Try allocating memory directly, without a context */
 
     // GPUMEM_ALLOC (0x22)
     struct
@@ -224,7 +224,7 @@ void test_secure_context(int fd)
 {
     printf("\n=== Testing Secure Context ===\n");
 
-    // 嘗試創建 secure context
+    // Try to create a secure context
     struct kgsl_drawctxt_create_v1 ctx = {0};
     ctx.flags = KGSL_CONTEXT_SECURE;
 
@@ -238,7 +238,7 @@ void test_mmap_gpu_memory(int fd)
 {
     printf("\n=== Testing GPU Memory mmap ===\n");
 
-    // 嘗試各種 offset 進行 mmap
+    // Try mmap at various offsets
     for (unsigned long offset = 0; offset < 0x100000; offset += 0x10000)
     {
         void *ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE,
@@ -265,19 +265,19 @@ int main(int argc, char **argv)
     }
     printf("[+] Opened /dev/kgsl-3d0: fd=%d\n", fd);
 
-    // 測試各種 context 創建方式
+    // Test the various context creation methods
     test_context_creation(fd);
 
-    // 掃描 context 相關 ioctl
+    // Scan for context-related ioctls
     scan_context_ioctls(fd);
 
-    // 測試不需要 context 的操作
+    // Test operations that need no context
     test_gpu_operations_without_context(fd);
 
-    // 測試 secure context
+    // Test the secure context
     test_secure_context(fd);
 
-    // 測試 mmap
+    // Test mmap
     test_mmap_gpu_memory(fd);
 
     close(fd);

@@ -16,7 +16,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
 
-/** 依訊息 type 分派到眼鏡端各元件。 */
+/** Dispatch to the glasses-side components by message type. */
 class CommandRouter(private val graph: AppGraph) {
 
     suspend fun handle(handler: ConnectionHandler, json: String) {
@@ -76,7 +76,7 @@ class CommandRouter(private val graph: AppGraph) {
     }
 
 
-    // ---- 開發模式（無線 adb 按需開關） ----
+    // ---- dev mode (on-demand wireless adb switch) ----
 
     private suspend fun devModeStart(h: ConnectionHandler, id: Long, msg: JSONObject) {
         val ssid = msg.optString("ssid", "").ifBlank { null }
@@ -84,7 +84,7 @@ class CommandRouter(private val graph: AppGraph) {
         val security = msg.optString("security", "wpa2")
         val idleMs = msg.optLong("idleMs", com.rokid.rc.glasses.net.DevModeController.DEFAULT_IDLE_MS)
         graph.devMode.start(ssid, pass, security, idleMs)
-        // 給加入網段一點時間再回報（手機端可輪詢 DEV_MODE_STATUS 追蹤）
+        // give the subnet join a moment before reporting back (the phone can poll DEV_MODE_STATUS to track it)
         kotlinx.coroutines.delay(1500)
         h.sendJson(Msg.ack(id, true, null, graph.devMode.statusJson()).toString())
     }
@@ -99,7 +99,7 @@ class CommandRouter(private val graph: AppGraph) {
         h.sendJson(Msg.ack(id, true, null, graph.devMode.statusJson()).toString())
     }
 
-    /** 手機切換「靜音拍攝」（強制壓制拍照/錄影提示音；需 root）。 */
+    /** Phone toggles "silent capture" (force-suppress the photo/video shutter sound; needs root). */
     private suspend fun setSilent(h: ConnectionHandler, id: Long, msg: JSONObject) {
         val on = msg.optBoolean("enabled", true)
         val ok = graph.silentMode.setEnabled(on)
@@ -111,7 +111,7 @@ class CommandRouter(private val graph: AppGraph) {
         )
     }
 
-    /** 路徑 B：遠端開關眼鏡端的戒指／觸控板控制。 */
+    /** Path B: remotely toggle the glasses-side ring/touchpad control. */
     private suspend fun setRing(h: ConnectionHandler, id: Long, msg: JSONObject) {
         val enabled = msg.optBoolean("enabled", true)
         val pattern = msg.optString("pattern").takeIf { it.isNotBlank() }
@@ -131,27 +131,27 @@ class CommandRouter(private val graph: AppGraph) {
     }
 
     /**
-     * 手機要求開啟無線 adb。
-     * ⚠ 實測教訓：此 Rokid build 的 adbd 重啟會讓 USB 列舉丟失且未見 TCP 綁定，
-     * 因此**不再盲目重啟 adbd**：只設 service.adb.tcp.port，讓 adbd 的屬性監聽
-     * 自行切換（若此 build 支援）；不支援時回報失敗，USB adb 不受影響。
+     * The phone asks to turn wireless adb on.
+     * ⚠ Lesson measured on device: restarting adbd on this Rokid build loses USB enumeration and shows no TCP bind,
+     * so **adbd is no longer restarted blindly**: only service.adb.tcp.port is set and adbd's property watcher
+     * switches over by itself (if this build supports it); when it does not, failure is reported and USB adb is unaffected.
      */
     private suspend fun enableWifiAdb(h: ConnectionHandler, id: Long) {
         val client = com.rokid.rc.glasses.ghost.RootDaemonClient()
         if (!client.isRoot()) {
             return ackError(h, id, "root not ready")
         }
-        // P3：同時設 **persist**.adb.tcp.port，讓 adbd 在**每次開機**都自動監聽 TCP
-        // （只設 service.* 只在本次開機有效，重開機就要插線重來）。
-        // 注意：Android 11+ 官方即以此屬性實作無線偵錯；本機為 Android 12。
-        // 副作用：adb 會變成「只要網路可達就能連」，安全性由 adb RSA 金鑰把關（ro.adb.secure=1）。
+        // P3: also set **persist**.adb.tcp.port so adbd listens on TCP automatically on **every boot**
+        // (setting only service.* lasts for this boot, so a reboot means plugging the cable in again).
+        // NOTE: Android 11+ implements wireless debugging officially through this property; this device is Android 12.
+        // Side effect: adb becomes reachable by anyone who can reach it over the network; security rests on the adb RSA key (ro.adb.secure=1).
         client.exec("setprop persist.adb.tcp.port 5555", 15_000L)
         client.exec("setprop service.adb.tcp.port 5555", 15_000L)
-        // 輪詢 8 秒看 adbd 是否綁定 TCP 5555。
-        // ⚠ 2026-09-20 修正：**必須同時看 IPv4 與 IPv6**。本機 adbd 綁的是
-        //   IPv6 wildcard（`/proc/net/tcp6` 的 `[::]:5555`），只 grep IPv4 的
-        //   `/proc/net/tcp` 會把「其實有綁」誤判成「不支援」——這正是先前
-        //   「本 build 不支援 adb-over-TCP」結論的來源（見 reports/FACTS.md R7）。
+        // poll for 8 seconds to see whether adbd bound TCP 5555.
+        // ⚠ 2026-09-20 correction: **IPv4 and IPv6 must both be checked**. This device's adbd binds the
+        //   IPv6 wildcard (`[::]:5555` in `/proc/net/tcp6`), so grepping only the IPv4
+        //   `/proc/net/tcp` misreads "it actually is bound" as "not supported" — which is exactly where the earlier
+        //   "this build does not support adb-over-TCP" conclusion came from (see reports/FACTS.md R7).
         var bound = false
         var boundWhere = ""
         repeat(8) {
@@ -167,8 +167,8 @@ class CommandRouter(private val graph: AppGraph) {
         if (!bound) {
             return ackError(h, id, "adb-over-tcp not supported on this build")
         }
-        // 有 listener 還不夠：客戶端要連得到。SoftAP 提供固定入口 192.168.43.1；
-        // 若目前沒有任何 192.168/10.x 介面（AP 未開），順手確保 AP 起來。
+        // a listener is not enough: the client must be able to reach it. The SoftAP provides the fixed entry point 192.168.43.1;
+        // if there is currently no 192.168/10.x interface at all (AP not up), make sure the AP comes up while we are here.
         var ip = localIpv4()
         if (ip == "0.0.0.0") {
             runCatching { graph.wifiHotspot.ensureStarted() }
@@ -186,7 +186,7 @@ class CommandRouter(private val graph: AppGraph) {
         h.sendJson(Msg.ack(id, true, null, data).toString())
     }
 
-    /** 本機 IPv4（STA wlan0 優先，SoftAP wlan2 次之）。 */
+    /** Local IPv4 (STA wlan0 preferred, SoftAP wlan2 second). */
     private fun localIpv4(): String {
         try {
             val nets = java.net.NetworkInterface.getNetworkInterfaces() ?: return "0.0.0.0"
@@ -210,7 +210,7 @@ class CommandRouter(private val graph: AppGraph) {
         }
     }
 
-    /** 手機設定眼鏡儀表板顯示內容（五類開關，持久化）。 */
+    /** Phone sets what the glasses dashboard shows (five category switches, persisted). */
     private suspend fun setDisplayConfig(h: ConnectionHandler, id: Long, msg: JSONObject) {
         val cfg = msg.optJSONObject("display")
         if (cfg == null) {
@@ -279,7 +279,7 @@ class CommandRouter(private val graph: AppGraph) {
 
     private suspend fun acquireRoot(h: ConnectionHandler, id: Long) {
         val result = graph.acquireRootMetered()
-        // 提權成功後順手確保 WiFi 熱點（媒體通道；失敗不影響 ACQUIRE_ROOT 結果）
+        // make sure the WiFi hotspot is up after escalation (media channel; failure does not affect the ACQUIRE_ROOT result)
         if (result.success || graph.ghostlock.rootAcquired) {
             graph.scope.launch {
                 val apOk = graph.wifiHotspot.ensureStarted()
@@ -313,7 +313,7 @@ class CommandRouter(private val graph: AppGraph) {
         h.sendJson(Msg.reply(id, MsgType.DEVICE_INFO, "info" to info).toString())
     }
 
-    /** 手機要求確保 WiFi 熱點已啟動（root 未就緒時回報錯誤）。 */
+    /** Phone asks to make sure the WiFi hotspot is started (reports an error when root is not ready). */
     private suspend fun ensureWifiAp(h: ConnectionHandler, id: Long) {
         val ok = graph.wifiHotspot.ensureStarted()
         val status = graph.wifiHotspot.status()

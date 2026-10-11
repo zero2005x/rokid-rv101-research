@@ -1,5 +1,7 @@
 # Kali Linux Android SDK 建置紀錄
 
+> English: [sdk-setup_EN.md](sdk-setup_EN.md)
+
 本機（Kali / WSL2）已準備好可建置本專案的 Android SDK 與工具鏈，並已實際編譯通過。
 
 ## 安裝位置

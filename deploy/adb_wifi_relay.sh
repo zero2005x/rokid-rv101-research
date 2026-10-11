@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-# adb_wifi_relay.sh — 在裝置上開一個「無線 adb 入口」：TCP → adbd local socket
+# adb_wifi_relay.sh — open a wireless adb entry point on the device: TCP -> adbd local socket
 #
-# 原理：裝置的 adbd 聽在 UNIX socket /dev/socket/adbd（USB 只是它的另一個 transport）。
-#       本腳本在裝置端跑 deploy/adb_tcp_relay（TCP listener），把每條 TCP 連線原封不動
-#       轉給 adbd → PC/手機/筆電即可用標準 `adb connect <ip>:5555` 連上，
-#       認證/shell/sync/forward 全部由原廠 adbd 處理。
+# How: the device's adbd listens on the UNIX socket /dev/socket/adbd (USB is just another
+#      transport). This script runs deploy/adb_tcp_relay (a TCP listener) on the device and
+#      forwards every TCP connection verbatim to adbd -> a PC/phone/laptop can connect with
+#      the standard `adb connect <ip>:5555`, and auth/shell/sync/forward are all handled by
+#      the stock adbd.
 #
-# 為什麼需要 root：/dev/socket/adbd 只允許 adbd 自身 domain 與 root 連（SELinux）；
-#       shell(2000) 連會被拒（實測 Permission denied）。取得 root 後（GhostLock）即可。
+# Why root is needed: SELinux only lets adbd's own domain and root connect to
+#      /dev/socket/adbd; shell(2000) is refused (measured Permission denied). Once root is
+#      acquired (GhostLock) it works.
 #
-# 用法：
+# Usage:
 #   source deploy/env.sh
-#   bash deploy/adb_wifi_relay.sh start [PORT]     # 預設 5555
+# default 5555
 #   bash deploy/adb_wifi_relay.sh stop
 #   bash deploy/adb_wifi_relay.sh status
-#   bash deploy/adb_wifi_relay.sh probe            # 只做唯讀可行性檢查
+# read-only feasibility check only
 set -u
 source "$(dirname "$0")/env.sh"
 
@@ -28,7 +30,7 @@ SOCK=/data/local/tmp/root_daemon.sock
 
 adbs() { "$ADB" -s "$SERIAL" "$@"; }
 
-# 以 root 執行（走既有 root_daemon socket；沒有就退回 su -c）
+# run as root (via the existing root_daemon socket; falls back to su -c)
 root_exec() {
   local cmd="$1"
   if adbs shell "grep -q root_daemon.sock /proc/net/unix 2>/dev/null" | grep -q .; then

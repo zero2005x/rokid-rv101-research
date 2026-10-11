@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 GateServiced Protocol Fuzzer v3
-基於逆向分析的協議格式進行模糊測試
+Fuzz the protocol format recovered by reverse engineering
 """
 
 import socket
@@ -14,7 +14,7 @@ PORT = 8341
 TIMEOUT = 2
 
 def send_recv(data):
-    """發送數據並接收回應"""
+    """Send data and receive a response"""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(TIMEOUT)
@@ -27,17 +27,17 @@ def send_recv(data):
         return None
 
 def hexdump(data, max_len=64):
-    """十六進制輸出"""
+    """Hex output"""
     if not data:
         return "None"
     data = data[:max_len]
     return ' '.join(f'{b:02x}' for b in data)
 
 def try_command(cmd_data, desc=""):
-    """嘗試命令並顯示結果"""
+    """Try a command and show the result"""
     resp = send_recv(cmd_data)
     if resp and len(resp) > 0:
-        # 檢查是否有有意義的回應
+        # check whether the response is meaningful
         if resp != b'\x00' * len(resp):
             print(f"[+] {desc}")
             print(f"    Sent: {hexdump(cmd_data)}")
@@ -53,21 +53,21 @@ def try_command(cmd_data, desc=""):
     return False
 
 def fuzz_cmd_ids():
-    """Fuzz 命令 ID"""
+    """Fuzz command IDs"""
     print("=" * 60)
     print("Phase 1: Command ID Fuzzing")
     print("=" * 60)
     
     found = []
     
-    # 常見命令 ID
+    # common command IDs
     cmd_ids = [
-        # 數字型
+        # numeric
         0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005,
         0x0010, 0x0011, 0x0020, 0x0100, 0x0101, 0x0200,
         0x1000, 0x1001, 0x2000, 0xFFFF,
         
-        # ASCII 字符串型 (little-endian)
+        # ASCII string form (little-endian)
         0x6E757200,  # "run\x00"
         0x74696E69,  # "init"
         0x64616F6C,  # "load"
@@ -84,12 +84,12 @@ def fuzz_cmd_ids():
     ]
     
     for cmd_id in cmd_ids:
-        # 格式 1: cmd_id (4B) + length (4B)
+        # Format 1: cmd_id (4B) + length (4B)
         data = struct.pack('<II', cmd_id, 0)
         if try_command(data, f"cmd_id=0x{cmd_id:08x} len=0"):
             found.append(cmd_id)
         
-        # 格式 2: cmd_id (4B) + length (4B) + dummy payload
+        # Format 2: cmd_id (4B) + length (4B) + dummy payload
         data = struct.pack('<II', cmd_id, 8) + b'\x00' * 8
         if try_command(data, f"cmd_id=0x{cmd_id:08x} len=8"):
             found.append(cmd_id)
@@ -97,7 +97,7 @@ def fuzz_cmd_ids():
     return found
 
 def fuzz_strings():
-    """Fuzz 字符串命令"""
+    """Fuzz string commands"""
     print("=" * 60)
     print("Phase 2: String Command Fuzzing")
     print("=" * 60)
@@ -131,20 +131,20 @@ def fuzz_strings():
     ]
     
     for cmd in commands:
-        # 純字符串
+        # bare string
         try_command(cmd + b'\x00', f"string: {cmd.decode()}")
         
-        # 帶長度前綴
+        # with a length prefix
         data = struct.pack('<I', len(cmd)) + cmd
         try_command(data, f"len+string: {cmd.decode()}")
 
 def fuzz_ta_load():
-    """嘗試載入 TA"""
+    """Try to load TAs"""
     print("=" * 60)
     print("Phase 3: TA Load Attempts")
     print("=" * 60)
     
-    # 已知的 TA 名稱 (從 whitelist)
+    # known TA names (from the whitelist)
     ta_names = [
         "fingerprint",
         "keymaster",
@@ -157,42 +157,42 @@ def fuzz_ta_load():
         "soter",
     ]
     
-    # 嘗試不同的載入格式
+    # try different load formats
     for ta in ta_names:
         ta_bytes = ta.encode()
         
-        # 格式 1: "load" + ta_name
+        # format 1: "load" + ta_name
         data = b"load " + ta_bytes + b"\x00"
         try_command(data, f"load {ta}")
         
-        # 格式 2: cmd_id(1) + ta_name
+        # format 2: cmd_id(1) + ta_name
         data = struct.pack('<I', 1) + ta_bytes + b'\x00'
         try_command(data, f"cmd=1 ta={ta}")
         
-        # 格式 3: cmd_id(0x100) + len + ta_name
+        # format 3: cmd_id(0x100) + len + ta_name
         data = struct.pack('<II', 0x100, len(ta_bytes)) + ta_bytes
         try_command(data, f"cmd=0x100 ta={ta}")
 
 def fuzz_buffer_overflow():
-    """嘗試緩衝區溢出"""
+    """Try a buffer overflow"""
     print("=" * 60)
     print("Phase 4: Buffer Overflow Tests")
     print("=" * 60)
     
-    # 不同大小的 payload
+    # payloads of different sizes
     sizes = [256, 512, 1024, 4096, 8192, 16384]
     
     for size in sizes:
-        # Pattern: cmd_id + size 聲明與實際不符
+        # pattern: cmd_id + a declared size that does not match the actual one
         data = struct.pack('<II', 1, 16) + b'A' * size
         try_command(data, f"overflow: declared=16, actual={size}")
         
-        # 極大 size 值
+        # a huge size value
         data = struct.pack('<II', 1, 0xFFFFFFFF) + b'A' * 64
         try_command(data, f"int overflow: size=0xFFFFFFFF")
 
 def fuzz_format_string():
-    """嘗試格式字符串攻擊"""
+    """Try a format-string attack"""
     print("=" * 60)
     print("Phase 5: Format String Tests")
     print("=" * 60)
@@ -214,7 +214,7 @@ def main():
     print(f"Target: {HOST}:{PORT}")
     print()
     
-    # 測試連接
+    # test the connection
     test = send_recv(b"test")
     if test is None:
         print("[-] Cannot connect to GateServiced")

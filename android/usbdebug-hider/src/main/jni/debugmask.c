@@ -1,15 +1,16 @@
-/* debugmask.c — USB 偵錯防偵測的 native 層（PLT/GOT hook）
+/* debugmask.c — native layer of USB-debugging anti-detection (PLT/GOT hook)
  *
- * 為什麼需要：Java 層 hook 只能攔 android.os.SystemProperties；
- * 偵測器若用 native __system_property_get() / __system_property_read_callback()
- * 直讀屬性區，Java hook 完全看不到。這一層把目標行程內「已載入 ELF 模組」的
- * GOT 專案改寫成我們的替身函式，讓 libc 的屬性 API 回傳假值。
+ * Why it is needed: Java-layer hooks can only intercept android.os.SystemProperties;
+ * if a detector reads the property area directly through native __system_property_get() /
+ * __system_property_read_callback(), the Java hook sees nothing at all. This layer rewrites the GOT
+ * entries of "ELF modules already loaded" in the target process to point at our stand-in functions,
+ * so libc's property APIs return fake values.
  *
- * 關鍵設計：
- *  - 只改目標 App「自己行程」的 GOT：屬性區本體不動，init/usbd/adbd 讀到的仍是真值。
- *  - 跳過本程式庫自身的模組，避免自我遞迴。
- *  - 之後才載入的 .so：以屬性讀取路徑上的「節流重掃」補掛（不 hook dlopen，見下方說明）。
- *  - 遮蔽表由 Java 端傳入（key=value 換行分隔），可熱更新、免重啟。
+ * Key design:
+ *  - Only the target app's "own process" GOT is modified: the property area itself is untouched, so what init/usbd/adbd read is still the real value.
+ *  - This library's own module is skipped, to avoid self-recursion.
+ *  - .so files loaded later: attached through a "throttled re-scan" on the property-read path (dlopen is not hooked, see the note below).
+ *  - The mask table is passed in from the Java side (key=value, newline separated), and can be hot-updated without a restart.
  */
 #include <jni.h>
 #include <android/log.h>
@@ -32,7 +33,7 @@
 #define KEY_MAX 128
 #define VAL_MAX 128
 
-/* ── 遮蔽表（每次更新換一個新物件，讀者用原子指標取用） ──────────────────── */
+/* ── mask table (each update swaps in a new object; readers take it through an atomic pointer) ──────────────────── */
 struct table {
     int count;
     char keys[MAX_ENTRIES][KEY_MAX];
@@ -81,20 +82,20 @@ static void set_table(const char *blob) {
         p = nl ? nl + 1 : NULL;
     }
     struct table *old = __atomic_exchange_n(&g_table, t, __ATOMIC_ACQ_REL);
-    /* 舊表刻意不 free：可能還有其他執行緒正在讀，洩漏量以「設定變更次數」為上限 */
+    /* The old table is deliberately not freed: other threads may still be reading it; the leak is bounded by the number of config changes */
     (void) old;
     LOGI("遮蔽表更新：%d 個屬性", t->count);
 }
 
-/* ── 真函式指標 ────────────────────────────────────────────────────────── */
+/* ── real function pointers ────────────────────────────────────────────────────────── */
 typedef int (*prop_get_t)(const char *, char *);
 typedef int (*prop_read_t)(const void *, char *, char *);
 typedef void (*prop_read_cb_fn)(void *, const char *, const char *, unsigned int);
 typedef void (*prop_read_callback_t)(const void *, prop_read_cb_fn, void *);
 
-/* bionic 匯出的 loader API：帶明確 caller_addr，能保留「呼叫者所屬 namespace」。
- * 這是 libnativeloader 用的同一組介面；用一般 dlopen 攔截會讓 App 的載入改用
- * 我們自己的 isolated namespace（實測造成 vendor lib 載入失敗）。 */
+/* bionic-exported loader API: it takes an explicit caller_addr and preserves "the namespace the caller
+ * belongs to". This is the same set of interfaces libnativeloader uses; intercepting with plain dlopen
+ * would make the app's loads resolve through our own isolated namespace (measured: vendor libs then fail to load). */
 typedef void *(*loader_dlopen_t)(const char *filename, int flags, const void *caller_addr);
 typedef void *(*loader_dlopen_ext_t)(const char *filename, int flags, const void *extinfo,
                                      const void *caller_addr);
@@ -110,7 +111,7 @@ static void patch_all(void);
 static void maybe_repatch(void);
 static uintptr_t fix_ptr(struct dl_phdr_info *info, ElfW(Addr) v);
 
-/* ── 替身函式 ──────────────────────────────────────────────────────────── */
+/* ── stand-in functions ──────────────────────────────────────────────────────────── */
 static int my_get(const char *name, char *value) {
     maybe_repatch();
     const char *fake = mask_lookup(name);
@@ -161,15 +162,15 @@ static void my_read_callback(const void *pi, prop_read_cb_fn cb, void *cookie) {
     real_read_callback(pi, cb_trampoline, &w);
 }
 
-/* ── 之後才載入的 .so 也要補掛 ──────────────────────────────────────────
+/* ── .so files loaded later must be attached as well ──────────────────────────────────────────
  *
- * 為什麼不 hook dlopen：android_dlopen_ext/dlopen 會依「呼叫者所屬的 linker
- * namespace」解析路徑。我們的替身函式位於模組的 isolated namespace，一旦攔下
- * App 的 dlopen，App 之後載入 vendor／私有 .so 就會失敗。實測（台灣行動支付）：
+ * Why dlopen is not hooked: android_dlopen_ext/dlopen resolves paths according to "the linker namespace the
+ * caller belongs to". Our stand-in functions live in the module's isolated namespace, so as soon as we
+ * intercept the app's dlopen, the app's later loads of vendor/private .so files fail. Measured (Taiwan Mobile Payment):
  *   E linker: library "/vendor/lib64/egl/libMEOW_qt.so" ... needed or dlopened by
  *             ".../cache/libdebugmask.so" is not accessible for the namespace
- * 因此改成在屬性讀取路徑上「節流重掃」（每秒最多一次 dl_iterate_phdr），
- * 兼顧覆蓋率與不干擾 App 的動態載入行為。
+ * So instead we "re-scan on a throttle" on the property-read path (dl_iterate_phdr at most once a second),
+ * balancing coverage against not disturbing the app's dynamic loading behavior.
  */
 static long long g_last_patch_ms;
 
@@ -188,7 +189,7 @@ static void maybe_repatch(void) {
     patch_all();
 }
 
-/* ── dlopen 攔截：載入完成後立刻補掃新模組 ────────────────────────────── */
+/* ── dlopen interception: re-scan for new modules right after a load completes ────────────────────────────── */
 static void *my_dlopen(const char *filename, int flags) {
     const void *caller = __builtin_return_address(0);
     if (loader_dlopen == NULL) {
@@ -213,19 +214,19 @@ static void *my_dlopen_ext(const char *filename, int flags, const void *extinfo)
     return h;
 }
 
-/* ── 要改寫的符號表 ────────────────────────────────────────────────────── */
+/* ── symbol table to rewrite ────────────────────────────────────────────────────── */
 struct target {
     const char *name;
     void *replacement;
     void **original;
-    int enabled; /* 0 = 本次不安裝（例如取不到 __loader_* 時就不攔 dlopen） */
+    int enabled; /* 0 = do not install this time (for example dlopen is not intercepted when __loader_* cannot be obtained) */
 };
 
 static struct target g_targets[] = {
         {"__system_property_get", (void *) my_get, (void **) &real_get, 1},
         {"__system_property_read", (void *) my_read, (void **) &real_read, 1},
         {"__system_property_read_callback", (void *) my_read_callback, (void **) &real_read_callback, 1},
-        /* dlopen 這兩個預設關閉，只有在取到 __loader_* 時才開（見 resolve_loader_api） */
+        /* these two dlopen entries are disabled by default and enabled only once __loader_* is obtained (see resolve_loader_api) */
         {"dlopen", (void *) my_dlopen, NULL, 0},
         {"android_dlopen_ext", (void *) my_dlopen_ext, NULL, 0},
 };
@@ -234,7 +235,7 @@ static const int g_target_count = (int) (sizeof(g_targets) / sizeof(g_targets[0]
 static pthread_mutex_t g_patch_lock = PTHREAD_MUTEX_INITIALIZER;
 static int g_patched_slots;
 
-/* 已掃過的模組基底位址：重掃時只處理「新出現」的模組，成本從 O(全部) 降到 O(新的)。 */
+/* base addresses of modules already scanned: a re-scan only handles "newly appeared" modules, cutting the cost from O(all) to O(new). */
 #define MAX_MODULES 256
 static uintptr_t g_seen_bases[MAX_MODULES];
 static int g_seen_count;
@@ -254,9 +255,9 @@ static void base_mark(uintptr_t base) {
     }
 }
 
-/* ── 由已載入模組的 GOT 反查符號位址 ──────────────────────────────────────
- * dlsym(RTLD_DEFAULT, "__loader_dlopen") 在 Android 13 取不到（0x0），
- * 但 libnativeloader 會匯入 __loader_*，其 GOT 內就是已解析好的真位址。
+/* ── look a symbol address up from the GOT of an already loaded module ──────────────────────────────────────
+ * dlsym(RTLD_DEFAULT, "__loader_dlopen") cannot be obtained on Android 13 (0x0),
+ * but libnativeloader imports __loader_*, and its GOT holds the already resolved real address.
  */
 static const char *g_lookup_name;
 static void *g_lookup_result;
@@ -303,7 +304,7 @@ static int lookup_cb(struct dl_phdr_info *info, size_t size, void *data) {
             const char *nm = strtab + symtab[sym_index].st_name;
             if (nm != NULL && strcmp(nm, g_lookup_name) == 0) {
                 g_lookup_result = *(void **) fix_ptr(info, r->r_offset);
-                return 1; /* 找到就停 */
+                return 1; /* stop once found */
             }
         }
     }
@@ -317,11 +318,11 @@ static void *lookup_symbol_via_got(const char *name) {
     return g_lookup_result;
 }
 
-/* ── GOT 改寫 ──────────────────────────────────────────────────────────── */
+/* ── GOT rewriting ──────────────────────────────────────────────────────────── */
 static uintptr_t fix_ptr(struct dl_phdr_info *info, ElfW(Addr) v) {
     uintptr_t p = (uintptr_t) v;
     if (p < (uintptr_t) info->dlpi_addr) {
-        p += (uintptr_t) info->dlpi_addr; /* 有些 linker 未把動態段指標轉成絕對位址 */
+        p += (uintptr_t) info->dlpi_addr; /* some linkers do not turn the dynamic-section pointer into an absolute address */
     }
     return p;
 }
@@ -394,10 +395,10 @@ static void patch_rela_table(struct dl_phdr_info *info, ElfW(Rela) *rela, size_t
             }
             uintptr_t slot = fix_ptr(info, r->r_offset);
             if (g_targets[t].original != NULL && *g_targets[t].original == NULL) {
-                *g_targets[t].original = *(void **) slot; /* 記下真函式 */
+                *g_targets[t].original = *(void **) slot; /* remember the real function */
             }
             if (*(void **) slot == g_targets[t].replacement) {
-                continue; /* 已經改過 */
+                continue; /* already rewritten */
             }
             patch_slot(info, slot, g_targets[t].replacement);
             break;
@@ -411,10 +412,10 @@ static int patch_cb(struct dl_phdr_info *info, size_t size, void *data) {
 
     const char *name = info->dlpi_name ? info->dlpi_name : "";
     if (strstr(name, "libdebugmask.so") != NULL || strstr(name, "linker") != NULL) {
-        return 0; /* 自己與 linker 不碰 */
+        return 0; /* do not touch ourselves or the linker */
     }
     if (base_seen((uintptr_t) info->dlpi_addr)) {
-        return 0; /* 這一顆掃過了 */
+        return 0; /* this module has been scanned */
     }
     base_mark((uintptr_t) info->dlpi_addr);
 
@@ -470,8 +471,8 @@ static int patch_cb(struct dl_phdr_info *info, size_t size, void *data) {
     return 0;
 }
 
-/* 背景重掃：之後才載入的 .so（例如偵測器自己的 native 檢查庫）會在 1 秒內被補掛。
- * 不去 hook dlopen —— 那會讓 App 的 dlopen 改用我們的 isolated namespace 解析。 */
+/* Background re-scan: .so files loaded later (for example the detector's own native check library) are attached within a second.
+ * dlopen is not hooked — that would make the app's dlopen resolve through our isolated namespace. */
 static void *repatch_loop(void *arg) {
     (void) arg;
     for (;;) {
@@ -490,7 +491,7 @@ static void patch_all(void) {
     pthread_mutex_unlock(&g_patch_lock);
 }
 
-/* ── JNI 介面 ──────────────────────────────────────────────────────────── */
+/* ── JNI interface ──────────────────────────────────────────────────────────── */
 JNIEXPORT jboolean JNICALL
 Java_com_rokid_rc_usbdebughider_NativeMask_nativeInstall(JNIEnv *env, jclass clazz, jstring blob) {
     (void) clazz;
@@ -504,7 +505,7 @@ Java_com_rokid_rc_usbdebughider_NativeMask_nativeInstall(JNIEnv *env, jclass cla
     set_table(utf);
     (*env)->ReleaseStringUTFChars(env, blob, utf);
 
-    /* 先解析真函式，再改 GOT（順序不能顛倒） */
+    /* resolve the real functions first, then rewrite the GOT (the order must not be reversed) */
     if (real_get == NULL) {
         real_get = (prop_get_t) dlsym(RTLD_DEFAULT, "__system_property_get");
         real_read = (prop_read_t) dlsym(RTLD_DEFAULT, "__system_property_read");
@@ -517,7 +518,7 @@ Java_com_rokid_rc_usbdebughider_NativeMask_nativeInstall(JNIEnv *env, jclass cla
         if (loader_dlopen_ext == NULL) {
             loader_dlopen_ext = (loader_dlopen_ext_t) lookup_symbol_via_got("__loader_android_dlopen_ext");
         }
-        /* 兩個都取到才攔 dlopen；取不到就完全不裝（絕不讓 dlopen 回 NULL） */
+        /* intercept dlopen only when both are obtained; otherwise do not install at all (never let dlopen return NULL) */
         g_targets[3].enabled = (loader_dlopen != NULL);
         g_targets[4].enabled = (loader_dlopen_ext != NULL);
         LOGI("真函式: get=%p read=%p read_cb=%p loader_dlopen=%p loader_dlopen_ext=%p",
@@ -571,7 +572,7 @@ Java_com_rokid_rc_usbdebughider_NativeMask_nativePatchedSlots(JNIEnv *env, jclas
     return (jint) g_patched_slots;
 }
 
-/* 讓 Java 端能驗證 native 層是否真的生效（讀的是被 hook 過的 __system_property_get） */
+/* lets the Java side verify that the native layer really took effect (it reads the hooked __system_property_get) */
 JNIEXPORT jstring JNICALL
 Java_com_rokid_rc_usbdebughider_NativeMask_nativeGetProp(JNIEnv *env, jclass clazz, jstring key) {
     (void) clazz;

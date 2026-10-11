@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""把 scripts/i18n 產出的 68 個新字串併入 app-phone 的 14 個 strings.xml。
+"""Merge the 68 new strings produced by scripts/i18n into the phone app's 14 strings.xml files.
 
-輸入：
-  scripts/i18n/phone_keys.tsv          key / zh-TW / en（zh-TW → values/，en → values-en/）
-  scripts/i18n/out/*.xml               `@@values-xx` 區塊（其餘 12 語系）
-輸出：
-  android/app-phone/src/main/res/values-*/strings.xml 於 </resources> 前插入新字串
+Input:
+  scripts/i18n/phone_keys.tsv          key / zh-TW / en (zh-TW -> values/, en -> values-en/)
+  scripts/i18n/out/*.xml               `@@values-xx` blocks (the other 12 locales)
+Output:
+  android/app-phone/src/main/res/values-*/strings.xml with the new strings inserted before
+  </resources>
 
-特性：可重複執行（已存在的 key 會先移除再寫入）；插入前做 XML 轉義（& ' < >）。
+Behaviour: idempotent (an existing key is removed before being written again); XML escaping
+(& ' < >) happens before insertion.
 """
 import pathlib
 import re
@@ -18,7 +20,7 @@ RES = ROOT / "android/app-phone/src/main/res"
 KEYS_TSV = ROOT / "scripts/i18n/phone_keys.tsv"
 OUT_DIR = ROOT / "scripts/i18n/out"
 
-# locale tag → res 目錄
+# locale tag -> res directory
 DIR_OF = {
     "zh-TW": "values",
     "zh-CN": "values-zh-rCN",
@@ -38,13 +40,13 @@ DIR_OF = {
 
 
 def esc(v: str) -> str:
-    """Android 字串資源轉義（保留既有 \\n 等反斜線序列）。"""
+    """Escape for an Android string resource (preserving existing backslash sequences such as \\n)."""
     v = re.sub(r"&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9A-Fa-f]+);)", "&amp;", v)
     v = v.replace("<", "&lt;").replace(">", "&gt;")
     out, i = [], 0
     while i < len(v):
         c = v[i]
-        if c == "\\" and i + 1 < len(v):      # 保留 \n \' \" 等
+        if c == "\\" and i + 1 < len(v):      # keep \n \' \" and the like
             out.append(v[i:i + 2]); i += 2; continue
         out.append("\\'" if c == "'" else c)
         i += 1
@@ -65,7 +67,7 @@ def load_keys() -> list[str]:
 
 
 def load_translations() -> dict[str, dict[str, str]]:
-    """locale tag → {key: value}（zh-TW / en 取自 TSV，其餘取自 out/*.xml）。"""
+    """locale tag -> {key: value} (zh-TW / en come from the TSV, the rest from out/*.xml)."""
     tr: dict[str, dict[str, str]] = {t: {} for t in DIR_OF}
     for ln in KEYS_TSV.read_text(encoding="utf-8").splitlines()[1:]:
         if not ln.strip():
@@ -80,7 +82,7 @@ def load_translations() -> dict[str, dict[str, str]]:
             s = ln.strip()
             if s.startswith("@@"):
                 tag = s[2:].strip()
-                # 允許 `@@fr`（locale tag）或 `@@values-fr`（res 目錄名）兩種寫法
+                # both `@@fr` (locale tag) and `@@values-fr` (res directory name) are accepted
                 tag = dir2tag.get(tag, tag)
                 assert tag in DIR_OF, f"{f.name}: 未知 locale tag {s}"
                 cur = tag
@@ -109,7 +111,7 @@ def main() -> int:
     for tag, d in DIR_OF.items():
         p = RES / d / "strings.xml"
         s = p.read_text(encoding="utf-8")
-        for k in keys:  # 可重複執行：先移除既有同名 key
+        for k in keys:  # idempotent: remove a pre-existing key of the same name first
             s = re.sub(rf'\n?\s*<string name="{re.escape(k)}">.*?</string>', "", s)
         block = "\n".join(f'    <string name="{k}">{esc(tr[tag][k])}</string>' for k in keys)
         s = s.replace("</resources>", f"\n    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->\n{block}\n</resources>")

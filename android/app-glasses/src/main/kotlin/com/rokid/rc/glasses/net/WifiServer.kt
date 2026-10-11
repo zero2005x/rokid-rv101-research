@@ -12,11 +12,11 @@ import java.net.ServerSocket
 import java.net.Socket
 
 /**
- * 眼鏡端 WiFi TCP server（媒體通道，port 8555）。
+ * Glasses-side WiFi TCP server (media channel, port 8555).
  *
- * 與 BluetoothServer 完全對稱：accept 後把 socket 串流包成 [ConnectionHandler]
- * （同一套 FrameCodec/CommandRouter），因此照片/影片/縮圖傳輸邏輯零修改。
- * 單一連線（新連線取代舊連線），供手機經 SoftAP（192.168.43.1）連入。
+ * Completely symmetric with BluetoothServer: after accept it wraps the socket stream as a [ConnectionHandler]
+ * (the same FrameCodec/CommandRouter), so the photo/video/thumbnail transfer logic needs zero changes.
+ * Single connection (a new connection replaces the old one); the phone connects in over the SoftAP (192.168.43.1).
  */
 class WifiServer(private val graph: AppGraph) {
 

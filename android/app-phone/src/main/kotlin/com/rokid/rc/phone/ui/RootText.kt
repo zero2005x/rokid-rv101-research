@@ -6,14 +6,14 @@ import com.rokid.rc.shared.protocol.RootStates
 import com.rokid.rc.shared.protocol.Status
 
 /**
- * root 狀態與提權度量 → 手機語系文字（P0-b／P2）。
+ * root state and escalation metrics → text in the phone's locale (P0-b/P2).
  *
- * 眼鏡端只送狀態代碼（`RootStates`）與提示（腳本名稱），由手機組字，
- * 因此兩端語言可各自獨立。
+ * The glasses send only status codes (`RootStates`) and hints (script names), and the phone composes the text,
+ * so the two sides' languages stay independent.
  */
 object RootText {
 
-    /** 狀態列文字，例如「root：可用」／「root：已失效，需重新武裝」。 */
+    /** Status row text, for example "root: available" / "root: lost, needs re-arming". */
     fun state(ctx: Context, state: String?): String = when (state) {
         RootStates.OK -> ctx.getString(R.string.root_state_ok)
         RootStates.REARMING -> ctx.getString(R.string.root_state_rearming)
@@ -23,7 +23,7 @@ object RootText {
         else -> ctx.getString(R.string.root_state_unknown)
     }
 
-    /** 需要操作者介入時的操作提示（含要跑的腳本）。 */
+    /** Operating hint when operator intervention is needed (including the script to run). */
     fun hint(ctx: Context, state: String?, hint: String?): String? {
         if (hint.isNullOrBlank()) return null
         val scripts = hint.split("|").filter { it.isNotBlank() }
@@ -36,8 +36,8 @@ object RootText {
     }
 
     /**
-     * 度量列，例如「上次 84 秒（bridge）· 成功 3/5」。
-     * 沒有資料時回 null（呼叫端不顯示）。
+     * Metrics row, for example "last 84 s (bridge) · 3/5 succeeded".
+     * null when there is no data (the caller does not display it).
      */
     fun metrics(ctx: Context, s: Status): String? {
         if (s.suAttempts <= 0) return null
@@ -50,7 +50,7 @@ object RootText {
         )
     }
 
-    /** 看守統計（P0），例如「看守 12 次 · 自動重建 1 次」。 */
+    /** Watchdog statistics (P0), for example "12 watchdog runs · 1 auto-rebuild". */
     fun keeper(ctx: Context, s: Status): String? {
         if (s.suKeeperChecks <= 0) return null
         return ctx.getString(R.string.root_keeper_fmt, s.suKeeperChecks, s.suKeeperRearms)

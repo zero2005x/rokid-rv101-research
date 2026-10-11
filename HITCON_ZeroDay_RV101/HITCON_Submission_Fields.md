@@ -1,5 +1,7 @@
 # HITCON ZeroDay 通報欄位草稿
 
+> English: [HITCON_Submission_Fields_EN.md](HITCON_Submission_Fields_EN.md)
+
 > 依 2026-08-22 登入後通報頁的實際欄位整理。尚未提交。方括號內文字需在送出前處理。
 
 ## 標題

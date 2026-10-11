@@ -7,13 +7,15 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
- * 模組入口（經典 Xposed API，{@code assets/xposed_init} 指到這裡）。
+ * Module entry point (classic Xposed API; {@code assets/xposed_init} points here).
  *
- * <p>只在「第三方 App 行程」內安裝 hook：
+ * <p>Hooks are installed only inside third-party app processes:
  * <ul>
- *   <li>{@code android} / system_server 一律不碰（避免動到系統行為、也避免 bootloop）。</li>
- *   <li>uid &lt; 10000（root/system/shell）不遮，所以 adb、設定頁、系統檔案傳輸讀到的仍是真值。</li>
- *   <li>模組自己的行程不遮（UI 才能顯示裝置真實狀態）。</li>
+ *   <li>{@code android} / system_server is never touched (avoids altering system behaviour
+ *       and avoids a boot loop).</li>
+ *   <li>uid &lt; 10000 (root/system/shell) is not masked, so adb, the settings UI and system
+ *       file transfer still read the real values.</li>
+ *   <li>The module's own process is not masked (so its UI can show the device's real state).</li>
  * </ul>
  */
 public final class MaskEntry implements IXposedHookLoadPackage {
@@ -44,7 +46,7 @@ public final class MaskEntry implements IXposedHookLoadPackage {
                 return;
             }
             if (sInstalled) {
-                // handleLoadPackage 對「同一行程中的每個 package」都會呼叫一次；只裝一次。
+                // handleLoadPackage is called once per package in the same process; install only once.
                 return;
             }
 
@@ -62,8 +64,8 @@ public final class MaskEntry implements IXposedHookLoadPackage {
     }
 
     /**
-     * native 層需要 app context 才載得起來，注入當下通常還沒有；
-     * 這裡在 {@code Instrumentation.callApplicationOnCreate} 之後補一次。
+     * The native layer needs an app context to load and there usually is none at injection time;
+     * this retries it after {@code Instrumentation.callApplicationOnCreate}.
      */
     private static void hookAppCreate(ClassLoader cl) {
         try {

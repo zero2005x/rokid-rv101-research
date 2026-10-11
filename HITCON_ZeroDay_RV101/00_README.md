@@ -1,5 +1,7 @@
 # HITCON ZeroDay — Rokid Glasses RV101 通報準備包
 
+> English: [00_README_EN.md](00_README_EN.md)
+
 > 狀態：**草稿，尚未提交**  
 > 建立日期：2026-08-22（Asia/Taipei）  
 > 漏洞定位：既有 `CVE-2026-43499` 在 Rokid Glasses RV101 上的可利用性驗證；**不主張新 CVE，也不主張本案是 zero-day**。

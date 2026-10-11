@@ -6,16 +6,16 @@ import com.rokid.rc.glasses.ghost.RootDaemonClient
 import com.rokid.rc.shared.ring.RingIdentity
 
 /**
- * 路徑 B：眼鏡端以 **root 直讀 evdev**（`getevent`）取得手勢。
+ * Path B: the glasses obtain gestures by having **root read evdev directly** (`getevent`).
  *
- * 為什麼用 getevent 而不是自製 native binary：
- *   - App 是 untrusted_app，讀不到 dev/input 節點；但 root daemon 可以。
- *   - `getevent` 是裝置內建的 evdev 讀取器，免去隨 APK 附帶 aarch64 二進位與其建置鏈。
- *   - daemon 的 exec 是「指令結束才回傳」，因此做法是：**背景**啟動 getevent 將事件
- *     追加到 `/data/local/tmp/ring_events.log`，App 再以固定間隔 `tail -c +offset`
- *     取回增量（每次 exec 很短，事件延遲 ≈ 輪詢間隔）。
+ * Why getevent instead of a custom native binary:
+ *   - the app is untrusted_app and cannot read dev/input nodes, but the root daemon can.
+ *   - `getevent` is the device's built-in evdev reader, which avoids shipping an aarch64 binary and its build chain with the APK.
+ *   - the daemon's exec returns only when the command finishes, so the approach is: start getevent **in the background**
+ *     appending events to `/data/local/tmp/ring_events.log`, and let the app fetch the increment with
+ *     `tail -c +offset` at a fixed interval (each exec is short, so event latency ≈ the poll interval).
  *
- * 事件格式（`getevent -lt`）：
+ * Event format (`getevent -lt`):
  *   `[   12345.678901] /dev/input/event1: EV_KEY       BTN_TOUCH            DOWN`
  */
 class RingEvdevReader(
@@ -27,7 +27,7 @@ class RingEvdevReader(
     private var offset = 0L
     private var device: String? = null
 
-    /** 列出可用的輸入裝置：回傳 (路徑, 名稱)。 */
+    /** List the available input devices: returns (path, name). */
     suspend fun listDevices(): List<Pair<String, String>> {
         val out = root.exec("getevent -pl 2>/dev/null | grep -E 'add device|name:'", 20_000L)
         val list = mutableListOf<Pair<String, String>>()
@@ -46,12 +46,12 @@ class RingEvdevReader(
     }
 
     /**
-     * 檢查某個 evdev 路徑是否**真的存在**（裝置可能已解除配對／被移除）。
+     * Check whether an evdev path **really exists** (the device may have been unpaired/removed).
      *
-     * ⚠ `listDevices()` 是走 root daemon（`getevent -pl`）；**沒有 root 時它一律回空清單**。
-     * 若把「空清單」當成「裝置不存在」，就會在沒有 root 的情況下**誤刪使用者已設定的裝置**
-     * （實測踩到：19:40 無 root 啟動時把 `/dev/input/event1` 誤判為不存在而清掉）。
-     * 因此列舉不到（空清單）時一律回 true —— 無法確認就不動它。
+     * ⚠ `listDevices()` goes through the root daemon (`getevent -pl`); **without root it always returns an empty list**.
+     * Treating that "empty list" as "the device does not exist" would **wrongly delete the device the user configured**
+     * while there is no root (measured: a rootless start at 19:40 misjudged `/dev/input/event1` as nonexistent and cleared it).
+     * So when enumeration fails (empty list) this always returns true — if it cannot be confirmed, leave it alone.
      */
     suspend fun deviceExists(path: String): Boolean {
         val all = listDevices()
@@ -59,7 +59,7 @@ class RingEvdevReader(
         return all.any { it.first == path }
     }
 
-    /** 依名稱子字串自動挑裝置（大小寫無關）；找不到回傳 null。 */
+    /** Auto-pick a device by name substring (case-insensitive); returns null when none is found. */
     suspend fun autoDetect(namePattern: String = RingIdentity.DEFAULT_NAME_PATTERN): Pair<String, String>? {
         val all = listDevices()
         return all.firstOrNull { it.second.contains(namePattern, true) }
@@ -67,19 +67,22 @@ class RingEvdevReader(
     }
 
     /**
-     * 啟動背景 getevent（root）。成功回傳 true。
+     * Start the background getevent (root). Returns true on success.
      *
-     * 注意：**同一行指令內不可同時 pkill 與啟動 getevent**——`pkill -f` 會比對到本行
-     * 指令自身（後半段含 `getevent -lt` 字面）而自殺，導致後面全部沒跑（實測踩到）。
-     * 因此：停止用獨立指令（`[g]etevent` 括號技巧 + PID 檔），啟動再另一次 exec。
+     * NOTE: **pkill and starting getevent must not be in the same command line** — `pkill -f` would match the
+     * command line itself (whose second half contains the literal `getevent -lt`) and kill itself, so everything
+     * after it never runs (hit this in practice). Hence: stop with a separate command (the `[g]etevent` bracket trick
+     * plus a PID file), then start with another exec.
      */
     /**
-     * 啟動讀取。
+     * Start reading.
      *
-     * [skipExisting] 的語意（App 被系統回收後恢復時很重要）：
-     *  - 先看 log 檔的**最後修改時間**：若在 [freshSec] 秒內（代表剛才真的有手勢），
-     *    就從**上次讀到的位移**續讀 → 喚醒前一刻的手勢不會被丢掉；
-     *  - 若檔案已閒置超過 [freshSec] 秒，就從檔尾開始，避免重放很舊的手勢。
+     * The meaning of [skipExisting] (important when recovering after the app was reclaimed by the system):
+     *  - first look at the log file's **last modification time**: if it is within [freshSec] seconds (meaning there
+     *    really were gestures just now), continue from **the previously read offset** → a gesture from the moment
+     *    before waking up is not lost;
+     *  - if the file has been idle for more than [freshSec] seconds, start from the end of the file, to avoid
+     *    replaying very old gestures.
      */
     suspend fun start(devicePath: String, skipExisting: Boolean = false, freshSec: Long = 10L): Boolean {
         stop()
@@ -90,8 +93,8 @@ class RingEvdevReader(
         val fresh = mtime > 0 && now > 0 && (now - mtime) <= freshSec
         offset = when {
             !skipExisting -> 0L
-            fresh -> savedOffset().coerceAtMost(size)   // 續讀：可能補到剛剛漏掉的手勢
-            else -> size                                // 太舊：跳過
+            fresh -> savedOffset().coerceAtMost(size)   // continue reading: may pick up a gesture that was just missed
+            else -> size                                // too old: skip
         }
         Log.i(TAG, "start($devicePath) skipExisting=$skipExisting fresh=$fresh size=$size offset=$offset")
         val launch = "rm -f $logPath ; " +
@@ -124,17 +127,17 @@ class RingEvdevReader(
         prefs?.edit()?.putLong(KEY_OFFSET, v)?.apply()
     }
 
-    /** 直接問 root daemon：背景 getevent 是否還活著（看門狗用）。 */
+    /** Ask the root daemon directly: is the background getevent still alive (used by the watchdog). */
     suspend fun isAlive(): Boolean =
         (root.exec("pgrep -f '[g]etevent' | wc -l", 8_000L).trim().toIntOrNull() ?: 0) > 0
 
     /**
-     * 取回自上次呼叫後的新事件行（最多 [maxBytes]）。
-     * 讀不到時回傳空清單。
+     * Fetch the event lines new since the previous call (at most [maxBytes]).
+     * Returns an empty list when nothing can be read.
      */
     suspend fun pollNew(maxBytes: Int = 8192): List<String> {
-        // 防護：log 檔若被重建（新一次 start）而位移還停留在舊值，tail 會永遠讀不到東西。
-        // 每輪比對檔案大小，位移越界就歸零重讀。
+        // guard: if the log file was recreated (a new start) while the offset still holds the old value, tail would never read anything.
+        // Compare the file size every round; if the offset is out of range, reset it to zero and re-read.
         val size = root.exec("stat -c %s $logPath 2>/dev/null", 8_000L).trim().toLongOrNull() ?: 0L
         if (offset > size) {
             Log.w(TAG, "位移越界（offset=$offset > size=$size）→ 歸零重讀")
@@ -151,7 +154,7 @@ class RingEvdevReader(
         private const val TAG = "RingEvdevReader"
         private const val KEY_OFFSET = "reader_offset"
 
-        /** 讀取器只把「會被當成點擊」的標籤交給手勢機；其餘回報原始標籤。 */
+        /** The reader hands only the labels that would count as a tap to the gesture machine; it reports the rest as raw labels. */
         val TAP_LIKE = setOf(
             "BTN_TOUCH", "BTN_LEFT", "BTN_MOUSE", "BTN_RIGHT", "BTN_MIDDLE",
             "BTN_0", "BTN_1", "BTN_TRIGGER",

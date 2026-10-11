@@ -10,16 +10,16 @@ import android.app.AndroidAppHelper;
 import de.robv.android.xposed.XposedBridge;
 
 /**
- * native 層（PLT/GOT hook）的載入與控制。
+ * Loading and control of the native layer (PLT/GOT hook).
  *
- * <p>目標 App 行程內沒有我們的 .so，而 Android 11+ 的套件可見性讓目標 App 查不到模組包名
- * （{@code PackageManager.NameNotFoundException}），Vector 又是用 in-memory dex 載入模組
- * （{@code /proc/self/maps} 也看不到 APK 路徑）—— 所以 .so 直接以 Base64 內嵌在 dex
- * （{@link EmbeddedSo}），執行期解到<b>目標 App 自己的 cacheDir</b> 再 {@code System.load()}。
- * 不需 root、不寫別人的目錄、不依賴任何路徑探索。
+ * <p>The target app's process contains no .so of ours, and Android 11+ package visibility stops the target app from
+ * resolving the module package name ({@code PackageManager.NameNotFoundException}), while Vector loads modules as
+ * in-memory dex (the APK path is not visible in {@code /proc/self/maps} either) — so the .so is embedded directly in
+ * the dex as Base64 ({@link EmbeddedSo}) and at runtime is unpacked into the <b>target app's own cacheDir</b> before
+ * {@code System.load()}. No root, no writing into someone else's directory, no reliance on any path discovery.
  *
- * <p>注入時機（handleLoadPackage）通常還沒有 Application context，因此載入會失敗；
- * 之後由 {@code Instrumentation.callApplicationOnCreate} 的 hook 與屬性 hook 重試。
+ * <p>The injection point (handleLoadPackage) usually has no Application context yet, so loading fails there;
+ * the hook on {@code Instrumentation.callApplicationOnCreate} and the property hook retry later.
  */
 final class NativeMask {
 
@@ -29,7 +29,7 @@ final class NativeMask {
     private static volatile boolean sInstalled;
     private static volatile String sTable = "";
     private static volatile long sLastRepatch;
-    /** 載入失敗重試上限，避免每次屬性讀取都重試（log 洗版）。 */
+    /** Retry cap for failed loads, so not every property read retries (log spam). */
     private static int sAttempts;
 
     private NativeMask() {
@@ -50,10 +50,10 @@ final class NativeMask {
     static native String nativeGetProp(String key);
 
     /**
-     * 請 native 層補掃「之後才載入的 .so」。
+     * Ask the native layer to re-scan ".so files loaded later".
      *
-     * <p>Java 端節流 200ms：偵測器通常在讀 settings 之後才載入自己的 native 檢查庫，
-     * 這條路徑讓那個時間差被補上（native 端另有每秒一次的背景重掃）。
+     * <p>The Java side throttles to 200 ms: the detector usually loads its own native check library after reading
+     * settings, and this path covers that time gap (the native side also re-scans in the background once a second).
      */
     static void repatch() {
         if (!sInstalled) {
@@ -67,11 +67,11 @@ final class NativeMask {
         try {
             nativeRepatch();
         } catch (Throwable ignored) {
-            // native 層出錯不影響 Java 層遮蔽
+            // an error in the native layer does not affect Java-layer masking
         }
     }
 
-    /** 立即補掃（App 剛載入 native 庫時呼叫；不節流）。 */
+    /** Immediate re-scan (called when the app has just loaded a native library; no throttling). */
     static void repatchNow() {
         if (!sInstalled) {
             return;
@@ -79,11 +79,11 @@ final class NativeMask {
         try {
             nativeRepatch();
         } catch (Throwable ignored) {
-            // 不影響 Java 層遮蔽
+            // does not affect Java-layer masking
         }
     }
 
-    /** 冪等：已安裝就只在遮蔽表變動時更新。 */
+    /** Idempotent: once installed it only updates when the mask table changes. */
     static synchronized boolean install(MaskConfig cfg) {
         String table = cfg.propTableCache;
         if (sInstalled) {
@@ -116,10 +116,10 @@ final class NativeMask {
     private static boolean load() {
         Context ctx = AndroidAppHelper.currentApplication();
         if (ctx == null) {
-            return false; // 還沒有 app context，之後重試
+            return false; // no app context yet, retry later
         }
         if (sAttempts >= 3) {
-            return false; // 放棄（例如 ABI 不符）；改 conf 重載後仍會再試
+            return false; // give up (e.g. ABI mismatch); a conf reload will still try again
         }
         sAttempts++;
         if (EmbeddedSo.SIZE == 0) {
@@ -141,7 +141,7 @@ final class NativeMask {
         }
     }
 
-    /** 把內嵌的 .so 位元組寫進目標 App 自己的 cacheDir（不寫別人的目錄、不需 root）。 */
+    /** Write the embedded .so bytes into the target app's own cacheDir (no writing into someone else's directory, no root needed). */
     private static void write(File out) throws Exception {
         byte[] bytes = android.util.Base64.decode(EmbeddedSo.B64, android.util.Base64.DEFAULT);
         if (bytes.length != EmbeddedSo.SIZE) {

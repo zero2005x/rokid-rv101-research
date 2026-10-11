@@ -1,4 +1,5 @@
 # Rokid RV101 Root 專案整理報告
+> English: [README_ORGANIZED_EN.md](README_ORGANIZED_EN.md)
 > ⚠ **本檔為歷史版面（2026-08）**：`assets/`、`binaries/`、`ghostlock_rv101/`、RVE01 OTA zip／payload.bin
 > 等路徑**已不存在於目前工作區**；檔案計數（reports 225／logs 139／scripts 60）亦已過時。
 > 現行版面請看 [`MANIFEST.md`](MANIFEST.md)；本檔僅保留當時的整理思路。

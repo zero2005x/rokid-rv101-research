@@ -1,5 +1,7 @@
 # Rokid Glasses RV101 本機 Kernel 權限提升通報
 
+> English: [HITCON_RV101_Report_ZH-TW_EN.md](HITCON_RV101_Report_ZH-TW_EN.md)
+
 > 提交對象：HITCON ZeroDay 漏洞審核小組／受通報組織  
 > 文件狀態：草稿，尚未提交  
 > 機密等級：Restricted；本文件刻意省略武器化細節  

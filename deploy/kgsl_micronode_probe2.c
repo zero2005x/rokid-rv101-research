@@ -1,19 +1,20 @@
 /*
- * kgsl_micronode_probe2.c — 「0x58 micronode」語意驗證（v2，benign）
+ * kgsl_micronode_probe2.c — semantic verification of the "0x58 micronode" (v2, benign)
  *
- * v1（deploy/kgsl_micronode_probe.c）發現：nr=0x58 對 **任何 struct size（0x18/0x20/0x28/0x30）
- * 與任何參數內容都回 0（OK）** → 疑似「不驗證即成功」的空路徑，這正是歷史報告「0x58 ✅ 成功」
- * 互相矛盾的根源。v2 用**故意非法的參數**去逼出驗證行為：
+ * v1 (deploy/kgsl_micronode_probe.c) found that nr=0x58 returns 0 (OK) for **any struct size
+ * (0x18/0x20/0x28/0x30) and any argument content** -> suspected to be an empty path that
+ * "succeeds without validating", which is the root of the contradictory "0x58 ✅ success"
+ * historical reports. v2 uses **deliberately invalid arguments** to force validation:
  *
- *   T1  arg=NULL            → 有空路徑會回 0；真正 kernel 路徑應 EFAULT
- *   T2  gpuaddr=0xdead0000  → 真正 import/command 路徑應 EINVAL/ENODEV
- *   T3  gpuaddr=0x4000000000（合法外觀）
- *   T4  size/欄位極大值
- *   T5  先做合法 GPUMEM_ALLOC（0x20 與 0x2f 各試）→ 再用該 gpuaddr 測 0x58
+ *   T1  arg=NULL            -> an empty path returns 0; a real kernel path should EFAULT
+ *   T2  gpuaddr=0xdead0000  -> a real import/command path should EINVAL/ENODEV
+ *   T3  gpuaddr=0x4000000000 (plausible-looking)
+ *   T4  maximum size/field values
+ *   T5  a valid GPUMEM_ALLOC first (try both 0x20 and 0x2f) -> then test 0x58 with that gpuaddr
  *
- * 安全性：僅配置與查詢；不做 spray／race。alloc 後嘗試 free。
+ * Safety: allocation and queries only; no spray / race. Free is attempted after alloc.
  *
- * 編譯：ZIG_GLOBAL_CACHE_DIR=$PWD/build-cache/zig-global ZIG_LOCAL_CACHE_DIR=$PWD/build-cache/zig-local \
+ * Build: ZIG_GLOBAL_CACHE_DIR=$PWD/build-cache/zig-global ZIG_LOCAL_CACHE_DIR=$PWD/build-cache/zig-local \
  *       .venv/bin/python -m ziglang cc -target aarch64-linux-musl -static -O2 \
  *       deploy/kgsl_micronode_probe2.c -o build-cache/kgsl_micronode_probe2
  */

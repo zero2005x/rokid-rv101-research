@@ -5,11 +5,11 @@ import com.rokid.rc.glasses.GlassesPaths
 import java.io.File
 
 /**
- * LED 壓制協調器（daemon 優先）。
+ * LED suppression coordinator (daemon first).
  *
- * 提權後若 root daemon 常駐（socket 存在），所有 LED 指令直接走 socket（快）；
- * 否則回退到舊的「每次重跑 LPE」bridge 路徑。
- * marker 檔存在期間，daemon 的背景迴圈持續壓制白燈（對抗相機開啟事件）。
+ * After escalation, if the root daemon is resident (socket exists) every LED command goes straight over the socket (fast);
+ * otherwise it falls back to the old "re-run the LPE every time" bridge path.
+ * While the marker file exists, the daemon's background loop keeps suppressing the white LED (countering camera-open events).
  */
 class LedSuppressor(context: Context, private val engine: GhostlockEngine) {
 
@@ -22,7 +22,7 @@ class LedSuppressor(context: Context, private val engine: GhostlockEngine) {
 
     suspend fun setLed(on: Boolean) = setLed("white", on)
 
-    /** 指定顏色 LED 開/關。color ∈ white/green/blue/red/all。 */
+    /** Turn the LED of the given colour on/off. color ∈ white/green/blue/red/all. */
     suspend fun setLed(color: String, on: Boolean) {
         if (daemon.isAvailable()) {
             daemonSetLed(color, on)
@@ -31,7 +31,7 @@ class LedSuppressor(context: Context, private val engine: GhostlockEngine) {
         }
     }
 
-    // ---- daemon 路徑 ----
+    // ---- daemon path ----
 
     private suspend fun daemonSetLed(color: String, on: Boolean) {
         val value = if (on) "255" else "0"
@@ -41,15 +41,15 @@ class LedSuppressor(context: Context, private val engine: GhostlockEngine) {
                 daemon.exec(
                     "echo 255 > /sys/class/leds/white/brightness 2>/dev/null; " +
                         "echo 2 > /sys/class/leds/white/led_current 2>/dev/null; " +
-                        // 重發 camera-open 事件：相機使用中時讓系統自行維護點燈狀態
+                        // re-send the camera-open event: while the camera is in use, let the system maintain the lighting state itself
                         "service call lights_ctrl 8 i32 2 i32 2014 >/dev/null 2>&1"
                 )
             } else {
                 marker.writeText("1")
                 daemon.exec(
-                    // 根治：取消 lights_ctrl 的 camera-open 事件（否則 system_server 會
-                    // 強制重寫 brightness=255，與 hold-loop 互搶造成錄影期間閃爍——
-                    // 實測取消後 15s/150 樣本全為 0，見 RV101_CAMERA_LED_FLASH_MECHANISM.md 更新節）
+                    // fundamental fix: cancel lights_ctrl's camera-open event (otherwise system_server
+                    // force-rewrites brightness=255 and fights the hold-loop, causing flicker during recording —
+                    // measured: after cancelling, 15 s/150 samples were all 0, see the update section of RV101_CAMERA_LED_FLASH_MECHANISM.md)
                     "service call lights_ctrl 9 i32 2 i32 2014 >/dev/null 2>&1; " +
                         "echo 0 > /sys/class/leds/white/brightness 2>/dev/null; " +
                         "echo 0 > /sys/class/leds/white/led_current 2>/dev/null; " +
@@ -84,7 +84,7 @@ class LedSuppressor(context: Context, private val engine: GhostlockEngine) {
         }
     }
 
-    // ---- 回退：LPE bridge ----
+    // ---- fallback: LPE bridge ----
 
     private suspend fun bridgeSetLed(color: String, on: Boolean) {
         when {

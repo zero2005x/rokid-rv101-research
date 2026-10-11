@@ -1,10 +1,10 @@
 /*
- * adsprpc_ioctl_v2.c - 正確的 FASTRPC ioctl 測試
+ * adsprpc_ioctl_v2.c - correct FASTRPC ioctl test
  *
- * 使用 Qualcomm adsprpc driver 的實際 ioctl 定義
- * 參考: drivers/char/adsprpc.c
+ * Uses the real ioctl definitions of the Qualcomm adsprpc driver
+ * Reference: drivers/char/adsprpc.c
  *
- * 編譯:
+ * Build:
  * $CC -static -O2 -o adsprpc_ioctl_v2 adsprpc_ioctl_v2.c
  */
 
@@ -20,8 +20,8 @@
 #include <stdint.h>
 
 /*
- * FASTRPC IOCTL 定義 - 來自 Qualcomm kernel source
- * Magic number 可能是 'R' (0x52) 或使用其他值
+ * FASTRPC IOCTL definitions - from the Qualcomm kernel source
+ * The magic number may be 'R' (0x52) or some other value
  */
 
 #define FASTRPC_IOCTL_ALLOC_DMA_BUFF 0xc0105201
@@ -38,10 +38,10 @@
 #define FASTRPC_IOCTL_GET_DSP_INFO 0xc00c520d
 #define FASTRPC_IOCTL_CONTROL 0x80045209
 
-/* Alternative magic - 可能是 0x52 = 'R' */
+/* Alternative magic - may be 0x52 = 'R' */
 #define FASTRPC_MAGIC_R 'R'
 
-/* IOCTL 命令構造宏 */
+/* IOCTL command construction macros */
 #define FASTRPC_IOCTL_INVOKE2_R _IOWR('R', 1, void *)
 #define FASTRPC_IOCTL_MMAP_R _IOWR('R', 6, void *)
 #define FASTRPC_IOCTL_MUNMAP_R _IOWR('R', 7, void *)
@@ -55,21 +55,21 @@
 #define FASTRPC_IOCTL_MUNMAP_FD_R _IOWR('R', 15, void *)
 #define FASTRPC_IOCTL_GET_DSP_INFO_R _IOWR('R', 17, void *)
 
-/* fastrpc_ctrl 結構 */
+/* fastrpc_ctrl structure */
 struct fastrpc_ctrl
 {
     uint32_t req;
     uint32_t lp;
 };
 
-/* GETINFO 結構 */
+/* GETINFO structure */
 struct smq_phy_page
 {
     uint64_t addr; /* physical address */
     uint64_t size; /* size of contiguous region */
 };
 
-/* fastrpc_ioctl_init 結構 */
+/* fastrpc_ioctl_init structure */
 struct fastrpc_ioctl_init
 {
     uint32_t flags;  /* one of FASTRPC_INIT_* macros */
@@ -79,7 +79,7 @@ struct fastrpc_ioctl_init
     uint64_t mem;    /* in: physical address of the process region */
 };
 
-/* DSP 資訊結構 */
+/* DSP info structure */
 struct fastrpc_ioctl_dsp_info
 {
     uint32_t domain;
@@ -97,7 +97,7 @@ void test_ioctl_numeric(int fd)
 
     printf("\n[*] Testing IOCTL with numeric commands on fd=%d...\n", fd);
 
-    // 測試一系列可能的 ioctl 命令
+    // Test a series of possible ioctl commands
     unsigned int ioctls_to_test[] = {
         FASTRPC_IOCTL_GET_DSP_INFO, // 0xc00c520d
         FASTRPC_IOCTL_CONTROL,      // 0x80045209
@@ -130,7 +130,7 @@ void test_ioctl_magic_r(int fd)
 
     printf("\n[*] Testing IOCTL with magic 'R' on fd=%d...\n", fd);
 
-    // 測試使用 'R' magic 的命令
+    // Test commands using the 'R' magic
     uint32_t info = 0;
 
     ret = ioctl(fd, FASTRPC_IOCTL_GETINFO_R, &info);
@@ -176,17 +176,17 @@ void test_raw_ioctls(int fd)
     printf("\n[*] Testing raw IOCTL numbers on fd=%d...\n", fd);
 
     /*
-     * adsprpc 驅動可能使用的 ioctl 範圍:
-     * - 基於 0x52 ('R') 的命令
-     * - 或者直接的數字命令
+     * ioctl ranges the adsprpc driver may use:
+     * - commands based on 0x52 ('R')
+     * - or direct numeric commands
      */
 
-    // 嘗試找到有效的 ioctl
+    // Try to find a valid ioctl
     printf("  Scanning for valid ioctls (this may take a moment)...\n");
 
     int found = 0;
 
-    // 測試 0xc00c52XX 範圍 (可能的 GET_DSP_INFO)
+    // Test the 0xc00c52XX range (possible GET_DSP_INFO)
     for (unsigned int cmd = 0xc00c5200; cmd <= 0xc00c5220 && !found; cmd++)
     {
         errno = 0;
@@ -200,7 +200,7 @@ void test_raw_ioctls(int fd)
         }
     }
 
-    // 測試 0x5200-0x5220 範圍
+    // Test the 0x5200-0x5220 range
     for (unsigned int cmd = 0xc0005200; cmd <= 0xc0005220 && !found; cmd++)
     {
         errno = 0;
@@ -214,7 +214,7 @@ void test_raw_ioctls(int fd)
         }
     }
 
-    // 測試 _IOWR('R', n, ...) 格式 (0xc0xx52nn)
+    // Test the _IOWR('R', n, ...) format (0xc0xx52nn)
     for (int n = 0; n <= 20 && !found; n++)
     {
         unsigned int cmd = _IOWR('R', n, uint32_t);
@@ -242,7 +242,7 @@ int main(int argc, char **argv)
     printf("Testing with correct FASTRPC ioctl definitions\n");
     printf("==============================\n");
 
-    // 打開設備
+    // Open the device
     printf("\n[*] Opening /dev/adsprpc-smd O_RDONLY...\n");
     fd_ro = open("/dev/adsprpc-smd", O_RDONLY);
     if (fd_ro >= 0)
@@ -255,12 +255,12 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // 運行測試
+    // Run tests
     test_ioctl_numeric(fd_ro);
     test_ioctl_magic_r(fd_ro);
     test_raw_ioctls(fd_ro);
 
-    // 總結
+    // Summary
     printf("\n=== Summary ===\n");
     printf("If any ioctl returns non-ENOTTY error, we have a path forward.\n");
     printf("EBADF/EPERM = Write required, EINVAL = Wrong params\n");

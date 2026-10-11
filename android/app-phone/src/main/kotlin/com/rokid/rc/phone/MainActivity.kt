@@ -20,13 +20,13 @@ import com.rokid.rc.phone.ui.SettingsFragment
 import kotlinx.coroutines.launch
 
 /**
- * 單一 Activity：承載底部導覽（遙控 / 相簿 / 本機），
- * 並集中管理藍牙連線、權限與「選擇眼鏡」。
+ * Single Activity: hosts the bottom navigation (remote / albums / local),
+ * and centrally manages the Bluetooth connection, permissions and "pick glasses".
  */
 class MainActivity : AppCompatActivity() {
 
-    // 初始必須為空字串：show() 的 `if (tag == shownTag) return` 會在首次
-    // show("remote") 時直接跳過，導致首頁空白（需切換 tab 才出現）——已知 bug。
+    // must start as an empty string: show()'s `if (tag == shownTag) return` would skip
+    // show("remote") on the first call, leaving the home page blank (it only appears after switching tabs) — a known bug.
     private var shownTag = ""
 
     override fun onNewIntent(intent: Intent) {
@@ -37,19 +37,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 主題（淺色／深色，預設深色）與 per-app 語言，都要在 setContentView 前套用
+        // the theme (light/dark, dark by default) and the per-app language must both be applied before setContentView
         ThemeHelper.apply(this)
         LocaleHelper.apply(this)
         setContentView(R.layout.activity_main)
         Remote.ensureInit(applicationContext)
-        // 清掉中斷傳輸留下的 *.part 殘骸（失敗的傳輸每次會留下一個完整大小的暫存檔）
+        // clean up the *.part leftovers from interrupted transfers (a failed transfer leaves a full-size temp file every time)
         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             com.rokid.rc.phone.util.LocalStore.cleanupStaleParts()
         }
-        // 傳輸通道連上／斷線／開始協商都要更新畫面（可能在背景執行緒發生）
+        // connecting/disconnecting the transport and starting negotiation all update the screen (may happen on a background thread)
         Remote.onTransportChanged = { runOnUiThread { refreshAllFragments() } }
         com.rokid.rc.phone.ring.RingController.ensureInit(this)
-        // 背景媒體鍵（戒指的 PLAYPAUSE/NEXT/PREVIOUS）→ 路徑 A 在背景也能觸發
+        // background media keys (the ring's PLAYPAUSE/NEXT/PREVIOUS) → path A can trigger in the background too
         com.rokid.rc.phone.ring.RingMediaSession.ensureStarted(this)
         requestBlePermissions()
 
@@ -109,9 +109,9 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
     }
 
-    // ---------------- 戒指手勢攔截（路徑 A：手機端） ----------------
-    // 戒指（BLE HID）的事件會送到前景視窗；這裡把它餵進 RingController，
-    // 由它辨識單擊／雙擊／長按／滾輪並轉成拍照、錄影、靜音、顯示切換。
+    // ---------------- ring gesture interception (path A: phone side) ----------------
+    // the ring's (BLE HID) events are delivered to the foreground window; this feeds them into RingController,
+    // which recognizes single tap/double tap/long press/wheel and turns them into photo, video, silent and display toggle.
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     @Volatile private var ringTickRunning = false
     private val ringTick = object : Runnable {
@@ -122,8 +122,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 用 dispatchKeyEvent 而非 onKeyDown：後者只會在「沒有任何 View 消費」時才被呼叫，
-    // 戒指若送 ENTER，會被畫面上聚焦的按鈕吃掉（實測），dispatch 層才能穩定攔到。
+    // use dispatchKeyEvent rather than onKeyDown: the latter is called only when "no View consumes" the event,
+    // so an ENTER from the ring is eaten by a focused button (measured); only the dispatch layer intercepts it reliably.
     override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
         val handled = when (event.action) {
             android.view.KeyEvent.ACTION_DOWN -> com.rokid.rc.phone.ring.RingController.onKeyDown(event.keyCode)
@@ -134,9 +134,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 滑鼠式戒指的「點擊」會以 `source=SOURCE_MOUSE/TOUCHPAD` 走 **dispatchTouchEvent**
-     * （不是 dispatchGenericMotionEvent，後者只有 hover/scroll）——所以必須在這裡攔。
-     * 只處理滑鼠/觸控板來源，**不影響手指觸控**（避免一般點擊也被當成戒指手勢）。
+     * A mouse-style ring's "click" arrives with `source=SOURCE_MOUSE/TOUCHPAD` through **dispatchTouchEvent**
+     * (not dispatchGenericMotionEvent, which only carries hover/scroll) — so it must be intercepted here.
+     * Only mouse/touchpad sources are handled, so **finger touches are unaffected** (an ordinary tap is not mistaken for a ring gesture).
      */
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
         val src = ev.source
@@ -156,13 +156,13 @@ class MainActivity : AppCompatActivity() {
             android.view.MotionEvent.ACTION_SCROLL ->
                 if (ring.onScroll(if (e.getAxisValue(android.view.MotionEvent.AXIS_VSCROLL) > 0f) 1 else -1)) return true
 
-            // 註：滑鼠「點擊」不在這裡（走 dispatchTouchEvent），此處只處理滾輪/懸停
+            // note: a mouse "click" is not here (it goes through dispatchTouchEvent); this handles only wheel/hover
         }
         return super.dispatchGenericMotionEvent(e)
     }
 
-    /** 開啟 App 自動連到已配對、名稱含 Glasses/Rokid 的眼鏡。 */
-    // BLUETOOTH_CONNECT 已於 Manifest 宣告並於連線前請求
+    /** Enable App auto-connect to a paired glasses device whose name contains Glasses/Rokid. */
+    // BLUETOOTH_CONNECT is declared in the Manifest and requested before connecting
     @Suppress("MissingPermission")
     fun autoConnectIfPossible() {
         val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
@@ -180,8 +180,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch { connect(target) }
     }
 
-    /** 顯示「選擇眼鏡」對話框（未連線時）。 */
-    // BLUETOOTH_CONNECT 已於 Manifest 宣告並於連線前請求
+    /** Show the "pick glasses" dialog (when not connected). */
+    // BLUETOOTH_CONNECT is declared in the Manifest and requested before connecting
     @Suppress("MissingPermission")
     fun pickDevice() {
         val adapter = BluetoothAdapter.getDefaultAdapter()
@@ -220,7 +220,7 @@ class MainActivity : AppCompatActivity() {
         refreshAllFragments()
     }
 
-    /** 連線狀態改變後叫各 Fragment 重新整理。 */
+    /** Ask the fragments to refresh after a connection state change. */
     fun refreshAllFragments() {
         val fm = supportFragmentManager
         (fm.findFragmentByTag("remote") as? RemoteFragment)?.onConnectionChanged()
@@ -249,11 +249,11 @@ class MainActivity : AppCompatActivity() {
             needed += Manifest.permission.BLUETOOTH_SCAN
         }
         /*
-         * ⚠ WiFi 媒體通道需要它（2026-09-13 修正）：
-         * Manifest 早已宣告 NEARBY_WIFI_DEVICES，但**執行期從來沒要求**過 →
-         * 在 Android 13 上 `WifiInfo.getSSID()` 只會回 `<unknown ssid>`，
-         * 使「是否已加入眼鏡 AP」的判斷永遠失敗 → WiFi 傳輸完全不能用（logcat 只看到
-         * `specifier: network available` 之後就沒有任何動靜）。
+         * ⚠ The WiFi media channel needs it (fixed 2026-09-13):
+         * the Manifest had long declared NEARBY_WIFI_DEVICES, but it was **never requested at runtime** →
+         * on Android 13 `WifiInfo.getSSID()` returns only `<unknown ssid>`,
+         * so the "have we joined the glasses AP" test always failed → WiFi transfer was completely unusable (logcat showed
+         * `specifier: network available` and then nothing further).
          */
         if (Build.VERSION.SDK_INT >= 33) {
             needed += Manifest.permission.NEARBY_WIFI_DEVICES
@@ -271,10 +271,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        /** 戒指手勢 tick 間隔（長按／連續點擊判定用）。 */
+        /** Ring gesture tick interval (used for long-press / repeated-tap detection). */
         private const val RING_TICK_MS = 80L
 
-        /** 以 MediaActivity 開啟眼鏡端某相簿。 */
+        /** Open one glasses-side album with MediaActivity. */
         fun openRemoteAlbum(from: android.app.Activity, albumId: String, albumName: String) {
             from.startActivity(
                 Intent(from, MediaActivity::class.java)
@@ -284,7 +284,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        /** 以 MediaActivity 開啟本機相簿。 */
+        /** Open a local album with MediaActivity. */
         fun openLocalAlbum(from: android.app.Activity, albumId: String, albumName: String) {
             from.startActivity(
                 Intent(from, MediaActivity::class.java)

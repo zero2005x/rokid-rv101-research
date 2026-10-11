@@ -1,13 +1,13 @@
 /*
- * kgsl_deep_probe.c - 深入分析 KGSL ioctl 命令
+ * kgsl_deep_probe.c - in-depth analysis of the KGSL ioctl commands
  *
- * 發現的成功 ioctl:
+ * ioctls found to succeed:
  * 0xc1000938, 0xc1000939, 0xc100093a, 0xc1000940, 0xc1000956, 0xc1000958
  *
- * 分析 ioctl 編號:
- * 0xc1000938 = _IOWR(0x09, 0x38, 256_bytes) - 這可能是某種 query
+ * Analyzing the ioctl numbers:
+ * 0xc1000938 = _IOWR(0x09, 0x38, 256_bytes) - this may be some kind of query
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_deep_probe kgsl_deep_probe.c
  */
 
@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 /*
- * ioctl 命令解析:
+ * ioctl command decoding:
  * bits 0-7: command number
  * bits 8-15: magic number (0x09 for KGSL)
  * bits 16-29: size
@@ -37,7 +37,7 @@
  *   Number: 0x38 = 56
  */
 
-/* 已知成功的命令 */
+/* commands known to succeed */
 #define IOCTL_0x38 0xc1000938 // 256 bytes, nr=56
 #define IOCTL_0x39 0xc1000939 // 256 bytes, nr=57
 #define IOCTL_0x3a 0xc100093a // 256 bytes, nr=58
@@ -45,7 +45,7 @@
 #define IOCTL_0x56 0xc1000956 // 256 bytes, nr=86
 #define IOCTL_0x58 0xc1000958 // 256 bytes, nr=88
 
-/* 用於測試的結構 */
+/* structures used for testing */
 struct generic_ioctl_data
 {
     uint64_t data[32]; // 256 bytes
@@ -78,7 +78,7 @@ void analyze_successful_ioctl(int fd, unsigned int cmd, const char *name)
 
     if (ret >= 0)
     {
-        // 檢查是否有任何非零數據
+        // Check whether there is any non-zero data
         int has_data = 0;
         for (int i = 0; i < 32; i++)
         {
@@ -92,9 +92,9 @@ void analyze_successful_ioctl(int fd, unsigned int cmd, const char *name)
         if (has_data)
         {
             printf("  Output data:\n");
-            hexdump(&data, 64); // 只顯示前 64 bytes
+            hexdump(&data, 64); // only show the first 64 bytes
 
-            // 嘗試解析為有意義的值
+            // Try to interpret it as meaningful values
             printf("  As uint64_t[8]: ");
             for (int i = 0; i < 8; i++)
             {
@@ -126,7 +126,7 @@ void test_gpumem_operations(int fd)
     alloc.size = 4096;
     alloc.flags = 0;
 
-    unsigned int cmd = 0xc024093d; // 原始的 GPUMEM_ALLOC_ID 命令
+    unsigned int cmd = 0xc024093d; // the original GPUMEM_ALLOC_ID command
     errno = 0;
     int ret = ioctl(fd, cmd, &alloc);
     printf("[*] GPUMEM_ALLOC_ID (0xc024093d): ret=%d, errno=%d (%s)\n",
@@ -139,7 +139,7 @@ void test_gpumem_operations(int fd)
                (unsigned long long)alloc.mmapsize);
     }
 
-    /* 嘗試 GPUOBJ_ALLOC */
+    /* Try GPUOBJ_ALLOC */
     struct
     {
         uint64_t size;
@@ -165,13 +165,13 @@ void try_kgsl_mmap(int fd)
 {
     printf("\n=== Testing KGSL mmap ===\n");
 
-    /* 嘗試直接 mmap GPU 驅動 */
+    /* Try to mmap the GPU driver directly */
     void *map = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (map != MAP_FAILED)
     {
         printf("[+] mmap(offset=0) succeeded at %p\n", map);
 
-        // 嘗試讀取
+        // Try to read
         printf("  First 16 bytes: ");
         for (int i = 0; i < 16; i++)
         {
@@ -186,7 +186,7 @@ void try_kgsl_mmap(int fd)
         printf("[-] mmap(offset=0) failed: %s\n", strerror(errno));
     }
 
-    // 嘗試不同的 offset
+    // Try different offsets
     for (int i = 1; i <= 16; i++)
     {
         map = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, i * 4096);
@@ -204,7 +204,7 @@ void scan_deep_ioctls(int fd)
 
     char buf[512] = {0};
 
-    /* 掃描使用 8-64 byte 結構的命令 */
+    /* Scan commands that use an 8-64 byte structure */
     unsigned int sizes[] = {4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 0};
 
     for (int s = 0; sizes[s] != 0; s++)
@@ -222,7 +222,7 @@ void scan_deep_ioctls(int fd)
             int ret = ioctl(fd, cmd, buf);
 
             if (errno != 25 && errno != 22)
-            { // 排除 ENOTTY 和 EINVAL
+            { // exclude ENOTTY and EINVAL
                 printf("  nr=0x%02x: ret=%d, errno=%d (%s)\n",
                        nr, ret, errno, strerror(errno));
                 found++;
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
     }
     printf("[+] Opened /dev/kgsl-3d0: fd=%d\n", fd);
 
-    // 分析成功的 ioctl
+    // Analyze the successful ioctls
     analyze_successful_ioctl(fd, IOCTL_0x38, "IOCTL_0x38");
     analyze_successful_ioctl(fd, IOCTL_0x39, "IOCTL_0x39");
     analyze_successful_ioctl(fd, IOCTL_0x3a, "IOCTL_0x3a");
@@ -253,13 +253,13 @@ int main(int argc, char **argv)
     analyze_successful_ioctl(fd, IOCTL_0x56, "IOCTL_0x56");
     analyze_successful_ioctl(fd, IOCTL_0x58, "IOCTL_0x58");
 
-    // 測試 GPU 記憶體操作
+    // Test GPU memory operations
     test_gpumem_operations(fd);
 
-    // 測試 mmap
+    // Test mmap
     try_kgsl_mmap(fd);
 
-    // 深度掃描
+    // Deep scan
     scan_deep_ioctls(fd);
 
     close(fd);

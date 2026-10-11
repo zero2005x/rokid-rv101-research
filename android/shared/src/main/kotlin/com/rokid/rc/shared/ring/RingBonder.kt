@@ -14,36 +14,36 @@ import android.os.Looper
 import android.util.Log
 
 /**
- * 戒指配對（bonding）。
+ * Ring bonding.
  *
- * 戒指多為 BLE HID（HOGP 0x1812）周邊，Android 需先完成 SMP 綁定才會把它的
- * input device 掛進系統（之後才收得到按鍵/滑鼠事件）。
+ * Rings are mostly BLE HID (HOGP 0x1812) peripherals; Android only attaches their input
+ * device to the system after SMP bonding completes (key/mouse events arrive only after that).
  *
- * **位址型別很重要**：BLE 周邊常用 random address，若用字串 MAC 重建 `BluetoothDevice`
- * 會被當成 public address type → 連線得到 GATT status 133、`createBond()` 也會失敗。
- * 因此一律優先用「掃描結果帶回的 BluetoothDevice 物件」。
+ * **The address type matters**: BLE peripherals often use a random address, and rebuilding a
+ * `BluetoothDevice` from a MAC string treats it as public address type -> the connection gets GATT
+ * status 133 and `createBond()` fails too. So always prefer the BluetoothDevice object returned by the scan.
  *
- * **2026-09-13 修正**：新增 [bondedHidDevices]。原本唯一入口是 [scanAndBond]（用名稱子字串掃描），
- * 但**已配對的戒指不會再廣播**，所以那條路對已配對裝置永遠找不到（AIVELA 實測三次掃描皆無）。
- * UI 應改為「列出已配對的 HID 裝置讓使用者選」。
+ * **2026-09-13 fix**: added [bondedHidDevices]. The only entry point used to be [scanAndBond] (scanning by
+ * name substring), but **an already bonded ring stops advertising**, so that path never finds bonded devices
+ * (AIVELA: three scans, nothing). The UI should instead list bonded HID devices for the user to pick.
  */
 object RingBonder {
 
     private const val TAG = "RingBonder"
 
-    /** BR/EDR HID（HID over Bluetooth classic）。 */
+    /** BR/EDR HID (HID over Bluetooth classic). */
     private const val UUID_HID_BREDR = "00001124-0000-1000-8000-00805f9b34fb"
 
-    /** HID over GATT（BLE）。 */
+    /** HID over GATT (BLE). */
     private const val UUID_HOGP = "00001812-0000-1000-8000-00805f9b34fb"
 
     private const val UUID_HID_SERVICE = UUID_HOGP
 
     /**
-     * 已配對、且看起來是 **HID**（鍵盤／滑鼠／觸控板／複合）的裝置。
+     * Bonded devices that look like **HID** (keyboard/mouse/touchpad/combo).
      *
-     * 判定順序：`BluetoothClass` 的周邊類別 → 服務 UUID（0x1124 / 0x1812）→
-     * 名稱含 RING / RGR / AIVELA（涵蓋未回報 class 的 BLE 周邊）。
+     * Decision order: `BluetoothClass` peripheral category -> service UUID (0x1124 / 0x1812) ->
+     * name containing RING / RGR / AIVELA (covers BLE peripherals that report no class).
      */
     @SuppressLint("MissingPermission")
     fun bondedHidDevices(context: Context): List<BluetoothDevice> {
@@ -63,20 +63,21 @@ object RingBonder {
             val n = runCatching { d.name }.getOrNull().orEmpty()
             val byName = n.contains("RING", true) || n.contains("RGR", true) ||
                 n.contains("AIVELA", true) || n.contains("戒指", true)
-            // `Major.PERIPHERAL` 也涵蓋耳機／喇叭等 AUDIO_VIDEO 周邊（實測 Xiaomi Buds 會入列），
-            // 那些不是 HID → 除非 UUID／名稱明確像 HID/戒指，否則排除，讓清單真的只列可當戒指的裝置。
+            // `Major.PERIPHERAL` also covers AUDIO_VIDEO peripherals such as headsets/speakers
+            // (measured: Xiaomi Buds show up), and those are not HID -> exclude them unless the UUID/name
+            // clearly looks like HID/ring, so the list really only holds ring-capable devices.
             val isAudio = cls != null && cls.doesClassMatch(BluetoothClass.Device.Major.AUDIO_VIDEO)
             val hidEvidence = byUuid || byName
             (byClass || hidEvidence) && !(isAudio && !hidEvidence)
         }.sortedBy { runCatching { it.name }.getOrNull() ?: (it.address ?: "") }
     }
 
-    /** 裝置的顯示名稱（未知時回 MAC）。 */
+    /** Display name of the device (falls back to the MAC when unknown). */
     @SuppressLint("MissingPermission")
     fun displayName(device: BluetoothDevice): String =
         runCatching { device.name }.getOrNull()?.takeIf { it.isNotBlank() } ?: (device.address ?: "?")
 
-    /** 以 MAC 字串配對（僅適用 public address 的裝置；優先用 [bond] 的 device 版本）。 */
+    /** Bond by MAC string (only for public-address devices; prefer the device overload of [bond]). */
     fun bond(context: Context, mac: String, timeoutMs: Long = 30_000L, onDone: (Boolean, String) -> Unit) {
         val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
         if (adapter == null || !adapter.isEnabled) {
@@ -92,7 +93,7 @@ object RingBonder {
         bond(context, device, timeoutMs, onDone)
     }
 
-    /** 以掃描取得的 [BluetoothDevice] 配對（**建議用這個**，保留正確 address type）。 */
+    /** Bond with the [BluetoothDevice] obtained from a scan (**prefer this**, it keeps the correct address type). */
     fun bond(
         context: Context,
         device: BluetoothDevice,
@@ -105,11 +106,12 @@ object RingBonder {
             return
         }
 
-        // ⚠ 必須用 **application context**：本函式可能被 `BroadcastReceiver.onReceive()` 呼叫
-        // （例：`DebugReceiver` 的 PAIR_RING），而 receiver 的 context 是
-        // `ReceiverRestrictedContext` —— 在 Android 12（API < 33）它只允許帶 flag 的
-        // registerReceiver，兩參數版本會丟 `ReceiverCallNotAllowedException` 讓 App 直接崩潰
-        // （實測：眼鏡 API 32 從 DebugReceiver 配對必崩，見 reports/rgr06_pairing_failure_2026-09-13.md）。
+        // WARNING: the **application context** must be used: this function can be called from
+        // `BroadcastReceiver.onReceive()` (e.g. `DebugReceiver`'s PAIR_RING), and a receiver's context is a
+        // `ReceiverRestrictedContext` — on Android 12 (API < 33) it only allows the flagged
+        // registerReceiver, and the two-argument form throws `ReceiverCallNotAllowedException`, crashing the app
+        // (measured: on glasses API 32 pairing from DebugReceiver always crashes, see
+        // reports/rgr06_pairing_failure_2026-09-13.md).
         val regCtx = context.applicationContext ?: context
         val filter = IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
         val receiver = object : BroadcastReceiver() {
@@ -158,8 +160,8 @@ object RingBonder {
     }
 
     /**
-     * 掃描 → 挑選名稱符合 [namePattern]（不分大小寫；null 表示「可連線且 RSSI 最強者」）
-     * → 立刻用**掃描當下的 BluetoothDevice** 配對。
+     * Scan -> pick a device whose name matches [namePattern] (case-insensitive; null means
+     * "connectable with the strongest RSSI") -> bond immediately with the **BluetoothDevice from that scan**.
      */
     fun scanAndBond(
         context: Context,
@@ -169,7 +171,8 @@ object RingBonder {
     ) {
         RingScanner(context).scan(scanMs) { list ->
             val candidates = list.filter { it.connectable != false && it.device != null }
-            // 指定名稱時**絕不退而求其次**：否則會誤配對其他可連線裝置（例如智慧音箱）
+            // When a name is given **never settle for less**: otherwise it bonds the wrong
+            // connectable device (e.g. a smart speaker)
             val target = if (namePattern.isNullOrBlank()) {
                 candidates.maxByOrNull { it.rssi }
             } else {
@@ -191,7 +194,7 @@ object RingBonder {
         }
     }
 
-    /** 解除配對（removeBond；非系統 App 常失敗，回報即可）。 */
+    /** Remove the bond (removeBond; it often fails for non-system apps, so just report the result). */
     fun unbond(context: Context, mac: String, onDone: (Boolean, String) -> Unit) {
         val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
         val device = runCatching { adapter?.getRemoteDevice(mac) }.getOrNull()

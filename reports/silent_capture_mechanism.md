@@ -1,5 +1,7 @@
 # RV101 拍照／錄影提示音壓制（靜音拍攝）機制與驗證
 
+> English: [silent_capture_mechanism_EN.md](silent_capture_mechanism_EN.md)
+
 > 日期：2026-09-11 · 裝置：Rokid RV101（`<DEVICE_SERIAL>`，fw 1.22.009，Android 12，kernel 5.10.209-perf）
 > 狀態：**已實作於眼鏡端與手機端 App，實機驗證通過**
 

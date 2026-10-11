@@ -1,5 +1,7 @@
 # GhostLock RV101 — 工作狀態交接 v13（第十三任：Clean Root（uid=0 gid=0）達成）
 
+> English: [GHOSTLOCK_HANDOFF_V13_EN.md](GHOSTLOCK_HANDOFF_V13_EN.md)
+
 > 更新於 2026-08-22。本輪（第十三任）在實機（<DEVICE_SERIAL>）上完成：
 > **1. Clean Root 達成：child `uid=0` 且 `gid=0`，`id` 回 `uid=0(root) gid=0(root) groups=0(root)`。**
 > **2. 定案 kernel-side gid repair（第 4 次 reclaim）會 panic，改用 user-space `setgid(0)` 修復。**

@@ -15,12 +15,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 /**
- * 手機端 WiFi 媒體通道管理：
- *   1. 記錄眼鏡回報的 AP 資訊（ssid/pass/ip/port，來自 DEVICE_INFO / WIFI_AP_STATUS）
- *   2. 引導手機加入眼鏡 SoftAP（先試 WifiNetworkSpecifier 系統彈窗，失敗回傳 false → UI 引導手動）
- *   3. 建立 TCP 連線（[TcpClient]）
+ * Phone-side WiFi media channel management:
+ *   1. record the AP information reported by the glasses (ssid/pass/ip/port, from DEVICE_INFO / WIFI_AP_STATUS)
+ *   2. guide the phone to join the glasses SoftAP (try the WifiNetworkSpecifier system dialog first; on failure return false → the UI guides a manual join)
+ *   3. establish the TCP connection ([TcpClient])
  *
- * 控制指令維持藍牙；本類只負責「媒體通道」的 WiFi 部分，藍牙回退由 Remote 層決定。
+ * Control commands stay on Bluetooth; this class handles only the WiFi part of the "media channel", and the Bluetooth fallback is decided by the Remote layer.
  */
 class WifiLink(private val context: Context) {
 
@@ -37,27 +37,27 @@ class WifiLink(private val context: Context) {
         get() = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
 
     /**
-     * `WifiNetworkSpecifier` 回報「已可用」的 [Network]。
+     * The [Network] that `WifiNetworkSpecifier` reported as "available".
      *
-     * ⚠ 為什麼需要它（2026-09-13 實測）：手機 App 雖然在 Manifest 宣告了
-     * `NEARBY_WIFI_DEVICES`，但執行期**從未要求**該權限（`granted=false`），
-     * 在 Android 13 上 `WifiInfo.getSSID()` 便只回 `<unknown ssid>`，
-     * 導致 [currentSsid]/[isOnAp] **永遠是 false** → 加入 AP 後仍判定失敗、WiFi 傳輸完全不能用。
-     * 改為優先看「這個 Network 的本機位址是否落在眼鏡 AP 的子網」，不需要任何權限。
+     * ⚠ Why it is needed (measured 2026-09-13): although the phone app declared `NEARBY_WIFI_DEVICES` in the Manifest,
+     * it **never requested** that permission at runtime (`granted=false`), so on Android 13 `WifiInfo.getSSID()` returns
+     * only `<unknown ssid>`, which made [currentSsid]/[isOnAp] **always false** → joining the AP was still judged a failure
+     * and WiFi transfer was completely unusable. It now prefers checking "whether this Network's local address falls in the
+     * glasses AP subnet", which needs no permission at all.
      */
     @Volatile
     private var joinedNetwork: Network? = null
 
     /**
-     * 目前生效的 specifier callback。
+     * The specifier callback currently in effect.
      *
-     * **刻意保持註冊**：`WifiNetworkSpecifier` 建立的連線綁在這個 request 上，一旦反註冊，
-     * 系統會把該 WiFi 連線拆掉（已建立的 TCP socket 也會一起死）。
-     * 只有「要發出新的加入請求」時才放掉舊的，避免每次重試都疊一個 callback。
+     * **Deliberately kept registered**: the connection created by `WifiNetworkSpecifier` is bound to this request, so
+     * unregistering makes the system tear that WiFi connection down (an already established TCP socket dies with it).
+     * The old one is released only when "a new join request is about to be issued", so retries do not pile up callbacks.
      */
     private var activeCallback: ConnectivityManager.NetworkCallback? = null
 
-    /** 目前連到的 WiFi SSID（去引號）；非 WiFi 時 null。 */
+    /** The WiFi SSID currently connected (quotes stripped); null when not on WiFi. */
     fun currentSsid(): String? {
         return try {
             val info = wifiManager?.connectionInfo ?: return null
@@ -69,15 +69,15 @@ class WifiLink(private val context: Context) {
     }
 
     /**
-     * 是否已在眼鏡的 AP 上。
+     * Whether it is already on the glasses AP.
      *
-     * 判定順序：
-     *  1. **本機位址**是否落在眼鏡 AP 子網（`192.168.43.x`）——最可靠且**不需權限**；
-     *  2. 退而比對 SSID（需要 NEARBY_WIFI_DEVICES／位置權限才會拿到真值）。
+     * Decision order:
+     *  1. whether the **local address** falls in the glasses AP subnet (`192.168.43.x`) — the most reliable, and it **needs no permission**;
+     *  2. failing that, compare the SSID (the real value requires NEARBY_WIFI_DEVICES / location permission).
      */
     fun isOnAp(): Boolean = isOnApSubnet() || currentSsid() == apInfo.ssid
 
-    /** 檢查 [network] 的本機 IPv4 是否在眼鏡 AP 子網內（預設 192.168.43.0/24）。 */
+    /** Check whether [network]'s local IPv4 is inside the glasses AP subnet (default 192.168.43.0/24). */
     private fun onApSubnet(network: Network?): Boolean {
         val n = network ?: return false
         return runCatching {
@@ -93,12 +93,12 @@ class WifiLink(private val context: Context) {
     private fun isOnApSubnet(): Boolean = onApSubnet(joinedNetwork)
 
     /**
-     * 已加入的眼鏡 AP [Network]；呼叫端必須用它來**綁定 socket**，
-     * 否則 TCP 會走預設網路而不是眼鏡 AP（見 TcpClient.connect 的說明）。
+     * The glasses AP [Network] that has been joined; the caller must use it to **bind the socket**,
+     * otherwise TCP goes over the default network instead of the glasses AP (see the note in TcpClient.connect).
      */
     fun joinedApNetwork(): Network? = joinedNetwork?.takeIf { onApSubnet(it) }
 
-    /** 目前連到眼鏡 AP 時的本機 IP（測試／顯示用）。 */
+    /** The local IP while connected to the glasses AP (for testing/display). */
     fun currentLocalIp(): String? = runCatching {
         val n = joinedNetwork ?: return null
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -106,9 +106,9 @@ class WifiLink(private val context: Context) {
     }.getOrNull()
 
     /**
-     * 用 WifiNetworkSpecifier 請求加入眼鏡 AP（系統會彈「加入此網路?」確認框）。
-     * 等待最多 [timeoutMs]：期間輪詢是否已連上。成功回 true；失敗/取消/逾時回 false。
-     * Android 10+ 支援；MIUI 亦支援（需位置權限或 12+ 的 NEARBY_WIFI_DEVICES 已於 Manifest 宣告）。
+     * Request to join the glasses AP with WifiNetworkSpecifier (the system pops a "join this network?" confirmation).
+     * Waits up to [timeoutMs], polling whether it is connected. Returns true on success; false on failure/cancel/timeout.
+     * Supported on Android 10+; MIUI supports it too (it needs location permission, or NEARBY_WIFI_DEVICES on 12+, which is declared in the Manifest).
      */
     suspend fun requestJoinAp(timeoutMs: Long = 30_000L): Boolean {
         if (isOnAp()) return true
@@ -128,7 +128,7 @@ class WifiLink(private val context: Context) {
                 val callback = object : ConnectivityManager.NetworkCallback() {
                     override fun onAvailable(network: Network) {
                         joinedNetwork = network
-                        // 等到真的有 IP 才算「在 AP 上」（onAvailable 當下 linkAddress 可能還是空的）
+                        // only when it really has an IP does it count as "on the AP" (linkAddress may still be empty when onAvailable fires)
                         Log.i(TAG, "specifier: network available (localIp=${currentLocalIp()})")
                     }
 
@@ -138,7 +138,7 @@ class WifiLink(private val context: Context) {
                     }
 
                     override fun onLost(network: Network) {
-                        // 連上後又跳走（例如使用者切回原本 WiFi）
+                        // connected and then jumped away again (e.g. the user switched back to the original WiFi)
                         if (joinedNetwork == network) joinedNetwork = null
                         if (cont.isActive) cont.resume(false)
                     }
@@ -146,7 +146,7 @@ class WifiLink(private val context: Context) {
                 activeCallback?.let { runCatching { cm.unregisterNetworkCallback(it) } }
                 activeCallback = callback
                 cm.requestNetwork(request, callback)
-                // 輪詢 isOnAp() 直到逾時
+                // poll isOnAp() until the timeout
                 val deadline = System.currentTimeMillis() + timeoutMs
                 val poller = Thread {
                     while (System.currentTimeMillis() < deadline && cont.isActive) {
@@ -162,13 +162,13 @@ class WifiLink(private val context: Context) {
                     }
                     if (cont.isActive) cont.resume(false)
                 }.apply { isDaemon = true; start() }
-                // 單一取消 handler：反註冊 network callback + 停掉輪詢執行緒
+                // single cancellation handler: unregister the network callback + stop the polling thread
                 cont.invokeOnCancellation {
                     runCatching { cm.unregisterNetworkCallback(callback) }
                     poller.interrupt()
                 }
             }.also {
-                // 成功後等 IP/DHCP 就緒再回報
+                // after success, wait for IP/DHCP to settle before reporting
                 if (it) delay(1500)
             }
         } catch (e: Exception) {

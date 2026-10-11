@@ -1,5 +1,5 @@
 /*
- * 簡單 GateServiced 連接測試
+ * Simple GateServiced connection test
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +43,7 @@ int main()
     printf("[+] Connected!\n");
     fflush(stdout);
 
-    // 發送簡單測試包
+    // Send a simple test packet
     // cmd_id = 1, len = 8
     unsigned char pkt[] = {0x01, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00};
 
@@ -54,7 +54,7 @@ int main()
     printf("[+] Sent %zd bytes\n", sent);
     fflush(stdout);
 
-    // 接收響應
+    // Receive the response
     unsigned char buf[256];
     struct timeval tv;
     tv.tv_sec = 2;

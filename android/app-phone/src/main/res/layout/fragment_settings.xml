@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  設定分頁：每個分組都是**可折疊卡片**（點標題列展開/收合，狀態記憶於 prefs）。
-  收合後只留標題，讓「常用」與「很少改」的設定不會互相干擾。
+  Settings tab: each group is a **collapsible card** (tap the title row to expand/collapse, state remembered in prefs).
+  When collapsed only the title remains, so "frequently used" and "rarely changed" settings do not get in each other's way.
 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -19,7 +19,7 @@
         android:paddingTop="10dp"
         android:paddingBottom="16dp">
 
-        <!-- ===== 連線 ===== -->
+        <!-- ===== connection ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RokidPhone.Card"
             android:layout_width="match_parent"
@@ -91,7 +91,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ===== 拍攝與權限 ===== -->
+        <!-- ===== capture and permissions ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RokidPhone.Card"
             android:layout_width="match_parent"
@@ -159,7 +159,7 @@
                         android:minHeight="48dp"
                         android:text="@string/root_auto_label" />
 
-                    <!-- root 狀態（P0-b 失敗可視化）＋提權度量（P2）：點一下看操作指引 -->
+                    <!-- root status (P0-b failure visualization) + escalation metrics (P2): tap for operating instructions -->
                     <TextView
                         android:id="@+id/tvRootState"
                         android:layout_width="match_parent"
@@ -191,7 +191,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ===== 隱私指示燈 ===== -->
+        <!-- ===== privacy indicator LED ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RokidPhone.Card"
             android:layout_width="match_parent"
@@ -283,7 +283,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ===== 眼鏡顯示 ===== -->
+        <!-- ===== glasses display ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RokidPhone.Card"
             android:layout_width="match_parent"
@@ -397,7 +397,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ===== 戒指控制 ===== -->
+        <!-- ===== ring control ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RokidPhone.Card"
             android:layout_width="match_parent"
@@ -523,7 +523,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ===== 外觀（淺色模式） ===== -->
+        <!-- ===== appearance (light mode) ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RokidPhone.Card"
             android:layout_width="match_parent"
@@ -586,7 +586,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ===== 語言 ===== -->
+        <!-- ===== language ===== -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.RokidPhone.Card"
             android:layout_width="match_parent"

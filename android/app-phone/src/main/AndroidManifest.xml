@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <!-- WiFi 媒體通道：WifiNetworkSpecifier 加入眼鏡 SoftAP（Android 12+ 用 NEARBY_WIFI_DEVICES） -->
+    <!-- WiFi media channel: WifiNetworkSpecifier joins the glasses SoftAP (Android 12+ uses NEARBY_WIFI_DEVICES) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="32" />
     <uses-permission
@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <!-- 戒指探索：BLE 掃描僅用於找出戒指裝置，不用於推估位置（neverForLocation 免 location 權限） -->
+    <!-- Ring discovery: BLE scanning is used only to find the ring device, not to estimate location (neverForLocation avoids the location permission) -->
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation" />

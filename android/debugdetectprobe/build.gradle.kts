@@ -3,12 +3,13 @@ plugins {
 }
 
 /*
- * debugdetectprobe — 對照組偵測器（2026-09-30）
+ * debugdetectprobe — control-group detector (2026-09-30)
  *
- * 目的：從「一般第三方 App」的視角，把 USB 偵錯相關的每一條偵測途徑實際讀一遍，
- *       用來驗證 :usbdebug-hider 的遮蔽是否真的生效（同一支 App，掛 scope 前後對照）。
+ * Purpose: from the viewpoint of an "ordinary third-party app", actually read every USB-debugging-related detection
+ *       path, to verify that :usbdebug-hider's masking really works (the same app, compared before and after being
+ *       added to scope).
  *
- * 與 adbreachprobe 同樣刻意保持最小：純 Java + 一支小 JNI、無依賴、無 layout XML。
+ * Like adbreachprobe it is deliberately minimal: pure Java + one small JNI, no dependencies, no layout XML.
  */
 android {
     namespace = "com.rokid.rc.debugdetectprobe"

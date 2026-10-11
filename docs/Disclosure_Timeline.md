@@ -1,5 +1,7 @@
 # Disclosure Timeline — CVE-2026-43499 (GhostLock) on Rokid Glasses RV101
 
+> English: [Disclosure_Timeline_EN.md](Disclosure_Timeline_EN.md)
+
 > **用途**：記錄本研究的協調揭露（coordinated disclosure）時間線。公開 write-up 前以此為準。
 > **狀態**：持續更新中。最後更新：2026-09-06。
 

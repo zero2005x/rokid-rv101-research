@@ -1,4 +1,7 @@
 # GhostLock RV101 — 工作狀態交接 v11（第十一任：mm-leak flake 根因 + blind-write 攻堅）
+
+> English: [GHOSTLOCK_HANDOFF_V11_EN.md](GHOSTLOCK_HANDOFF_V11_EN.md)
+
 > 📌 **事實依據**：本檔涉及裝置世代、kernel config、CVE 狀態、GhostLock 位移與產品結構等事實時，一律以 [`reports/FACTS.md`](FACTS.md) 為準（單一權威事實表；衝突時以該表裁決）。
 
 

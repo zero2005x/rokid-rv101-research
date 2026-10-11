@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # deploy_parasitic_attack.sh
-# 編譯並部署寄生式 GPU 命令注入攻擊工具
+# Build and deploy the parasitic GPU command injection attack tools
 
 echo "╔═══════════════════════════════════════════════════════════════════════╗"
 echo "║  Parasitic GPU Command Injection - Build & Deploy                     ║"

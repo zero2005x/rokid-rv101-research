@@ -1,4 +1,4 @@
-/* Dirty Pipe 漏洞測試 - 針對 Android */
+/* Dirty Pipe vulnerability test - targeting Android */
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <fcntl.h>

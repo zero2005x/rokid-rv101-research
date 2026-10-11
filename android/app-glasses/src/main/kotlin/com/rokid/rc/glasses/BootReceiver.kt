@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 
-/** 開機自啟：BOOT_COMPLETED 後啟動 CaptureService（含藍牙 server 與自動提權）。 */
+/** Boot autostart: start CaptureService after BOOT_COMPLETED (includes the Bluetooth server and auto escalation). */
 class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {

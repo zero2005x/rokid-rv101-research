@@ -1,4 +1,4 @@
-// dsp_raw_binder.c - 極簡 Raw HWBinder 版
+// dsp_raw_binder.c - minimal Raw HWBinder version
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -28,11 +28,11 @@ int main() {
 
     printf("[*] Opened /dev/hwbinder\n");
 
-    // TODO: 你需要先在裝置上執行以下指令取得資訊
+    // TODO: you must first run the following commands on the device to obtain the information
     // adb shell lshal --debug vendor.qti.hardware.dsp@1.0::IDspService
-    // 然後把 interface token 和 openSession 的 transaction code 填入下面
+    // then fill in the interface token and the openSession transaction code below
 
-    // 這裡只是骨架，實際 parcel 構造非常複雜
+    // This is only a skeleton; the actual parcel construction is very complex
     printf("[!] Raw binder 需要精確的 interface descriptor 和 method code\n");
     printf("    建議先 reverse vendor.qti.hardware.dsp@1.0.so\n");
 

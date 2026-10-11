@@ -1,17 +1,18 @@
 <resources>
     <!--
-      ★ 視窗底色＝不透明黑（2026-09-13 最終決定）
+      ★ Window background = opaque black (final decision 2026-09-13)
 
-      為什麼**不能**用 `windowIsTranslucent=true`：
-      實測（截圖對照）一旦視窗透明，**背後的啟動器／其他 App 的圖示與文字會整個透出來**，
-      與儀表板疊在一起變成「混在一起」——這不是使用者要的「透明」。
+      Why `windowIsTranslucent=true` **must not** be used:
+      measured (by comparing screenshots) that as soon as the window is translucent, **the launcher's / other apps'
+      icons and text behind it show through completely** and blend with the dashboard into a "mixed" mess — that is not
+      the "transparency" the user wanted.
 
-      在 AR 眼鏡上，「透明」的正確實作是 **不透明黑**：
-      黑色像素不發光 → 配戴者看到的是真實世界（等於看穿），
-      同時**擋掉背後 App 的畫面**，儀表板才能乾淨地浮在視線上。
-      這也是 `activity_main.xml`「不遮蔽視野」的原意。
+      On AR glasses the correct implementation of "transparent" is **opaque black**:
+      black pixels emit no light → the wearer sees the real world (equivalent to seeing through),
+      while **the app behind is blocked out**, so the dashboard can float cleanly in view.
+      This is also the intent of "does not block the field of view" in `activity_main.xml`.
 
-      （面板本身仍**沒有任何底色**：只有文字與狀態圓點。）
+      (The panel itself still has **no background colour**: only text and status dots.)
     -->
     <style name="Theme.RokidGlasses" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>

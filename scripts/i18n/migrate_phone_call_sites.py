@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""一次性遷移：把手機端 APP 內寫死的中文字串改用 R.string 資源（i18n 全在地化）。
+"""One-off migration: replace the phone app's hardcoded Chinese strings with R.string
+resources (full i18n localisation).
 
-- 來源清單：scripts/i18n/phone_keys.tsv（key / zh-TW / en + 其他 12 語系由翻譯產出）
-- 本腳本只負責「呼叫端替換」：每個 old 字串必須在檔案中出現指定次數，否則中止（避免誤改）。
-- 已於 2026-02 執行完畢；保留作為變更紀錄（重跑會因 assert 失敗而中止，屬預期行為）。
+- Source list: scripts/i18n/phone_keys.tsv (key / zh-TW / en, plus the other 12 locales from the
+  translation output)
+- This script only does the call-site replacement: every old string must appear the given number
+  of times in the file, otherwise it aborts (to avoid unintended edits).
+- It finished running in 2026-02; it is kept as a change record (a rerun aborts on a failed
+  assert, which is expected behaviour).
 """
 import pathlib
 import sys
 
 ROOT = pathlib.Path("/home/kali/rokid_root/android/app-phone/src/main/kotlin/com/rokid/rc/phone")
 
-# (檔案, [(old, new, 次數), ...])
+# (file, [(old, new, count), ...])
 PLAN = [
     ("ui/RemoteFragment.kt", [
         ('import com.rokid.rc.phone.Remote',

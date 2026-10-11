@@ -1,5 +1,7 @@
 # 私密材料：禁止直接上傳 HITCON 公開欄位
 
+> English: [PRIVATE_MATERIALS_NOT_FOR_UPLOAD_EN.md](PRIVATE_MATERIALS_NOT_FOR_UPLOAD_EN.md)
+
 本檔是醒目提醒，不包含機密資料本身。
 
 以下材料留在原始 `RV101_Disclosure/confidential/` 或研究 repo，不複製進本包：

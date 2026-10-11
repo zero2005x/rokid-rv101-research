@@ -1,3 +1,4 @@
+> English: [index_resilience_verification_run2_EN.txt](index_resilience_verification_run2_EN.txt)
 === 眼鏡媒體索引驗證（2026-09-16 07:54:59）===
 APK: /home/kali/rokid_root/scripts/../dist/app-glasses-v1.0-safe.3.apk
 

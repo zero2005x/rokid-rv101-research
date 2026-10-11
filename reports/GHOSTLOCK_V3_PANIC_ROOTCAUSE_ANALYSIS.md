@@ -1,5 +1,7 @@
 # GhostLock RV101 — v3「fake page panic」根因分析（第四任）
 
+> English: [GHOSTLOCK_V3_PANIC_ROOTCAUSE_ANALYSIS_EN.md](GHOSTLOCK_V3_PANIC_ROOTCAUSE_ANALYSIS_EN.md)
+
 ## 結論（一句話）
 
 v3 交接的「walk 在 fake page 上 kernel panic」其實是**回收失敗造成的垃圾頁 walk**：

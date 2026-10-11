@@ -1,3 +1,4 @@
+> English: [device_state_EN.txt](device_state_EN.txt)
 === 裝置 ===
 21091116UG
 13

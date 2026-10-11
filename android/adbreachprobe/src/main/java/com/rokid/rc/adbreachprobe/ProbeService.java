@@ -12,8 +12,8 @@ import android.util.Log;
 import java.util.List;
 
 /**
- * 前景 Service：在 App 自己的 process / uid / SELinux domain 內再跑一次探針，
- * 證明結果不依賴 Activity 生命週期。
+ * Foreground Service: runs the probe once more inside the app's own process / uid / SELinux domain,
+ * proving the result does not depend on the Activity lifecycle.
  */
 public class ProbeService extends Service {
 

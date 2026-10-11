@@ -22,20 +22,20 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 
 /**
- * WifiJoin — 讓眼鏡加入開發者網段（兩條路徑，依權限自動選擇）。
+ * WifiJoin — makes the glasses join a developer subnet (two paths, chosen automatically by privilege).
  *
- * 路徑 **A（免 root，App 權限）**：`WifiNetworkSuggestion`
- *   - 這是 Android 10+ 給一般 App 的唯一合法介面；建議清單會持久化（重開機仍有效）。
- *   - 需要：`ACCESS_FINE_LOCATION`（Android 12；13+ 另需 `NEARBY_WIFI_DEVICES`）。
- *   - 限制：若本機有多個已儲存網路，系統可能彈出「要改用哪個網路」通知（需使用者點一次）。
- *     本機眼鏡**無螢幕**，若彈窗無法點擊，請改用路徑 B。
+ * Path **A (no root, app permission)**: `WifiNetworkSuggestion`
+ *   - This is the only legitimate interface Android 10+ offers an ordinary app; the suggestion list is persisted (still valid after reboot).
+ *   - Requires: `ACCESS_FINE_LOCATION` (Android 12; 13+ additionally needs `NEARBY_WIFI_DEVICES`).
+ *   - Limitation: if the device has several saved networks, the system may pop a "要改用哪個網路" notification (the user must tap once).
+ *     These glasses have **no screen**, so if the dialog cannot be tapped, use path B instead.
  *
- * 路徑 **B（需 root／shell）**：`cmd wifi connect-network <ssid> wpa2 <pass>`
- *   - 走既有 root_daemon socket；適合研究版或有提權的裝置。
- *   - 這條路徑也是唯一能**可靠無人介入**的方式。
+ * Path **B (requires root/shell)**: `cmd wifi connect-network <ssid> wpa2 <pass>`
+ *   - Goes through the existing root_daemon socket; suited to research units or devices with escalation.
+ *   - This path is also the only **reliably unattended** one.
  *
- * ⚠ 本機 STA 與 SoftAP **互斥**：加入 STA 會讓 SoftAP 關閉（反之亦然）。
- *   開發模式結束時由 [DevModeController] 依原狀態決定是否還原 SoftAP。
+ * ⚠ On this device STA and SoftAP are **mutually exclusive**: joining STA turns the SoftAP off (and vice versa).
+ *   When dev mode ends, [DevModeController] decides from the original state whether to restore the SoftAP.
  */
 class WifiJoin(private val ctx: Context) {
 
@@ -46,7 +46,7 @@ class WifiJoin(private val ctx: Context) {
 
     enum class Method { SUGGESTION, ROOT_SHELL, NONE }
 
-    /** 憑證持久化（供開發模式重開後自動使用）。 */
+    /** Credential persistence (so dev mode can reuse it after a restart). */
     fun saveCred(c: Cred) = prefs().edit()
         .putString(K_SSID, c.ssid).putString(K_PASS, c.pass).putString(K_SEC, c.security).apply()
 
@@ -59,7 +59,7 @@ class WifiJoin(private val ctx: Context) {
 
     private fun prefs() = ctx.getSharedPreferences("dev_mode_wifi", Context.MODE_PRIVATE)
 
-    /** 目前是否連上該 SSID 且取得 IPv4。 */
+    /** Whether currently connected to that SSID with an IPv4 address. */
     fun isConnected(ssid: String): Boolean {
         val cur = currentSsid() ?: return false
         return cur.trim('"') == ssid.trim('"') && ipv4() != null
@@ -72,7 +72,7 @@ class WifiJoin(private val ctx: Context) {
         }.getOrNull()
     }
 
-    /** 目前對外可用的 IPv4（STA wlan0 優先，SoftAP wlan2 次之）。 */
+    /** Currently usable external IPv4 (STA wlan0 first, SoftAP wlan2 second). */
     fun ipv4(): String? {
         return try {
             val nifs = NetworkInterface.getNetworkInterfaces()
@@ -96,7 +96,7 @@ class WifiJoin(private val ctx: Context) {
         }
     }
 
-    /** 是否具備路徑 A 所需權限。 */
+    /** Whether the permissions required by path A are present. */
     fun hasSuggestionPermissions(): Boolean {
         val fine = ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         if (Build.VERSION.SDK_INT >= 33) {
@@ -107,8 +107,8 @@ class WifiJoin(private val ctx: Context) {
     }
 
     /**
-     * 加入網段。回傳 (成功, 說明, 使用的方法)。
-     * @param preferRoot true = 先試路徑 B（可靠、無人介入）；false = 先試路徑 A（免 root）
+     * Join the subnet. Returns (success, explanation, method used).
+     * @param preferRoot true = try path B first (reliable, unattended); false = try path A first (no root)
      */
     suspend fun join(c: Cred, preferRoot: Boolean = false, timeoutMs: Long = 45_000L): Triple<Boolean, String, Method> {
         val root = RootDaemonClient()
@@ -124,7 +124,7 @@ class WifiJoin(private val ctx: Context) {
                 }
                 Method.ROOT_SHELL -> {
                     if (!root.isRoot()) { lastMsg = "無 root（路徑 B 不可用）"; continue }
-                    // 先確保 WiFi 已啟用（重開機後 adbd 重啟會讓 WiFi 工作被殺；此步驟冪等）
+                    // first make sure WiFi is enabled (after a reboot the adbd restart kills the WiFi job; this step is idempotent)
                     root.exec("cmd wifi set-wifi-enabled enabled", 20_000L)
                     delay(2000)
                     val out = root.exec("cmd wifi connect-network ${c.ssid} ${c.security} ${c.pass}", 40_000L)
@@ -139,7 +139,7 @@ class WifiJoin(private val ctx: Context) {
         return Triple(false, lastMsg.ifEmpty { "無法加入 ${c.ssid}" }, Method.NONE)
     }
 
-    /** 路徑 A：建立 suggestion 並等待 NetworkCallback 給出該網路的 IP。 */
+    /** Path A: create the suggestion and wait for the NetworkCallback to hand that network an IP. */
     private suspend fun suggestAndWait(c: Cred, timeoutMs: Long): Boolean {
         val specifier: NetworkSpecifier = WifiNetworkSpecifier.Builder()
             .setSsid(c.ssid)

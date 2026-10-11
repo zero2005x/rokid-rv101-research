@@ -1,6 +1,6 @@
 /*
  * Simple Binder/Ashmem Test
- * 逐步測試各個操作，找出崩潰點
+ * Test each operation step by step to find the crash point
  */
 
 #define _GNU_SOURCE
@@ -63,12 +63,12 @@ int main(int argc, char **argv)
         printf("    version=%d ret=%d\n", version, ret);
     }
 
-    // Test 3: Binder mmap (這裡可能是問題點)
+    // Test 3: Binder mmap (this may be the problem point)
     printf("\n[3] Binder mmap...\n");
     void *binder_map = NULL;
     if (binder_fd >= 0)
     {
-        // 嘗試較小的映射大小
+        // Try a smaller mapping size
         size_t map_size = 0x1000; // 4KB first
         printf("    Trying mmap size=0x%zx...\n", map_size);
 
@@ -82,22 +82,22 @@ int main(int argc, char **argv)
         {
             printf("    mmap SUCCESS: addr=%p\n", binder_map);
 
-            // 不要讀取內容，只是映射
+            // Do not read the contents, only map
             printf("    (not reading from map yet)\n");
         }
     }
 
-    // Test 4: Binder write-read (簡化版)
+    // Test 4: Binder write-read (simplified)
     printf("\n[4] Binder write-read (empty)...\n");
     if (binder_fd >= 0 && binder_map)
     {
         struct binder_write_read bwr = {0};
-        // 不寫入任何東西，只是測試 IOCTL
+        // Write nothing, only test the IOCTL
         int ret = ioctl(binder_fd, BINDER_WRITE_READ, &bwr);
         printf("    ret=%d errno=%d\n", ret, errno);
     }
 
-    // Test 5: Ashmem 操作
+    // Test 5: Ashmem operations
     printf("\n[5] Ashmem operations...\n");
     void *ashmem_map = NULL;
     if (ashmem_fd >= 0)

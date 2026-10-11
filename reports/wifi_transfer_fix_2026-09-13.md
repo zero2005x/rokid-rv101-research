@@ -1,5 +1,7 @@
 # WiFi 媒體通道無法傳輸 — log 取證與修正（兩個真 bug）
 
+> English: [wifi_transfer_fix_2026-09-13_EN.md](wifi_transfer_fix_2026-09-13_EN.md)
+
 - **日期**：2026-09-13 22:16–22:25
 - **症狀**：手機與眼鏡無法透過 WiFi 傳輸
 - **log 起點**：手機 `WifiLink: specifier: network available` 之後**就沒有任何動靜**

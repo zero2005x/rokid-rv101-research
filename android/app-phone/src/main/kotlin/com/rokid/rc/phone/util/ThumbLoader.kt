@@ -9,8 +9,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * 縮圖載入器：磁碟檔由 Remote.getThumbnail 提供（依 mediaId cache 在 app cache），
- * 這裡負責「取檔 → 依目標尺寸降採樣 → 記憶體 LruCache」。
+ * Thumbnail loader: the disk file is provided by Remote.getThumbnail (cached in the app cache by mediaId);
+ * this handles "fetch file → downsample to the target size → in-memory LruCache".
  */
 object ThumbLoader {
 
@@ -21,10 +21,10 @@ object ThumbLoader {
     private fun key(mediaId: String, maxPx: Int) = "$mediaId@$maxPx"
 
     /**
-     * 取得遠端縮圖 bitmap。
-     * @param mediaId 媒體 id
-     * @param maxPx   目標長邊像素（網格約 512、封面約 1024）
-     * @param renew   即使有 cache 檔也重新抓（相簿重掃後）
+     * Get a remote thumbnail bitmap.
+     * @param mediaId media id
+     * @param maxPx   target long-edge pixels (about 512 for the grid, about 1024 for the cover)
+     * @param renew   re-fetch even when a cache file exists (after an album re-scan)
      */
     suspend fun remote(mediaId: String, maxPx: Int, renew: Boolean = false): Bitmap? {
         mem.get(key(mediaId, maxPx))?.let { return it }
@@ -40,7 +40,7 @@ object ThumbLoader {
         return decode(f, maxPx)?.also { mem.put(key(mediaId, maxPx), it) }
     }
 
-    /** 本機圖片直接降採樣（不進遠端）。 */
+    /** Downsample a local image directly (does not go to the remote). */
     suspend fun local(file: File?, maxPx: Int): Bitmap? {
         if (file == null || !file.exists()) return null
         return decode(file, maxPx)

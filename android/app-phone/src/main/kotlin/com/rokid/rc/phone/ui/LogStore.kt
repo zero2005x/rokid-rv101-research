@@ -1,17 +1,18 @@
 package com.rokid.rc.phone.ui
 
 /**
- * 共用操作紀錄緩衝。
+ * Shared operation log buffer.
  *
- * 重設計後「操作紀錄」只顯示在遙控分頁，但設定分頁的動作（切換 WiFi／靜音／root／戒指…）
- * 也要寫進同一份紀錄，因此把緩衝抽出來共用（單一來源，避免兩份日誌不同步）。
+ * After the redesign the "operation log" is shown only on the remote tab, but actions on the settings tab
+ * (toggling WiFi/silent/root/ring …) must be written into the same log too, so the buffer is extracted for sharing
+ * (a single source, so the two logs cannot drift apart).
  */
 object LogStore {
 
     private const val MAX_CHARS = 20_000
     private val sb = StringBuilder()
 
-    /** 內容變更回呼（由遙控分頁註冊；分頁不在前景時為 null）。 */
+    /** Content-change callback (registered by the remote tab; null while the tab is not in the foreground). */
     @Volatile
     var onChanged: ((String) -> Unit)? = null
 

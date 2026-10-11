@@ -1,5 +1,8 @@
 # 手機端多國語言（i18n）全在地化與語言選擇按鈕 — 實作與驗證報告
 
+> English: [phone_i18n_localization_report_EN.md](phone_i18n_localization_report_EN.md)
+
+
 - 日期：2026-09-11
 - 範圍：`android/app-phone`（手機端 App）＋ `scripts/i18n/`（翻譯工作流）
 - 對應需求：手機端 App 內建「語言選擇」按鈕；介面與操作紀錄不再出現中文殘留

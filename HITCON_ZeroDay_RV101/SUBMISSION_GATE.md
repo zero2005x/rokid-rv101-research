@@ -1,5 +1,7 @@
 # 提交前門檻
 
+> English: [SUBMISSION_GATE_EN.md](SUBMISSION_GATE_EN.md)
+
 在以下項目完成前，請勿按下 HITCON ZeroDay 的「回報」。
 
 ## 必須確認

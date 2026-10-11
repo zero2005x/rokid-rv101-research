@@ -23,71 +23,71 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-/** 眼鏡端全域元件圖（單例，由 [App] 建立）。 */
+/** Glasses-side global component graph (singleton, created by [App]). */
 class AppGraph(val app: Application) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
-     * ghostlock LPE 觸發層選擇：
-     *  - SHIZUKU（預設）：Shizuku UserService（shell 身份）直跑 exploit；Shizuku
-     *    不可用（server 未啟動/未授權）時自動回退 BRIDGE。
-     *  - BRIDGE：既有 shell helper 迴圈（deploy/root_bridge.sh 常駐）。
-     *  - DIRECT：App 直連（symlink trick；實測 exploit 以 untrusted_app 執行會
-     *    kernel panic，不可用，僅保留供研究）。
+     * ghostlock LPE trigger layer choice:
+     *  - SHIZUKU (default): the Shizuku UserService (shell identity) runs the exploit directly; when Shizuku is
+     *    unavailable (server not started / not authorized) it falls back to BRIDGE automatically.
+     *  - BRIDGE: the existing shell helper loop (deploy/root_bridge.sh resident).
+     *  - DIRECT: the app connects directly (symlink trick; measured: running the exploit as untrusted_app
+     *    kernel-panics, so it is unusable and is kept for research only).
      */
     /**
-     * 提權引擎：**執行期自動探測**（P1）。
+     * Escalation engine: **runtime auto-detection** (P1).
      *
-     * 先前是編譯期常數 `USE_ENGINE`，換環境（先跑 `start_shizuku.sh` 或 `root_bridge.sh`）
-     * 得改程式重建 APK；現在每次呼叫時探測 Shizuku／bridge helper 並委派，
-     * 選錯也能自動換另一條管線重試（見 [AutoGhostlockEngine]）。
+     * It used to be the compile-time constant `USE_ENGINE`, so changing the environment (running `start_shizuku.sh`
+     * or `root_bridge.sh` first) meant editing code and rebuilding the APK; now every call probes Shizuku/the bridge
+     * helper and delegates, and a wrong pick automatically retries the other pipeline (see [AutoGhostlockEngine]).
      */
     val ghostlock: GhostlockEngine = com.rokid.rc.glasses.ghost.AutoGhostlockEngine(app)
     val media: MediaRepository = MediaRepository(app)
     val led: LedSuppressor = LedSuppressor(app, ghostlock)
 
-    /** WiFi 熱點管理（提權後啟動 SoftAP，供手機以 TCP 傳輸媒體）。 */
+    /** WiFi hotspot management (starts the SoftAP after escalation so the phone can transfer media over TCP). */
     val wifiHotspot = WifiHotspot()
 
-    /** 儀表板顯示配置（手機可遠端設定，持久化）。 */
+    /** Dashboard display configuration (settable remotely from the phone, persisted). */
     val displayConfig = DisplayConfigStore(app)
 
-    /** 靜音拍攝（強制壓制拍照/錄影提示音；需 root）。 */
+    /** Silent capture (force-suppress the photo/video notification sound; requires root). */
     val silentMode = SilentMode(app)
 
-    /** 無線 adb：加入開發者網段（A：WifiNetworkSuggestion／B：cmd wifi connect-network）。 */
+    /** Wireless adb: join the developer subnet (A: WifiNetworkSuggestion / B: cmd wifi connect-network). */
     val wifiJoin by lazy { com.rokid.rc.glasses.net.WifiJoin(app) }
 
     /**
-     * 開發模式：按需開啟無線 adb（加入網段 → 確認 listener → idle 逾時自動關 → 失敗回退）。
-     * 預設 OFF，避免 adb TCP 常駐曝露。
+     * Dev mode: enable wireless adb on demand (join the subnet → confirm the listener → auto-off on idle timeout → fallback on failure).
+     * OFF by default, to avoid leaving adb TCP exposed at all times.
      */
     val devMode by lazy { com.rokid.rc.glasses.net.DevModeController(app) }
 
     /**
-     * 路徑 B：戒指／觸控板控制（root 直讀 evdev，背景也能觸發拍攝）。
-     * lazy：真的要用時才建立（未取得 root 時不初始化）。
+     * Path B: ring/touchpad control (root reads evdev directly; it can also trigger capture in the background).
+     * lazy: created only when actually used (not initialized before root has been acquired).
      */
     val ringControl: RingControlManager by lazy { RingControlManager(app, this, displayConfig) }
 
     /**
-     * root daemon 存活看守（P0）：30 秒一輪檢查，失效時清 stale socket、
-     * 在「還有人能觸發提權」的前提下自動重建，並回報需操作者介入的腳本。
+     * root daemon liveness watchdog (P0): checks every 30 seconds, clears the stale socket when it has died,
+     * auto-rebuilds as long as "someone can still trigger escalation", and reports the script the operator must run.
      */
     val rootKeeper: com.rokid.rc.glasses.ghost.RootDaemonKeeper by lazy {
         com.rokid.rc.glasses.ghost.RootDaemonKeeper(this)
     }
 
     init {
-        // ghostlock 長時操作的進度，推送到已連線手機
+        // progress of long ghostlock operations, pushed to the connected phone
         ghostlock.onProgress = { msg -> pushProgress(msg) }
     }
 
     /**
-     * 提權度量（P2）：由 [acquireRootMetered] 累計，隨 STATUS 回報手機。
+     * Escalation metrics (P2): accumulated by [acquireRootMetered] and reported to the phone with STATUS.
      *
-     * **持久化於 prefs**：Rokid 會頻繁殺掉本 App，若只放記憶體，計數每次重啟就歸零，
-     * 累計成功率就失去意義。
+     * **Persisted in prefs**: Rokid kills this app frequently, so if it lived only in memory the counter would
+     * reset on every restart and the cumulative success rate would be meaningless.
      */
     @Volatile
     var rootMetrics: com.rokid.rc.shared.protocol.RootMetrics = loadRootMetrics()
@@ -117,13 +117,14 @@ class AppGraph(val app: Application) {
     }
 
     /**
-     * 取得 root（**唯一入口**，含度量）。所有呼叫端都應走這裡，才能累計 P2 指標。
+     * Acquire root (**the only entry point**, metrics included). Every caller should go through here so the P2
+     * metrics can accumulate.
      */
     suspend fun acquireRootMetered(): ExecResult {
         val engine = (ghostlock as? com.rokid.rc.glasses.ghost.AutoGhostlockEngine)
             ?.lastEngineName ?: "unknown"
         val started = android.os.SystemClock.elapsedRealtime()
-        // 快速路徑（root 已存在）不計入「首次即成功」統計，避免美化數字
+        // the fast path (root already present) is not counted in the "succeeded on the first try" statistic, to avoid flattering the numbers
         val preRooted = com.rokid.rc.glasses.ghost.RootDaemonClient().isRoot()
         val first = rootMetrics.attempts == 0
         val result = ghostlock.acquireRoot()
@@ -142,10 +143,10 @@ class AppGraph(val app: Application) {
         return result
     }
 
-    /** App 共用 prefs（keeper 的看守計數也存這裡）。 */
+    /** Shared app prefs (the keeper's watchdog counters are stored here too). */
     val prefs = app.getSharedPreferences("rokid_glasses", Context.MODE_PRIVATE)
 
-    /** root 取得模式：AUTO=開啟即自動跑 LPE；MANUAL=等手機指令（持久化，重啟後保留）。 */
+    /** root acquisition mode: AUTO=run the LPE automatically on start; MANUAL=wait for a phone command (persisted, kept across restarts). */
     @Volatile
     var rootMode: RootMode = run {
         val saved = prefs.getString("root_mode", null)
@@ -153,45 +154,45 @@ class AppGraph(val app: Application) {
     }
         private set
 
-    /** 設定 root 模式並持久化。 */
+    /** Set and persist the root mode. */
     fun setRootMode(mode: RootMode) {
         rootMode = mode
         prefs.edit().putString("root_mode", mode.name).apply()
     }
 
-    /** 隱私指示燈狀態（由手機 SET_LED 設定）。 */
+    /** Privacy indicator LED state (set by the phone through SET_LED). */
     @Volatile
     var ledOn: Boolean = true
 
-    /** 連線成功後自動關閉隱私指示燈（預設開啟）。 */
+    /** Turn the privacy indicator LED off automatically after a successful connection (enabled by default). */
     @Volatile
     var autoLedOffOnConnect: Boolean = true
 
-    /** 由 [CaptureService] 建立並註冊。 */
+    /** Created and registered by [CaptureService]. */
     @Volatile
     var camera: CameraController? = null
 
-    /** 目前連線中的手機（單一連線，藍牙控制通道或 WiFi 媒體通道皆可取代）。 */
+    /** The currently connected phone (single connection; either the Bluetooth control channel or the WiFi media channel may replace it). */
     @Volatile
     var connection: ConnectionHandler? = null
 
-    /** 藍牙控制通道是否已連線（儀表板顯示用）。 */
+    /** Whether the Bluetooth control channel is connected (for the dashboard display). */
     @Volatile
     var btConnected: Boolean = false
 
-    /** WiFi 媒體通道是否已連線（儀表板顯示用）。 */
+    /** Whether the WiFi media channel is connected (for the dashboard display). */
     @Volatile
     var wifiConnected: Boolean = false
 
-    /** 推送非請求回應（如錄影完成）給已連線手機。 */
+    /** Push a non-response message (such as recording finished) to the connected phone. */
     fun push(json: JSONObject) {
         val c = connection ?: return
         scope.launch { c.sendJson(json.toString()) }
     }
 
     /**
-     * 推送結構化進度給已連線手機（只送代碼＋參數，手機端以自己語系顯示）。
-     * 舊欄位 `message` 仍一併帶上（= `code|arg`），方便 logcat 與向後相容。
+     * Push structured progress to the connected phone (codes and arguments only; the phone renders them in its own locale).
+     * The old `message` field is still included (= `code|arg`), for logcat and backward compatibility.
      */
     fun pushProgress(event: com.rokid.rc.shared.protocol.ProgressEvent) {
         val encoded = com.rokid.rc.shared.protocol.ProgressCodec.encode(event.code, event.arg)
@@ -206,11 +207,11 @@ class AppGraph(val app: Application) {
     }
 
     companion object {
-        /** ghostlock 觸發層模式。 */
+        /** ghostlock trigger layer mode. */
         enum class Engine { SHIZUKU, BRIDGE, DIRECT }
 
-        // 預設 SHIZUKU（Shizuku 不可用時自動回退 BRIDGE，見建構子）。
-        // P1：引擎改為執行期探測（見 ghostlock 屬性）；此列保留僅作為文件說明。
+        // SHIZUKU by default (it falls back to BRIDGE automatically when Shizuku is unavailable, see the constructor).
+        // P1: the engine is now probed at runtime (see the ghostlock property); this line is kept as documentation only.
         // private val USE_ENGINE = Engine.SHIZUKU
     }
 }

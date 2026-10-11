@@ -1,10 +1,11 @@
 /*
- * run_shell.c — 從 root 降權到 shell (uid/gid 2000) 後執行命令。
+ * run_shell.c — drop from root to shell (uid/gid 2000), then run a command.
  *
- * 用途：install-recovery.sh（root）啟動 ghostlock bridge helper 時，
- * 讓 helper 以 shell(2000) 執行，符合 exploit 原始的 unprivileged 環境。
+ * Purpose: when install-recovery.sh (root) starts the ghostlock bridge helper,
+ * run the helper as shell(2000) to match the exploit's original unprivileged
+ * environment.
  *
- * 建置（Android NDK, aarch64）：
+ * Build (Android NDK, aarch64):
  *   <NDK>/toolchains/llvm/prebuilt/<host>/bin/aarch64-linux-android<api>-clang \
  *       -O2 -static -o run_shell run_shell.c
  */

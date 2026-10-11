@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -u
-source "$(dirname "$0")/../deploy/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+source "$(dirname "$0")/../deploy/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 S="<DEVICE_SERIAL>"
 ENV="GL_PURGE_CNT=0 GL_TAIL_KILLS=16 GL_DUMMY_KILLS=0 W2_ATTEMPTS=1"
 LOCAL_SCRIPT="/home/kali/rokid_root/led_test.sh"

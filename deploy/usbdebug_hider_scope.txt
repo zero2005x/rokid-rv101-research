@@ -1,3 +1,5 @@
+# > English: [usbdebug_hider_scope_EN.txt](usbdebug_hider_scope_EN.txt)
+
 # DebugMask scope — 銀行 ＋ 支付 ＋ 加密貨幣 ＋ 2FA
 # 用途：./deploy/usbdebug_hider_ctl.sh scope-from-file deploy/usbdebug_hider_scope.txt
 # 格式：每行一個 package；# 之後為註解；空行忽略。

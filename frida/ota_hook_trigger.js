@@ -1,4 +1,4 @@
-// ota_hook_trigger.js — 掛 URL/Header/SharedPreferences 後，直接呼叫 CheckService 觸發版本檢查
+// ota_hook_trigger.js — after hooking URL/Header/SharedPreferences, call CheckService directly to trigger a version check
 'use strict';
 var TAG = '[OTA-HOOK]';
 function log(m) { console.log(TAG + ' ' + m); }
@@ -14,7 +14,7 @@ Java.perform(function () {
         };
     } catch (e) { log('URL hook 失敗: ' + e); }
 
-    // ---- 請求 header（HttpURLConnection / URLConnection）----
+    // ---- request headers (HttpURLConnection / URLConnection) ----
     try {
         var Conn = Java.use('java.net.URLConnection');
         Conn.setRequestProperty.overload('java.lang.String', 'java.lang.String').implementation = function (k, v) {
@@ -24,7 +24,7 @@ Java.perform(function () {
         log('hook setRequestProperty OK');
     } catch (e) { log('setRequestProperty hook 失敗: ' + e); }
 
-    // ---- 回應 status ----
+    // ---- response status ----
     try {
         var HUC = Java.use('java.net.HttpURLConnection');
         HUC.getResponseCode.implementation = function () {
@@ -49,7 +49,7 @@ Java.perform(function () {
         };
     } catch (e) { log('SP hook 失敗: ' + e); }
 
-    // ---- 觸發 ----
+    // ---- trigger ----
     try {
         Java.choose('com.rokid.glass.ota.component.CheckService', {
             onMatch: function (inst) {

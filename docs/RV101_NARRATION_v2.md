@@ -1,5 +1,7 @@
 # RV101 逐字旁白腳本 v2（華英雙語）
 
+> English: [RV101_NARRATION_v2_EN.md](RV101_NARRATION_v2_EN.md)
+
 > 對應 `VIDEO_PRODUCTION_PLAN_v2.md` §11。標記：`[原]`＝沿用 v1、`[改]`＝已改寫、`[新]`＝新增。
 > 每場景約 15 秒。180s 用 id 0–11，60s 用 id 12–15。
 > ⚠️ **署名**：以下用「mazuda payrung」為佔位，**尚未定稿**（見 v2 §9）。若改真名

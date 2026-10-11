@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-產生 ROKID_Glasses_漏洞盤點_20260523.xlsx
-基於 1.19.009-20260520 韌體實際驗證結果更新自 20260522 版本
+Generate ROKID_Glasses_漏洞盤點_20260523.xlsx
+Updated from the 20260522 version with results measured on the 1.19.009-20260520 firmware
 """
 import openpyxl
 from openpyxl.styles import (
@@ -11,7 +11,7 @@ from openpyxl.utils import get_column_letter
 
 wb = openpyxl.Workbook()
 
-# ── 顏色定義 ──────────────────────────────────────────────────
+# ── colour definitions ────────────────────────────────────────
 RED_FILL      = PatternFill("solid", fgColor="C00000")
 ORANGE_FILL   = PatternFill("solid", fgColor="E26B0A")
 YELLOW_FILL   = PatternFill("solid", fgColor="FFCC00")
@@ -57,14 +57,14 @@ def data_cell(ws, row, col, val, fill=None, font=None, align="left",
     return c
 
 # ═══════════════════════════════════════════════════════════════
-# Sheet 1: 摘要
+# Sheet 1: summary
 # ═══════════════════════════════════════════════════════════════
 ws1 = wb.active
 ws1.title = "摘要"
 ws1.column_dimensions["A"].width = 26
 ws1.column_dimensions["B"].width = 90
 
-# 標題列
+# header row
 ws1.row_dimensions[1].height = 28
 ws1.merge_cells("A1:B1")
 c = ws1.cell(row=1, column=1, value="Rokid Glasses 安全盤點 — 綜合摘要")
@@ -72,7 +72,7 @@ c.fill = SECTION_FILL
 c.font = Font(color="FFFFFF", bold=True, size=14)
 c.alignment = Alignment(horizontal="center", vertical="center")
 
-# 副標題
+# subtitle
 ws1.merge_cells("A2:B2")
 c2 = ws1.cell(row=2, column=1,
               value="三階段 ADB 盤查整併 + 1.19.009 韌體靜態驗證 / "
@@ -81,7 +81,7 @@ c2.fill = PatternFill("solid", fgColor="4472C4")
 c2.font = Font(color="FFFFFF", size=9)
 c2.alignment = Alignment(horizontal="center", vertical="center")
 
-# 基本資料標題
+# basic-information header
 ws1.row_dimensions[4].height = 18
 hdr_cell(ws1, 4, 1, "裝置基本資料", fill=SECTION_FILL, bold=True)
 ws1.cell(row=4, column=2).fill = SECTION_FILL
@@ -117,7 +117,7 @@ for i, (k, v) in enumerate(device_info):
     c_v.border = BORDER_THIN
     ws1.row_dimensions[row].height = 20
 
-# 核心結論
+# key conclusions
 ws1.row_dimensions[16].height = 8
 ws1.row_dimensions[17].height = 18
 hdr_cell(ws1, 17, 1, "核心結論", fill=SECTION_FILL, bold=True)
@@ -150,7 +150,7 @@ for i, txt in enumerate(conclusions):
     ws1.row_dimensions[row].height = 36
 
 # ═══════════════════════════════════════════════════════════════
-# Sheet 2: 發現清單
+# Sheet 2: findings list
 # ═══════════════════════════════════════════════════════════════
 ws2 = wb.create_sheet("發現清單")
 ws2.column_dimensions["A"].width = 7
@@ -171,8 +171,9 @@ ws2.row_dimensions[1].height = 22
 for col, h in enumerate(headers, start=1):
     hdr_cell(ws2, 1, col, h)
 
-# 資料列定義
-# (id, 類別, 項目CVE, 元件證據, cvss, kev, 補丁對照, 狀態, 優先序, 建議, 狀態顏色)
+# data row definitions
+# (id, category, item/CVE, component evidence, cvss, kev, patch comparison, status,
+#  priority, recommendation, status colour)
 UNPATCHED  = "已驗證未修"
 IMPROVED   = "已改善(固件層)"
 PENDING_RT = "固件層未見，待運行確認"
@@ -337,7 +338,7 @@ for i, row_data in enumerate(findings):
     row_fill = ROW_ALT if i % 2 == 0 else WHITE_FILL
     vals = [fid, cat, item, evidence, cvss, kev, patch, status, prio, rec]
     for col, val in enumerate(vals, start=1):
-        if col == 8:  # 狀態欄
+        if col == 8:  # status column
             c = data_cell(ws2, row, col, val,
                           fill=STATUS_FILLS[color],
                           font=STATUS_FONTS[color],
@@ -348,7 +349,7 @@ for i, row_data in enumerate(findings):
             c = data_cell(ws2, row, col, val, fill=row_fill)
 
 # ═══════════════════════════════════════════════════════════════
-# Sheet 3: 驗證與後續
+# Sheet 3: verification and follow-up
 # ═══════════════════════════════════════════════════════════════
 ws3 = wb.create_sheet("驗證與後續")
 ws3.column_dimensions["A"].width = 10
@@ -447,7 +448,7 @@ for i, (aid, purpose, cmd) in enumerate(actions):
     c.alignment = Alignment(horizontal="left", vertical="top", wrap_text=True)
     c.border = BORDER_THIN
 
-# 備註列
+# notes row
 note_row = len(actions) + 3
 ws3.row_dimensions[note_row].height = 20
 ws3.merge_cells(f"A{note_row}:C{note_row}")
@@ -460,7 +461,7 @@ c.font = Font(size=9, italic=True, color="444444")
 c.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
 c.border = BORDER_THIN
 
-# ── 儲存 ──────────────────────────────────────────────────────
+# ── save ──────────────────────────────────────────────────────
 out_path = r"c:\Users\<USER>\Documents\codebase\rokid_root\ROKID_Glasses_漏洞盤點_20260523.xlsx"
 wb.save(out_path)
 print(f"[OK] 已儲存: {out_path}")

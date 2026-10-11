@@ -1,5 +1,7 @@
 # 提權「安全武裝」四道保護 — 實作與實機驗證
 
+> English: [arm_safety_policy_2026-09-13_EN.md](arm_safety_policy_2026-09-13_EN.md)
+
 - **日期**：2026-09-13
 - **動機**：`reports/glasses_reboot_after_adb_unplug_2026-09-13.md`
   —— GhostLock（CVE-2026-43499）**每次嘗試約 50% 會 kernel panic，裝置 2–5 分鐘後自動重開機**；

@@ -1,4 +1,7 @@
 # GateServiced — Phase 1 Ghidra-Style Reverse Engineering Report
+
+> English: [GateServiced_Phase1_RE_Report_EN.md](GateServiced_Phase1_RE_Report_EN.md)
+
 > ⚠ **2026-09-13 指令級複核更正（見 `reports/static_re_gate_codes_and_rescue_2026-09-13.md`）**
 >
 > 1. **錯誤碼語意更正**：`0x3001`＝**空檔（大小 0）**而非「檔案不存在」；`0x3003`＝`read_file` 回負值（非 mmap 路徑）；

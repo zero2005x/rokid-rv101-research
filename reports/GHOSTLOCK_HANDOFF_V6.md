@@ -1,5 +1,8 @@
 # GhostLock RV101 — 工作狀態交接 v6（第六任 → 第七任）
 
+> English: [GHOSTLOCK_HANDOFF_V6_EN.md](GHOSTLOCK_HANDOFF_V6_EN.md)
+
+
 > 更新於 2026-08-18 深夜。本輪（第六任）自 v9.19 接手，歷經 v9.20→v9.26 共 7 版。
 > 本輪**以靜態分析為主解開了 v5 交接的三個未定點**（±64 pad 的真相、rb_erase 寫入幾何、
 > W1 未落地的靜態側全貌），並把回收工程化推進到「每次新開機 attempt 1 穩定 dip」——

@@ -2,7 +2,8 @@ package com.rokid.rc.shared.protocol
 
 import org.json.JSONObject
 
-/** 眼鏡 WiFi 熱點（SoftAP）與媒體通道資訊，附在 DEVICE_INFO / WIFI_AP_STATUS 內。 */
+/** Glasses WiFi hotspot (SoftAP) and media channel info; attached to DEVICE_INFO /
+ *  WIFI_AP_STATUS. */
 data class WifiApInfo(
     val up: Boolean,
     val ssid: String,

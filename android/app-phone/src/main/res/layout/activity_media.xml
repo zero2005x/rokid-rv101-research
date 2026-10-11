@@ -15,7 +15,7 @@
         app:navigationIconTint="@color/text_primary"
         app:titleTextColor="@color/text_primary" />
 
-    <!-- 多選操作列 -->
+    <!-- multi-select action bar -->
     <LinearLayout
         android:id="@+id/selBar"
         android:layout_width="match_parent"

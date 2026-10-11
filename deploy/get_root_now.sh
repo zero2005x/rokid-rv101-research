@@ -1,39 +1,41 @@
 #!/usr/bin/env bash
-# get_root_now.sh — 依 2026-09 驗證流程：bridge helper + ghostlock_rv101 提權 → root_daemon 常駐。
-# 每 boot 一輪：helper 內部最多試 3 次；同 boot 可重新觸發；若 exploit 造成 kernel reboot 則等開機後重來。
-source "$(dirname "$0")/env.sh"   # 共用 ADB/SERIAL（見 deploy/env.sh）
+# get_root_now.sh — per the verified 2026-09 flow: bridge helper + ghostlock_rv101 escalation -> root_daemon resident.
+# One round per boot: the helper tries up to 3 times internally; a boot may be retriggered; if the
+# exploit causes a kernel reboot, wait for boot and start over.
+source "$(dirname "$0")/env.sh"   # shared ADB/SERIAL (see deploy/env.sh)
 set -u
 SERIAL="${SERIAL:?請設定 SERIAL 或讓 env.sh 自動偵測}"
 ROOT_DIR="/home/kali/rokid_root"
 
-# 租約：deploy 路徑原本**完全沒有**取租約，於是會與桌面板／App keeper 同時跑，
-# 互搶 binary 內寫死的共用檔案（.ghostlock_root.sh、gl_run.log、ghostlock_rv101）。
-# SERIAL 必須先確定（lease.sh 用它組旗標檔名），故 source 置於此行之後。
+# Lease: the deploy path originally took **no** lease at all, so it ran alongside the desktop
+# app / App keeper, fighting over the files hardcoded in the binary (.ghostlock_root.sh,
+# gl_run.log, ghostlock_rv101).
+# SERIAL must be resolved first (lease.sh builds flag filenames from it), hence the source below.
 source "$(dirname "$0")/lease.sh"
-source "$(dirname "$0")/proc_util.sh"   # kill_all_helpers／clear_trigger_mailboxes
+source "$(dirname "$0")/proc_util.sh"   # kill_all_helpers / clear_trigger_mailboxes
 LEASE_OWNER="deploy"
-LEASE_WAIT_S="${LEASE_WAIT_S:-300}"   # 等對方讓開的上限（App keeper 單次重建上限 5 分鐘）
+LEASE_WAIT_S="${LEASE_WAIT_S:-300}"   # cap on waiting for the other side to yield (App keeper rebuilds take up to 5 minutes)
 BRIDGE=/data/local/tmp/ghostlock_bridge
 HELPER=/data/local/tmp/ghostlock_bridge_helper.sh
 TRIGGER="$ROOT_DIR/deploy/trigger_root_daemon.cmd"
 LOGFILE="$ROOT_DIR/deploy/get_root_now.log"
 
-MAX_BOOTS=6            # 最多 reboot 輪數
-TRIGGERS_PER_BOOT=2    # 同 boot 最多觸發次數
+MAX_BOOTS=6            # max reboot rounds
+TRIGGERS_PER_BOOT=2    # max triggers per boot
 POLL_S=5
-ROUND_TIMEOUT_S=950    # 每輪最長等待(helper 3 try 上限 ~ 640s + 餘裕)
+ROUND_TIMEOUT_S=950    # longest wait per round (helper 3-try cap ~640 s + margin)
 
 adb_s() { "$ADB" -s "$SERIAL" "$@"; }
 log()  { echo "[$(date '+%F %T')] $*" | tee -a "$LOGFILE"; }
 
-# ---- 等待裝置完成開機並穩定 (boot_completed + 低負載) ----
+# ---- wait for the device to finish booting and settle (boot_completed + low load) ----
 wait_device() {
   for i in $(seq 1 60); do
     ST=$(adb_s get-state 2>/dev/null | tr -d '\r')
     if [ "$ST" = "device" ]; then
       BC=$(adb_s shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
       if [ "$BC" = "1" ]; then
-        # 等 uptime 穩定（> 150s，讓系統安定，也避開其他自動觸發的 exploit）
+        # wait for uptime to settle (> 150 s: let the system calm down and dodge other auto-triggered exploits)
         for j in $(seq 1 36); do
           UP=$(adb_s shell cat /proc/uptime 2>/dev/null | awk '{print int($1)}' | tr -d '\r')
           if [ -n "$UP" ] && [ "$UP" -gt 150 ] 2>/dev/null; then return 0; fi
@@ -47,16 +49,17 @@ wait_device() {
   return 1
 }
 
-# ---- 確保 helper 常駐存在（先清掉任何舊實例再重建）----
+# ---- make sure the helper is resident (clear any old instance, then rebuild) ----
 ensure_helper() {
-  # 舊寫法 `pkill -f 'ghostlock_bridge_helper.s[h]'` 實測**漏殺** `_desktop` 變體
-  # → 桌面板 helper 整場存活，並在裝置重開機後被重新拉起而再觸發 exploit。
-  # kill_all_helpers 以「host 端過濾 + 送 PID」殺掉**兩個**變體（見 proc_util.sh）。
+  # The old `pkill -f 'ghostlock_bridge_helper.s[h]'` was measured to **miss** the `_desktop`
+  # variant -> the desktop helper survived the whole run and was restarted after a device
+  # reboot, triggering the exploit again.
+  # kill_all_helpers kills **both** variants (host-side filter + send PIDs; see proc_util.sh).
   kill_all_helpers
 
-  # 存在性檢查**只認 App helper**：它才是讀 `ghostlock_bridge/last.cmd` 的那一個。
-  # 若這裡誤用廣義 pattern，會在只有桌面板 helper 時誤判為「已常駐」而不再重建，
-  # 導致後續 trigger 永遠等不到結果。
+  # The existence check accepts the **App helper only**: it is the one that reads
+  # `ghostlock_bridge/last.cmd`. A broad pattern here would report "resident" when only the
+  # desktop helper is alive, skip the rebuild, and later triggers would never return.
   if ! adb_s shell "ps -A -o ARGS 2>/dev/null | grep -q '[g]hostlock_bridge_helper.sh'"; then
     log "[helper] 不存在，執行 root_bridge.sh 重建並啟動"
     bash "$ROOT_DIR/deploy/root_bridge.sh" >> "$LOGFILE" 2>&1
@@ -65,9 +68,10 @@ ensure_helper() {
   adb_s shell "ps -A -o PID,ARGS 2>/dev/null | grep '[g]hostlock_bridge_helpe'" >> "$LOGFILE" 2>&1
 }
 
-# ---- 清掉殘留的 exploit 行程 ----
-# 改用 proc_util.kill_all_exploits：host 端過濾 + 分批送 PID，
-# 結構上不可能自我匹配，且殺 500+ 個程序不會超過 adb 呼叫的等待上限。
+# ---- clear leftover exploit processes ----
+# Uses proc_util.kill_all_exploits: host-side filtering + batched PID sends, so
+# self-matching is structurally impossible and killing 500+ processes stays under the
+# adb call timeout.
 cleanup_exploit() {
   kill_all_exploits
   adb_s shell "rm -f /data/local/tmp/.ghostlock_root.sh /data/local/tmp/gl_run.log" || return 1
@@ -75,7 +79,7 @@ cleanup_exploit() {
   return 0
 }
 
-# ---- 觸發一次提權（寫 last.cmd；helper 必須已在常駐）----
+# ---- trigger one escalation (write last.cmd; the helper must already be resident) ----
 trigger() {
   adb_s shell "rm -f $BRIDGE/last.cmd $BRIDGE/last.out $BRIDGE/last.done $BRIDGE/last.progress $BRIDGE/payload.staging" || return 1
   adb_s push "$TRIGGER" "$BRIDGE/last.cmd" >/dev/null 2>&1 || return 1
@@ -83,11 +87,11 @@ trigger() {
   log "[trigger] last.cmd 已寫入，等待 exploit..."
 }
 
-# ---- 單輪等待結果；回傳 0=OK 1=超時/ERR 2=裝置 reboot ----
+# ---- wait for one round's result; returns 0=OK 1=timeout/ERR 2=device reboot ----
 wait_result() {
   local elapsed=0 PREV_PROG="" PREV_UP=0
   while [ $elapsed -lt $ROUND_TIMEOUT_S ]; do
-    # 裝置離線或 uptime 倒退（重新開機）=> 視為 exploit 造成 reboot
+    # device offline or uptime went backwards (reboot) => treat as a reboot caused by the exploit
     UP=$(adb_s shell cat /proc/uptime 2>/dev/null | awk '{print int($1)}' | tr -d '\r')
     if [ -z "$UP" ]; then
       log "[wait] 裝置離線，視為 reboot"
@@ -118,7 +122,7 @@ wait_result() {
   return 1
 }
 
-# ---- 驗證 root（socket 直連 root_daemon）----
+# ---- verify root (direct socket to root_daemon) ----
 verify_root() {
   log "[verify] last.done 內容："
   adb_s shell "cat $BRIDGE/last.done 2>/dev/null" | tee -a "$LOGFILE"
@@ -134,8 +138,8 @@ verify_root() {
 : > "$LOGFILE"
 log "===== get_root_now 開始（serial=$SERIAL）====="
 
-# ---- 取租約（拿不到就讓開；契約：看到新鮮租約必須讓）----
-# EXIT trap 確保任何結束路徑都會釋放租約；INT/TERM 先轉成 exit 才會觸發 EXIT trap。
+# ---- take the lease (yield if unavailable; contract: a fresh lease must be honoured) ----
+# The EXIT trap releases the lease on every exit path; INT/TERM become exits so the EXIT trap runs.
 trap 'lease_cleanup "$LEASE_OWNER"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
@@ -151,9 +155,10 @@ log "[lease] ✓ 已取得租約（$(lease_status)）"
 lease_autorenew_start "$LEASE_OWNER"
 log "[lease] 背景續約已啟動（每 ${LEASE_RENEW_S}s 一次；TTL ${LEASE_TTL_SEC}s）"
 
-# DRY_RUN=1：只驗證租約取得／續約／釋放，**完全不碰裝置上的 exploit**。
-# 用於在真正提權之前確認租約機制正常（尤其與桌面板／App 併行時），
-# 避免為了測試租約而多跑一次 LPE。DRY_RUN_HOLD_S 可讓「持有中」的狀態被觀察到。
+# DRY_RUN=1: verify lease take/renew/release only, **without touching the device's exploit at
+# all**. Use it to confirm the lease works before a real escalation (especially alongside the
+# desktop app), avoiding an extra LPE run just to test the lease. DRY_RUN_HOLD_S keeps the
+# "held" state observable.
 if [ "${DRY_RUN:-0}" = "1" ]; then
   log "[dry-run] 租約已取得，不觸發 exploit（DRY_RUN=1）"
   if [ "${DRY_RUN_HOLD_S:-0}" -gt 0 ]; then
@@ -167,7 +172,7 @@ fi
 for boot in $(seq 1 "$MAX_BOOTS"); do
   log "===== BOOT ROUND $boot/$MAX_BOOTS ====="
 
-  # 續約若中斷超過 TTL，租約可能已被對方取走 → 立刻讓開，不要繼續改共用檔案
+  # if renewal lapsed past the TTL the lease may have been taken -> yield at once and stop touching shared files
   if lease_lost; then
     log "[lease] ✗ 租約已被他人取走（$(cat "$LEASE_LOST_FLAG" 2>/dev/null)）→ 中止"
     exit 2
@@ -200,8 +205,8 @@ for boot in $(seq 1 "$MAX_BOOTS"); do
         fi
       fi
     fi
-    if [ $RC -eq 2 ]; then BOOT_OK=2; break; fi   # reboot：此 boot 結束
-    # RC=1：ERR/逾時，同一 boot 重新觸發（若還有額度）
+    if [ $RC -eq 2 ]; then BOOT_OK=2; break; fi   # reboot: this boot is over
+    # RC=1: ERR/timeout, retrigger within the same boot (if budget remains)
   done
 
   if [ "$boot" -lt "$MAX_BOOTS" ]; then

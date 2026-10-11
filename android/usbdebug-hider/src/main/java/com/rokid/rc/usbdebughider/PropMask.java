@@ -5,21 +5,21 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 
 /**
- * {@code android.os.SystemProperties} 的遮蔽（Java 端）。
+ * Masking for {@code android.os.SystemProperties} (Java side).
  *
- * <p>對 {@code sys.usb.*} / {@code init.svc.adbd} / {@code ro.debuggable} 等 key，
- * 讓目標 App 看到「USB 只有 MTP、adbd 沒在跑、非 debuggable」。
+ * <p>For keys such as {@code sys.usb.*} / {@code init.svc.adbd} / {@code ro.debuggable}, it makes the
+ * target app see "USB is MTP only, adbd is not running, not debuggable".
  *
- * <p>注意：這是<b>行程內</b>的假象，屬性區（property area）本身沒被改動，
- * 因此不會影響 init/usbd 真正要用的值，也不會弄斷 adb —— 這正是選 per-app 而非
- * 全域 {@code resetprop} 的原因。
+ * <p>NOTE: this is an <b>in-process</b> illusion; the property area itself is untouched, so it
+ * does not affect the values init/usbd actually use and does not break adb — which is exactly
+ * why this is per-app rather than a global {@code resetprop}.
  *
- * <p>兩層並用：
+ * <p>Both layers are used together:
  * <ul>
- *   <li><b>Java 層</b>：hook {@code android.os.SystemProperties} 的 get/getInt/getLong/getBoolean。</li>
- *   <li><b>native 層</b>：{@link NativeMask} 對 {@code __system_property_get} /
- *       {@code __system_property_read} / {@code __system_property_read_callback} 做 PLT/GOT hook，
- *       攔下繞過 Java 層的直讀。</li>
+ *   <li><b>Java layer</b>: hook get/getInt/getLong/getBoolean on {@code android.os.SystemProperties}.</li>
+ *   <li><b>native layer</b>: {@link NativeMask} applies PLT/GOT hooks to {@code __system_property_get} /
+ *       {@code __system_property_read} / {@code __system_property_read_callback} to intercept
+ *       direct reads that bypass the Java layer.</li>
  * </ul>
  */
 final class PropMask {
@@ -40,7 +40,8 @@ final class PropMask {
             XposedBridge.log(MaskEntry.TAG + ": SystemProperties hook 失敗: " + t);
             ok = false;
         }
-        // 注入當下多半還沒有 app context，載入會失敗；之後由 hook 內與 Application.onCreate 重試
+        // At injection time there is usually no app context yet and loading fails; retried later
+        // from the hook and Application.onCreate
         if (cfg.maskProps && cfg.maskPropsNative) {
             NativeMask.install(cfg);
         }
@@ -52,8 +53,8 @@ final class PropMask {
         protected void afterHookedMethod(MethodHookParam param) {
             MaskConfig cfg = MaskConfig.get();
             if (cfg.maskProps && cfg.maskPropsNative) {
-                NativeMask.install(cfg); // 冪等：未載入則重試，已載入則必要時更新遮蔽表
-                NativeMask.repatch();    // 補掃之後才載入的 .so
+                NativeMask.install(cfg); // idempotent: retry if not loaded, refresh the mask table if already loaded
+                NativeMask.repatch();    // rescan .so files loaded later
             }
             Object[] a = param.args;
             if (a == null || a.length < 1 || !(a[0] instanceof String)) {
@@ -70,7 +71,7 @@ final class PropMask {
         }
     };
 
-    /** {@code MethodHookParam.method} 是 {@link java.lang.reflect.Member}，要自己轉成 Method 才拿得到回傳型別。 */
+    /** {@code MethodHookParam.method} is a {@link java.lang.reflect.Member}; cast it to Method to get the return type. */
     private static Class<?> returnType(XC_MethodHook.MethodHookParam param) {
         java.lang.reflect.Member m = param.method;
         return (m instanceof java.lang.reflect.Method) ? ((java.lang.reflect.Method) m).getReturnType() : null;

@@ -1,0 +1,95 @@
+# Ring Audit — End-to-End Proof That a Third-Party App Can Deliver to DebugReceiver
+
+> 中文版：[ring_reachability_test_2026-09-13.txt](ring_reachability_test_2026-09-13.txt)
+
+**Date**: 2026-09-13 15:45 · **Purpose**: to upgrade the §2 R4 claim in `reports/ring_capture_security_audit_2026-09-13.md`
+that "any installed app can send" from a manifest inference to an **end-to-end measurement**.
+
+**Devices under test**
+| Role | Serial | Model |
+|------|------|------|
+| Phone (app: `com.rokid.rc.phone`) | `<PHONE_SERIAL>` | 21091116UG (Xiaomi) |
+| Glasses (app: `com.rokid.rc.glasses`) | `<DEVICE_SERIAL>` | RG-glasses (RV101) |
+
+**Test app**: `com.ringaudit.reachtest` (`build-cache/ringtest/`, 8.6 KB, self-signed)
+- It has a single Activity whose `onCreate` sends two **read-only** broadcasts:
+  - Phone side: `com.rokid.rc.phone/.DebugReceiver` + `cmd=TEST_RING_TEXT` (pure string comparison, no side effects)
+  - Glasses side: `com.rokid.rc.glasses/.DebugReceiver` + `cmd=RING_STATUS` (only prints status, no side effects)
+- It did **not** send any command with side effects (`CAPTURE_PHOTO`/`START_VIDEO`/`ACQUIRE_ROOT`/`PAIR_RING`/`WIFI_ADB`/`SET_*`/`DELETE_MEDIA`).
+- Build: `aapt2 link` → `javac` → `d8` → `jar uf` → `zipalign` → `apksigner` (Linux SDK 34.0.0 + the workspace `jdk`).
+
+**Result: both succeeded** — the broadcast was sent by an **ordinary app uid** (not shell's 2000) and was executed.
+
+---
+
+## 1. Phone (sender uid **10346**)
+
+```
+09-13 15:45:40.270 19776 19776 I RingReachTest: SENDER uid=10346 pkg=com.ringaudit.reachtest (shell=2000; app uid 應為 10xxx)
+09-13 15:45:40.271 19776 19776 I RingReachTest: SENDER sent -> com.rokid.rc.phone/com.rokid.rc.phone.DebugReceiver cmd=TEST_RING_TEXT
+09-13 15:45:40.277 19776 19776 I RingReachTest: SENDER sent -> com.rokid.rc.glasses/com.rokid.rc.glasses.DebugReceiver cmd=RING_STATUS
+
+--- receiver (com.rokid.rc.phone process 19836) ---
+09-13 15:45:41.297 19836 19836 I DebugReceiver: onReceive cmd=TEST_RING_TEXT connected=false
+09-13 15:45:41.322 19836 19916 I DebugReceiver: executing TEST_RING_TEXT connected=false
+09-13 15:45:41.335 19836 19916 I DebugReceiver: TEST_RING_TEXT photo_ok -> 已拍照 IMG_1.jpg
+09-13 15:45:41.339 19836 19916 I DebugReceiver: TEST_RING_TEXT photo_fail -> 拍照失敗：IMG_1.jpg
+09-13 15:45:41.340 19836 19916 I DebugReceiver: TEST_RING_TEXT video_start -> 開始錄影
+(the remaining 12 lines are identical; omitted)
+```
+
+- `uid=10346` = an ordinary third-party app (`shell` is 2000, `system` is 1000).
+- The phone-side process **did execute** the command (after `executing TEST_RING_TEXT` there are 15 lines of comparison output).
+- `connected=false` only means the phone was not connected to the glasses at that moment; **reachability** is unrelated to connection state.
+
+## 2. Glasses (sender uid **10064**)
+
+```
+09-13 15:45:55.082  5100  5100 I RingReachTest: SENDER uid=10064 pkg=com.ringaudit.reachtest (shell=2000; app uid 應為 10xxx)
+09-13 15:45:55.085  5100  5100 I RingReachTest: SENDER sent -> com.rokid.rc.glasses/com.rokid.rc.glasses.DebugReceiver cmd=RING_STATUS
+
+--- receiver ---
+09-13 15:45:55.116 26943 26943 I GlassesDebugReceiver: RING_STATUS enabled=true running=true device=/dev/input/event1 last=running//dev/input/event1
+```
+
+What the glasses reported is the **live ring-control state** (`enabled=true running=true device=/dev/input/event1`),
+consistent with the independent measurement in §2 R2 (glasses prefs / `getevent`).
+
+## 3. Conclusion
+
+| Previous label | Now |
+|----------|------|
+| "Any third-party app can deliver" = **platform-semantics inference (High)** | ✅ **FACT (Very High)**: delivered and executed in practice with uid 10346/10064 |
+| FACTS §9-D "end-to-end third-party app delivery proof" | ✅ **closed** (this document) |
+
+**Impact**: any installed app (requiring no permissions at all) can —
+- Phone: `CAPTURE_PHOTO`/`START_VIDEO`/`STOP_VIDEO`, `ACQUIRE_ROOT`, `WIFI_ADB`,
+  `WIFI_CONNECT --es host <arbitrary IP>`, **`PAIR_RING`/`WATCH_RING` (automatic pairing)**,
+  `DELETE_MEDIA`, `SET_RING` …
+- Glasses: **`RING_START` (can rebind the device/pattern)**, `RING_STOP`, `PAIR_RING`, `SET_DISPLAY`…
+
+## 4. Cleanup
+
+The test app has been removed from both devices (`adb uninstall com.ringaudit.reachtest` → `Success`,
+`pm list packages | grep ringaudit` produced no output). The APK and build materials are kept in
+`build-cache/ringtest/` (`out/app-signed.apk`) and can be reinstalled at any time to re-verify.
+
+## 5. Reproduction
+
+```bash
+cd /home/kali/rokid_root/build-cache/ringtest
+export JAVA_HOME=/home/kali/jdk; export PATH="$JAVA_HOME/bin:$PATH"
+BT=/home/kali/android-sdk/build-tools/34.0.0
+AJ=/home/kali/android-sdk/platforms/android-34/android.jar
+mkdir -p out/classes out/dex
+javac -source 8 -target 8 -bootclasspath "$AJ" -d out/classes $(find src -name '*.java')
+"$BT/d8" --release --lib "$AJ" --min-api 24 --output out/dex out/classes/com/ringaudit/reachtest/*.class
+"$BT/aapt2" link -o out/base.apk --manifest AndroidManifest.xml -I "$AJ" --min-sdk-version 24 --target-sdk-version 33
+cp out/base.apk out/app-unsigned.apk && ( cd out && cp dex/classes.dex . && "$JAVA_HOME/bin/jar" uf app-unsigned.apk classes.dex )
+"$BT/zipalign" -f -p 4 out/app-unsigned.apk out/app-aligned.apk
+"$BT/apksigner" sign --ks out/ringtest.keystore --ks-pass pass:android --key-pass pass:android \
+    --out out/app-signed.apk out/app-aligned.apk
+ADB="/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+"$ADB" -s <PHONE_SERIAL> install -r out/app-signed.apk
+"$ADB" -s <PHONE_SERIAL> shell 'logcat -c; am start -n com.ringaudit.reachtest/.MainActivity; sleep 4; logcat -d -s RingReachTest:* -s DebugReceiver:*'
+```

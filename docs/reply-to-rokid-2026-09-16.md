@@ -1,5 +1,7 @@
 # 回信 — 致 degang.xu@rokid.com（2026-09-16 版）
 
+> English: [reply-to-rokid-2026-09-16_EN.md](reply-to-rokid-2026-09-16_EN.md)
+
 > **本檔取代 `docs/reply-to-rokid-2026-09-06.md`**（舊版未涵蓋 9/16 決策）。
 > 狀態：**草稿，尚未寄出**。
 >

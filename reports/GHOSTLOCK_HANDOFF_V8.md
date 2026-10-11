@@ -1,5 +1,7 @@
 # GhostLock RV101 — 工作狀態交接 v8（第八任 → 第九任）
 
+> English: [GHOSTLOCK_HANDOFF_V8_EN.md](GHOSTLOCK_HANDOFF_V8_EN.md)
+
 > 更新於 2026-08-20。本輪（第八任）自 v9.30 接手，主要產出：**run51 死因定讞**、
 > **W2 FOPS 路線的全部符號/offset 完成驗證**、並**發現第三個位址錯誤 + kCFI 關鍵障礙**。
 > 源碼：`source_code\ghostlock_rv101\`（仍為 v9.30 邏輯，`target_rv101.h` 已新增 v9.31 W2 常數）。

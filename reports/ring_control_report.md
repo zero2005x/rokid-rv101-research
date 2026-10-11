@@ -1,5 +1,7 @@
 # 戒指控制（Rokid 戒指／觸控戒指）— 研究成果與實作報告
 
+> English: [ring_control_report_EN.md](ring_control_report_EN.md)
+
 - 日期：2026-09-12
 - 目標：讓**戒指**能操控眼鏡拍照／錄影（取得 root 後尤佳），手機端與眼鏡端都要支援
 - 狀態：**路徑 A（手機端攔截）與路徑 B（眼鏡端 root 直讀 evdev）皆完成並實機驗證**

@@ -1,4 +1,7 @@
 # GhostLock (CVE-2026-43499) RV101 Root Exploit — 交接 Prompt（給後續智能體）
+
+> English: [GHOSTLOCK_HANDOVER_PROMPT_EN.md](GHOSTLOCK_HANDOVER_PROMPT_EN.md)
+
 > ⚠ **2026-09-13 更新**：工作目錄已變更為 `/home/kali/rokid_root`（WSL/Kali；舊的
 > `C:\Users\<USER>\Documents\codebase\rokid_root` 已不使用）。**執行期提權已完成且穩定**
 > （bridge/Shizuku 兩條路徑、每 boot 以 adb 武裝一次），目前的維護重點是**維運層**

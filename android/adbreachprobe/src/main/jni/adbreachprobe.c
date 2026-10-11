@@ -1,13 +1,13 @@
 /*
  * adbreachprobe native probe (2026-09-20)
  *
- * 目的：繞過 Android Java framework 的 socket 封裝，直接做 raw syscall：
+ * Purpose: bypass the Android Java framework's socket wrapper and issue raw syscalls directly:
  *     socket(AF_UNIX, SOCK_STREAM, 0) + connect() + read()
- * 這樣拿到的 errno 是 kernel 的真實答案（DAC + SELinux 都會在這裡反映），
- * 不受 android.net.LocalSocket 的 @hide / API 行為差異影響。
+ * The errno obtained this way is the kernel's real answer (both DAC and SELinux show up here), unaffected by
+ * android.net.LocalSocket's @hide / API behavior differences.
  *
- * 只做連線與讀取；不 bind 任何系統路徑、不寫任何檔案（B 控制組只在 App 自己的
- * files dir 內建立 socket 檔案）。
+ * Connection and reads only; no binding to any system path, no writing any file (the B control group only creates
+ * a socket file inside the app's own files dir).
  */
 #include <jni.h>
 #include <errno.h>
@@ -21,12 +21,12 @@
 #define MAXREAD 24
 #define RES_LEN (4 + MAXREAD)
 
-/* 結果格式（int[RES_LEN]）：
- *   [0] errno       失敗時的 errno（0 = 沒失敗）
+/* Result layout (int[RES_LEN]):
+ *   [0] errno       errno on failure (0 = no failure)
  *   [1] stage       1=socket 2=connect 3=read 4=bind 5=listen 6=accept 7=echo
- *   [2] nbytes      read 到的 byte 數（<0 代表 read 失敗，errno 在 [0]）
- *   [3] extra       控制組用：accept 是否成功 / 額外狀態
- *   [4..27]         read 到的前 24 bytes（不足補 -1）
+ *   [2] nbytes      number of bytes read (<0 means read failed, errno in [0])
+ *   [3] extra       for the control group: whether accept succeeded / extra state
+ *   [4..27]         first 24 bytes read (padded with -1)
  */
 static jintArray
 make_result(JNIEnv *env, int err, int stage, int nbytes, int extra,
@@ -62,7 +62,7 @@ fill_sockaddr(struct sockaddr_un *sa, const char *path)
 }
 
 /*
- * Probe A（native）：connect 到 path，成功則在 timeoutMs 內最多讀 MAXREAD bytes。
+ * Probe A (native): connect to path; on success read at most MAXREAD bytes within timeoutMs.
  */
 JNIEXPORT jintArray JNICALL
 Java_com_rokid_rc_adbreachprobe_NativeProbe_connectUnixRead(JNIEnv *env, jclass clazz,
@@ -93,7 +93,7 @@ Java_com_rokid_rc_adbreachprobe_NativeProbe_connectUnixRead(JNIEnv *env, jclass 
         return make_result(env, e, 2, -1, 0, NULL);
     }
 
-    /* 連上了：設 3 秒接收逾時再讀 */
+    /* connected: set a 3-second receive timeout before reading */
     struct timeval tv;
     tv.tv_sec = timeoutMs / 1000;
     tv.tv_usec = (timeoutMs % 1000) * 1000;
@@ -109,10 +109,10 @@ Java_com_rokid_rc_adbreachprobe_NativeProbe_connectUnixRead(JNIEnv *env, jclass 
 }
 
 /*
- * Probe B（native 控制組）：在 path 建立自己的 UNIX socket、listen、
- * 由同一 process connect、accept、交換 1 byte。
- * 證明「本 process 有能力做完整的 AF_UNIX stream 連線」，所以 A 的失敗
- * 一定是目標 socket 的權限問題，而不是程式或 SELinux 全面禁止 AF_UNIX。
+ * Probe B (native control group): create our own UNIX socket at path, listen, connect from the same process,
+ * accept, and exchange 1 byte.
+ * This proves "this process is capable of a complete AF_UNIX stream connection", so a failure of A must be a
+ * permission problem of the target socket, not the program or SELinux banning AF_UNIX outright.
  */
 JNIEXPORT jintArray JNICALL
 Java_com_rokid_rc_adbreachprobe_NativeProbe_loopbackUnix(JNIEnv *env, jclass clazz,
@@ -145,7 +145,7 @@ Java_com_rokid_rc_adbreachprobe_NativeProbe_loopbackUnix(JNIEnv *env, jclass cla
         return make_result(env, e, 4, -1, 0, NULL);
     }
 
-    /* 記錄 socket 檔案的權限，當作 raw evidence */
+    /* record the socket file's permissions as raw evidence */
     struct stat st;
     int mode = -1, st_uid = -1, st_gid = -1;
     if (stat(path, &st) == 0) {
@@ -218,12 +218,12 @@ Java_com_rokid_rc_adbreachprobe_NativeProbe_loopbackUnix(JNIEnv *env, jclass cla
 }
 
 /*
- * 診斷：用 raw syscall 對 path 做 stat()/access()，證明 DAC 狀態。
+ * Diagnostics: stat()/access() on path through raw syscalls, to prove the DAC state.
  *
- * 注意：這是 DAC 專用。access(2) 完全不經過 SELinux，
- * 所以 access(W_OK) 的結果可以直接當成「DAC 是否允許寫入這個 socket inode」的證據。
+ * NOTE: this is DAC-only. access(2) does not go through SELinux at all,
+ * so the access(W_OK) result can be taken directly as evidence of "whether DAC allows writing to this socket inode".
  *
- * 結果格式（獨立於 make_result，避免截斷）：
+ * Result layout (independent of make_result, to avoid truncation):
  *   [0] stat errno          [1] access(W_OK) errno   [2] st_mode & 07777
  *   [3] W_OK (1/0)          [4] st_uid               [5] st_gid
  *   [6] st_mode & S_IFMT    [7..] = -1

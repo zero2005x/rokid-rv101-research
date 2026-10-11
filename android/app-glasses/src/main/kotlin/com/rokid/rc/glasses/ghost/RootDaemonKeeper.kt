@@ -13,30 +13,30 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 
 /**
- * root daemon 存活看守（**P0**，App 側）。
+ * root daemon liveness watchdog (**P0**, app side).
  *
- * 與 payload 安裝的 **root 側 keep-alive 迴圈**互補：
- * | 情境 | 由誰處理 |
+ * Complements the **root-side keep-alive loop** installed by the payload:
+ * | Scenario | Handled by |
  * |------|----------|
- * | daemon 崩潰／被 lmkd 回收，但 **root 還在** | root 側 keep-alive（20 秒一輪，直接重建，不需 adb、不需重跑 exploit） |
- * | root 整體失效（重開機、keeper 也被清掉） | 本看守：清 stale socket → 檢查是否**還有人可以幫忙提權** → 自動重建或回報「要跑哪支腳本」 |
+ * | daemon crashes / is reclaimed by lmkd, but **root is still alive** | root-side keep-alive (one round every 20 s, rebuilds directly, needs no adb and no exploit re-run) |
+ * | root is gone entirely (reboot, keeper also cleaned up) | this watchdog: clear the stale socket → check whether **anyone can still help escalate** → rebuild automatically or report which script to run |
  *
- * 設計取捨：
- *  - **不盲目重跑 exploit**：只有在 (a) bridge helper 常駐 或 (b) Shizuku 可用 時才自動重建；
- *    兩者都沒有時只回報狀態（避免在沒有觸發管線的情況下白跑、甚至 panic 重開機）。
- *  - **速率限制**：兩次自動重建至少間隔 [REARM_COOLDOWN_MS]，避免短時間內反覆觸發。
+ * Design tradeoffs:
+ *  - **Do not blindly re-run the exploit**: auto-rebuild only when (a) the bridge helper is resident or (b) Shizuku is available;
+ *    when neither holds, only report status (avoid burning runs with no trigger pipeline in place, or even a panic reboot).
+ *  - **Rate limit**: keep two auto-rebuilds at least [REARM_COOLDOWN_MS] apart, to avoid repeated triggering in a short window.
  */
 class RootDaemonKeeper(private val graph: AppGraph) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var job: Job? = null
 
-    /** 目前狀態代碼（結構化；手機端以自己語系顯示，見 shared `RootStates`）。 */
+    /** Current status code (structured; the phone side renders it in its own locale, see shared `RootStates`). */
     @Volatile
     var state: String = com.rokid.rc.shared.protocol.RootStates.UNKNOWN
         private set
 
-    /** 附加資訊（例如需要執行的腳本名稱、引擎名稱）。 */
+    /** Extra information (for example the script name to run, the engine name). */
     @Volatile
     var detail: String? = null
         private set
@@ -46,8 +46,8 @@ class RootDaemonKeeper(private val graph: AppGraph) {
     private var lastRearmAtMs = 0L
 
     /**
-     * 看守次數／自動重建次數（P2 度量用）。
-     * **持久化於 prefs**：Rokid 常殺 App，只放記憶體會每次歸零。
+     * Watchdog runs / auto-rebuild count (for P2 metrics).
+     * **Persisted in prefs**: Rokid kills the app often, so keeping it in memory alone would reset it every time.
      */
     private val prefs = graph.prefs
 
@@ -74,7 +74,7 @@ class RootDaemonKeeper(private val graph: AppGraph) {
     fun start() {
         if (job?.isActive == true) return
         job = scope.launch {
-            // 啟動後先等一輪，避免與 CaptureService 的 AUTO 提權撞在一起
+            // After startup, wait one round first so as not to collide with CaptureService's AUTO escalation
             delay(15_000)
             while (isActive) {
                 runCatching { check() }.onFailure { Log.w(TAG, "check failed: ${it.message}") }
@@ -90,20 +90,20 @@ class RootDaemonKeeper(private val graph: AppGraph) {
     }
 
     /**
-     * 外部操作者持有租約時，回傳其 owner 名稱；否則 null。
+     * When an external operator holds the lease, return its owner name; otherwise null.
      *
-     * exploit 本體（ghostlock_rv101、.ghostlock_root.sh、gl_run.log）無法像
-     * helper 與信箱那樣一分為二，所以三方用一個固定路徑的租約檔序列化。
-     * 外部操作者在工作期間會持續續約（桌面工具 30 秒輪詢、deploy `lease.sh` 背景續約），
-     * 因此這裡看到的 ts 是新鮮的就代表它確實在跑。
+     * The exploit itself (ghostlock_rv101, .ghostlock_root.sh, gl_run.log) cannot be split in two
+     * the way the helper and the mailbox can, so the three parties serialize through a lease file at a fixed path.
+     * An external operator keeps renewing it while it works (desktop tool polls every 30 s, deploy `lease.sh` renews in the background),
+     * so a fresh ts seen here means it really is running.
      *
-     * 判斷維持 **deny-by-default** ——只有 `owner=app`（自己）不算外部；
-     * 任何未知 owner 都讓開。**ts 新鮮但 owner 無法解析時保守視為外部**，
-     * 與原本 `mine = txt.contains("owner=app")` 的行為一致。
+     * The decision stays **deny-by-default** — only `owner=app` (ourselves) does not count as external;
+     * any unknown owner makes us back off. **When ts is fresh but the owner cannot be parsed, conservatively treat it as external**,
+     * matching the original `mine = txt.contains("owner=app")` behavior.
      *
-     * 回傳名稱（而非只是 Boolean）是為了讓 [detail] 顯示**實際**持有者：
-     * 原先把字串寫死成 `"desktop"`，但 2026-09-13 起 deploy 腳本（`deploy/lease.sh`）
-     * 也會持有租約，寫死會讓手機與日誌指出錯誤的對象。
+     * Returning the name (rather than just a Boolean) lets [detail] show the **actual** holder:
+     * the string used to be hardcoded to `"desktop"`, but since 2026-09-13 the deploy script (`deploy/lease.sh`)
+     * also holds the lease, and hardcoding made the phone and the log point at the wrong party.
      */
     private fun externalLeaseOwner(): String? {
         return try {
@@ -113,24 +113,24 @@ class RootDaemonKeeper(private val graph: AppGraph) {
             val ts = Regex("ts=(\\d+)").find(txt)?.groupValues?.get(1)?.toLongOrNull()
                 ?: return null
             val ageSec = System.currentTimeMillis() / 1000 - ts
-            if (ageSec !in 0..LEASE_TTL_SEC) return null          // 空閒／過期
+            if (ageSec !in 0..LEASE_TTL_SEC) return null          // idle / expired
             val owner = Regex("owner=([A-Za-z][A-Za-z]*)").find(txt)?.groupValues?.get(1)
-            if (owner == "app") return null                       // 自己持有
-            owner ?: "unknown"                                    // 無法解析 → 保守視為外部
+            if (owner == "app") return null                       // held by ourselves
+            owner ?: "unknown"                                    // cannot parse → conservatively treat as external
         } catch (e: Exception) {
             null
         }
     }
 
     /**
-     * 逾時後清掉洩漏的 exploit 程序。
+     * Clear out leaked exploit processes after a timeout.
      *
-     * exploit 失敗時會洩漏大量 ghostlock_rv101（實測 492 → 516，系統負載 347，
-     * adb 指令開始逾時）。**必須用 ps 取 PID 再逐一 kill**：pkill -f 的 pattern
-     * 會匹配到執行它的 shell 本身，造成自殺（退出碼 137）。
+     * When the exploit fails it leaks a large number of ghostlock_rv101 (measured 492 → 516, system load 347,
+     * adb commands started timing out). **Must take PIDs with ps and kill them one by one**: a `pkill -f` pattern
+     * would match the shell running it and kill itself (exit code 137).
      *
-     * 限制：App 只能殺自己的行程，這些是 shell 或 root 擁有，所以只有在
-     * root 還可用時才清得掉；清不掉時交給桌面工具（adb shell 有權限）。
+     * Limitation: the app can only kill its own processes, and these are owned by shell or root, so they can only be
+     * cleaned while root is still available; when they cannot be cleaned, it is left to the desktop tool (adb shell has the permission).
      */
     private suspend fun cleanupStrayExploits() {
         runCatching {
@@ -145,16 +145,16 @@ class RootDaemonKeeper(private val graph: AppGraph) {
     }
 
     /**
-     * 取得租約（覆寫整個檔案）。
+     * Take the lease (overwrite the whole file).
      *
-     * 租約檔位於 `ghostlock_bridge/`（**777**），因此本 App 可以自行建立它 ——
-     * 這是把租約從 `/data/local/tmp` 搬過來的原因（見 [LEASE_PATH] 的說明）。
-     * 搬遷前，App 對 `/data/local/tmp` 沒有目錄寫入權，檔案不存在時本函式**必然失敗**。
+     * The lease file lives in `ghostlock_bridge/` (**777**), so this app can create it itself —
+     * that is why the lease was moved over from `/data/local/tmp` (see the note on [LEASE_PATH]).
+     * Before the move the app had no directory write permission on `/data/local/tmp`, so when the file did not exist this function **always failed**.
      *
-     * 失敗時仍然**必須留下痕跡**：原本 `runCatching {}` 把失敗吞掉，於是 App 會在
-     * 「沒持有租約」的情況下照樣跑 exploit —— 正是租約要防止的互搶。
-     * 搬遷後失敗只剩磁碟／權限異常等罕見情況，但既然要防的是互搶，
-     * 寧可留一筆 W 級日誌也不要靜默。
+     * Even on failure it **must leave a trace**: the original `runCatching {}` swallowed the failure, so the app would
+     * run the exploit anyway while "not holding the lease" — exactly the mutual grabbing the lease exists to prevent.
+     * After the move a failure only means rare disk/permission anomalies, but since what is being prevented is mutual
+     * grabbing, a W-level log line is preferable to silence.
      */
     private fun takeLease(): Boolean {
         val pid = android.os.Process.myPid()
@@ -170,27 +170,27 @@ class RootDaemonKeeper(private val graph: AppGraph) {
     }
 
     /**
-     * 釋放租約：**寫入「已過期」標記，而不是刪除檔案**。
+     * Release the lease: **write an "expired" marker instead of deleting the file**.
      *
-     * 歷史：原本用 `delete()`，但當時租約檔在 `/data/local/tmp`，App 沒有該目錄的
-     * 寫入權 → `delete()` 永遠失敗（實測 `rm: Permission denied`），
-     * 租約便以 `owner=app` + 新鮮 `ts` 殘留，把桌面工具與 deploy **擋住最多 900 秒**。
+     * History: originally `delete()` was used, but the lease file was then in `/data/local/tmp` and the app had no
+     * write permission on that directory → `delete()` always failed (measured `rm: Permission denied`),
+     * so the lease lingered as `owner=app` + fresh `ts`, **blocking the desktop tool and deploy for up to 900 seconds**.
      *
-     * 搬遷到 777 的 `ghostlock_bridge/` 之後刪除已經可行，但**仍維持寫標記**，因為：
-     *  1. **一致性**：三方（app／deploy／desktop）用同一套約定，不必各自判斷刪除權。
-     *  2. **沒有空窗**：刪除與重建之間，讀者會看到「檔案不存在」＝無租約＝可搶，
-     *     那正是 TOCTOU 的溫床；寫標記是一次覆寫，沒有這種空窗。
+     * After the move to the 777 `ghostlock_bridge/` deletion works, but **the marker is still written**, because:
+     *  1. **Consistency**: the three parties (app/deploy/desktop) share one convention and need not each judge delete rights.
+     *  2. **No window**: between delete and recreate, readers would see "file does not exist" = no lease = takeable,
+     *     which is a breeding ground for TOCTOU; writing the marker is a single overwrite with no such window.
      *
-     * `ts=0` 在三方實作中都不通過有效性檢查（desktop 要求 `>1000000000`、
-     * app/deploy 要求 age 在 `0..TTL`），因此等價於「已釋放」；
-     * 同時保留檔案（666）讓後續 `takeLease()` 還能覆寫。
+     * `ts=0` fails the validity check in all three implementations (desktop requires `>1000000000`,
+     * app/deploy require the age to be within `0..TTL`), so it is equivalent to "released";
+     * keeping the file (666) also lets a later `takeLease()` overwrite it.
      */
     private fun dropLease() {
         runCatching { File(LEASE_PATH).writeText("owner=none pid=0 ts=0") }
             .onFailure { Log.w(TAG, "dropLease FAILED (${it.message})") }
     }
 
-    /** 單次健康檢查 + 必要時自動重建。 */
+    /** One health check + auto-rebuild when necessary. */
     private suspend fun check() {
         checks++
         persistCounters()
@@ -205,26 +205,26 @@ class RootDaemonKeeper(private val graph: AppGraph) {
         }
 
         /*
-         * 先看有沒有人在用同一套 exploit。順序很重要：這個檢查必須在
-         * 「刪 stale socket」之前 —— 否則桌面工具剛把 daemon 拉起來、
-         * socket 還沒出現在 /proc/net/unix 的空窗期，就會被我們刪掉。
+         * First check whether anyone is using the same exploit. Order matters: this check must come
+         * before "delete the stale socket" — otherwise, in the window where the desktop tool has just brought
+         * the daemon up but the socket is not yet in /proc/net/unix, we would delete it.
          */
         val externalOwner = externalLeaseOwner()
         if (externalOwner != null) {
             state = com.rokid.rc.shared.protocol.RootStates.LOST_COOLDOWN
-            // 顯示**實際**持有者（desktop／deploy／…），不要寫死
+            // show the **actual** holder (desktop/deploy/…), do not hardcode it
             detail = "external-lease($externalOwner)"
             Log.i(TAG, "external operator($externalOwner) holds lease; skip re-arm and leave socket alone")
             return
         }
 
         /*
-         * root 不可用：嘗試清掉 stale socket。
+         * root unavailable: try to clear a stale socket.
          *
-         * ⚠ App 對 `/data/local/tmp` **沒有目錄寫入權**（見 takeLease 的說明），
-         * 所以 `delete()` 實際上**永遠失敗**。原本的程式碼不看回傳值就印
-         * 「removed stale socket」，日誌與事實不符（實測：日誌說刪了、檔案還在）
-         * —— 這種假日誌會讓後續除錯往錯的方向走，所以改為照實記錄。
+         * ⚠ The app has **no directory write permission** on `/data/local/tmp` (see the note in takeLease),
+         * so `delete()` in fact **always fails**. The original code printed "removed stale socket"
+         * without looking at the return value, so the log contradicted the facts (measured: the log said deleted, the file was still there)
+         * — that kind of false log sends later debugging in the wrong direction, so it now records the truth.
          */
         val stale = File(com.rokid.rc.glasses.GlassesPaths.ROOT_DAEMON_SOCK)
         if (stale.exists()) {
@@ -236,7 +236,7 @@ class RootDaemonKeeper(private val graph: AppGraph) {
             }
         }
 
-        // 有沒有人可以幫忙提權？
+        // is there anyone who can help escalate?
         val helperResident = isBridgeHelperResident()
         val shizukuUp = isShizukuAvailable()
         if (helperResident) {
@@ -251,10 +251,10 @@ class RootDaemonKeeper(private val graph: AppGraph) {
         }
 
         /*
-         * 安全武裝政策（2026-09-13）：開機迴圈斷路器／每次開機重試上限＋指數退避／
-         * 僅充電時自動武裝／開機後延遲。EXPLOIT 每次約 50% 機率 kernel panic → 2–5 分鐘後重開機，
-         * 無限制重試會變成開機迴圈（reports/glasses_reboot_after_adb_unplug_2026-09-13.md）。
-         * 這裡只約束**自動**武裝；使用者手動提權不受影響。
+         * Safe arming policy (2026-09-13): boot-loop breaker / per-boot retry cap + exponential backoff /
+         * auto-arm only while charging / delay after boot. The EXPLOIT kernel-panics roughly 50% of the time → reboot after 2-5 minutes,
+         * and unlimited retries turn into a boot loop (reports/glasses_reboot_after_adb_unplug_2026-09-13.md).
+         * This only constrains **automatic** arming; manual escalation by the user is unaffected.
          */
         val appCtx = graph.app
         ArmPolicy.blockReason(appCtx, prefs)?.let { why ->
@@ -264,13 +264,13 @@ class RootDaemonKeeper(private val graph: AppGraph) {
             return
         }
 
-        // 速率限制
+        // rate limit
         val now = android.os.SystemClock.elapsedRealtime()
         if (rearming || now - lastRearmAtMs < REARM_COOLDOWN_MS) {
             state = com.rokid.rc.shared.protocol.RootStates.LOST_COOLDOWN
             return
         }
-        // 通過所有檢查 → 記錄這次自動武裝（供斷路器與退避使用）
+        // passed every check → record this auto-arm (used by the breaker and the backoff)
         ArmPolicy.onAutoArmAttempt(prefs)
 
         rearming = true
@@ -280,8 +280,8 @@ class RootDaemonKeeper(private val graph: AppGraph) {
         state = com.rokid.rc.shared.protocol.RootStates.REARMING
         Log.i(TAG, "auto re-arm start (helper=$helperResident shizuku=$shizukuUp detail=$detail)")
         /*
-         * 租約預檢：從上面讀到這裡之間可能已被外部操作者搶走（TOCTOU），
-         * 所以在真正動手前再確認一次，避免兩邊同時改 .ghostlock_root.sh。
+         * Lease pre-check: between the read above and here an external operator may have taken it (TOCTOU),
+         * so confirm once more before actually acting, to avoid both sides rewriting .ghostlock_root.sh at the same time.
          */
         val preOwner = externalLeaseOwner()
         if (preOwner != null) {
@@ -292,8 +292,8 @@ class RootDaemonKeeper(private val graph: AppGraph) {
             return
         }
 
-        // 取租約。失敗（例如租約檔不存在且 App 無目錄寫入權）仍會繼續，
-        // 但 takeLease() 已留下 W 級日誌 —— 不再靜默地「沒持租約就跑 exploit」。
+        // Take the lease. Failure (for example the lease file does not exist and the app has no directory write
+        // permission) still continues, but takeLease() has left a W-level log — no more silently "running the exploit without a lease".
         if (!takeLease()) {
             Log.w(TAG, "proceeding WITHOUT lease: external operators cannot see us; " +
                 "run deploy/lease.sh (ensure_file) to pre-create a 666 lease file")
@@ -301,9 +301,9 @@ class RootDaemonKeeper(private val graph: AppGraph) {
         try {
             val started = now
             /*
-             * 逾時是必要的：先前沒有逾時，keeper 卡在 acquireRoot() 裡長達 17 分鐘，
-             * 期間 (a) 不會再檢查租約 (b) 狀態永遠停在 REARMING
-             * (c) exploit 持續洩漏程序把裝置拖垮。
+             * The timeout is necessary: without one earlier, the keeper got stuck inside acquireRoot() for as long as 17 minutes,
+             * during which (a) it stopped checking the lease (b) the status stayed at REARMING
+             * (c) the exploit kept leaking processes and dragged the device down.
              */
             val result = withTimeoutOrNull(REARM_TIMEOUT_MS) { graph.ghostlock.acquireRoot() }
             val tookMs = android.os.SystemClock.elapsedRealtime() - started
@@ -317,7 +317,7 @@ class RootDaemonKeeper(private val graph: AppGraph) {
                 persistCounters()
                 state = com.rokid.rc.shared.protocol.RootStates.REARMED
                 Log.i(TAG, "auto re-arm ok in ${tookMs}ms")
-                // 重建成功後把相依功能補回來
+                // after a successful rebuild, bring the dependent features back
                 runCatching { graph.silentMode.applyIfEnabled() }
                 runCatching { graph.ringControl.ensureRunning() }
             } else {
@@ -331,46 +331,46 @@ class RootDaemonKeeper(private val graph: AppGraph) {
     }
 
     /**
-     * bridge helper 是否常駐。
+     * Whether the bridge helper is resident.
      *
-     * ⚠ 不能用 `ps`：Android 的 App 看不到其他 process（實測 helper 明明在跑卻回 false，
-     * 導致看守誤判「沒人可觸發」而不自動重建）。改讀 helper 每秒更新的心跳檔。
+     * ⚠ Cannot use `ps`: an Android app cannot see other processes (measured: the helper was clearly running yet this returned false,
+     * which made the watchdog wrongly conclude "nobody can trigger" and skip the auto-rebuild). Read the heartbeat file the helper updates every second instead.
      */
     private fun isBridgeHelperResident(): Boolean = runCatching {
         val f = File(com.rokid.rc.glasses.GlassesPaths.BRIDGE_HELPER_ALIVE)
         if (!f.exists()) return@runCatching false
         val ts = f.readText().trim().toLongOrNull() ?: return@runCatching false
         val now = System.currentTimeMillis() / 1000
-        // 心跳容忍 2 分鐘（helper 迴圈為 1 秒一輪；bridge 忙碌時也不會超過這個量級）
+        // tolerate a 2-minute heartbeat gap (the helper loop runs once a second; a busy bridge stays within that order of magnitude)
         now - ts in 0..HEARTBEAT_TOLERANCE_S
     }.getOrDefault(false)
 
-    /** Shizuku server 是否可用（用官方 API，而非 `ps`）。 */
+    /** Whether the Shizuku server is available (through the official API, not `ps`). */
     private fun isShizukuAvailable(): Boolean =
         runCatching { rikka.shizuku.Shizuku.pingBinder() }.getOrDefault(false)
 
     companion object {
         private const val TAG = "RootDaemonKeeper"
         private const val INTERVAL_MS = 30_000L
-        /** 兩次自動重建的最短間隔（避免反覆觸發 exploit）。 */
+        /** Minimum interval between two auto-rebuilds (avoid repeatedly triggering the exploit). */
         private const val REARM_COOLDOWN_MS = 5 * 60_000L
-        /** helper 心跳容忍秒數。 */
+        /** Helper heartbeat tolerance in seconds. */
         private const val HEARTBEAT_TOLERANCE_S = 120L
 
         /**
-         * 與 ZeroLightRokidDesktop／`deploy/lease.sh` 共用的租約檔。
-         * **三處路徑必須完全一致**（`deploy/test_lease.sh` 有一項跨檔一致性檢查）。
+         * Lease file shared with ZeroLightRokidDesktop/`deploy/lease.sh`.
+         * **The path must be identical in all three places** (`deploy/test_lease.sh` has a cross-file consistency check).
          *
-         * 為什麼在 `ghostlock_bridge/` 子目錄而不是 `/data/local/tmp` 本身：
-         * `/data/local/tmp` 是 `drwxrwx--x shell shell`，本 App（uid 10053）屬 "other"，
-         * 只有 `--x` **沒有目錄寫入權** —— 實測**既不能建立也不能刪除**其中的檔案，
-         * 導致 `takeLease()` 在檔案不存在時必然失敗（App 沒持租約就跑 exploit）。
-         * `ghostlock_bridge/` 是 **777**，實測本 App 在其中 `CREATE_OK` / `RM_OK`。
+         * Why in the `ghostlock_bridge/` subdirectory rather than `/data/local/tmp` itself:
+         * `/data/local/tmp` is `drwxrwx--x shell shell`, this app (uid 10053) is "other",
+         * which has only `--x` and **no directory write permission** — measured: it can **neither create nor delete** files in it,
+         * so `takeLease()` necessarily failed when the file did not exist (the app then ran the exploit without holding the lease).
+         * `ghostlock_bridge/` is **777**, and this app measured `CREATE_OK` / `RM_OK` inside it.
          */
         private const val LEASE_PATH = "/data/local/tmp/ghostlock_bridge/ghostlock_op.lease"
         private const val LEASE_TTL_SEC = 900L
 
-        /** 單次自動重建的上限。沒有這個，keeper 會卡死（實測 17 分鐘）。 */
+        /** Cap on a single auto-rebuild. Without it the keeper hangs (measured 17 minutes). */
         private const val REARM_TIMEOUT_MS = 5 * 60 * 1000L
         const val SCRIPT_BRIDGE = "deploy/root_bridge.sh"
         const val SCRIPT_SHIZUKU = "deploy/start_shizuku.sh"

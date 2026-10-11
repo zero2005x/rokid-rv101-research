@@ -25,11 +25,11 @@ import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * 傳輸無關的串流鏈路基類：request/response 配對（id ↔ replyTo）＋
- * 眼鏡→手機二進位檔案傳輸（MEDIA_META → chunks → TRANSFER_END）。
+ * Transport-agnostic stream link base class: request/response pairing (id ↔ replyTo) plus
+ * glasses→phone binary file transfer (MEDIA_META → chunks → TRANSFER_END).
  *
- * 子類：[BluetoothClient]（RFCOMM）、[TcpClient]（WiFi/SoftAP TCP 8555）。
- * 建立實體連線後呼叫 [attachStreams] 即啟用讀迴圈。
+ * Subclasses: [BluetoothClient] (RFCOMM), [TcpClient] (WiFi/SoftAP TCP 8555).
+ * Once the physical connection is established, calling [attachStreams] enables the read loop.
  */
 abstract class LinkClient {
 
@@ -51,15 +51,15 @@ abstract class LinkClient {
     @Volatile
     var onDisconnected: (() -> Unit)? = null
 
-    /** 實體連線建立（含 WiFi 通道自動建立）時通知；可能來自背景執行緒。 */
+    /** Notified when the physical connection is established (including auto-setup of the WiFi channel); may come from a background thread. */
     @Volatile
     var onConnected: (() -> Unit)? = null
 
-    /** 未配對的推送訊息（如 PROGRESS）。 */
+    /** Unpaired push messages (such as PROGRESS). */
     @Volatile
     var onPush: ((JSONObject) -> Unit)? = null
 
-    /** 子類建立實體連線後呼叫：接上串流並啟動讀迴圈。 */
+    /** Called by a subclass once the physical connection is established: attach the streams and start the read loop. */
     protected fun attachStreams(input: java.io.InputStream, output: java.io.OutputStream) {
         din = DataInputStream(BufferedInputStream(input, 64 * 1024))
         dout = DataOutputStream(BufferedOutputStream(output, 64 * 1024))
@@ -68,12 +68,12 @@ abstract class LinkClient {
         readJob = scope.launch { readLoop() }
     }
 
-    /** 子類關閉實體傳輸（socket）。 */
+    /** Subclass closes the physical transport (socket). */
     protected abstract fun closeTransport()
 
     open fun disconnect() {
-        // 顯式斷線（使用者按「斷線」、關閉 WiFi 通道）也要通知 UI；
-        // 原本只有 readLoop 的 finally 會通知，導致主動關閉時畫面停在舊的傳輸方式
+        // an explicit disconnect (the user tapping "disconnect", closing the WiFi channel) must notify the UI too;
+        // originally only readLoop's finally notified, so an active close left the screen showing the old transport
         val wasConnected = connected
         connected = false
         readJob?.cancel()
@@ -148,7 +148,7 @@ abstract class LinkClient {
                 }
             }
         } catch (e: Exception) {
-            // EOF / 連線中斷
+            // EOF / connection lost
         } finally {
             if (connected) {
                 connected = false
@@ -201,7 +201,7 @@ abstract class LinkClient {
         try {
             ct.out.write(data)
             ct.done += data.size
-            // 節流：每 ~256KB 或每 2% 回報一次（WiFi 速度快，降低回呼頻率）
+            // throttle: report every ~256KB or every 2% (WiFi is fast, so lower the callback frequency)
             if (ct.done - ct.lastReport >= 256 * 1024 || ct.total > 0 &&
                 (ct.done * 100 / ct.total - ct.lastReportPct >= 2)
             ) {

@@ -7,20 +7,20 @@ import java.net.InetSocketAddress
 import java.net.Socket
 
 /**
- * 手機端 WiFi TCP 鏈路（媒體通道）：連眼鏡 SoftAP 的 192.168.43.1:8555。
- * 傳輸邏輯與藍牙完全一致（[LinkClient]），僅傳輸介質不同。
+ * Phone-side WiFi TCP link (media channel): connects to the glasses SoftAP at 192.168.43.1:8555.
+ * The transfer logic is identical to Bluetooth ([LinkClient]); only the transport medium differs.
  */
 class TcpClient : LinkClient() {
 
     private var socket: Socket? = null
 
     /**
-     * 連線到眼鏡的媒體 TCP 服務。
+     * Connect to the glasses' media TCP service.
      *
-     * ⚠ [network] 很重要（2026-09-13 實測）：用 `WifiNetworkSpecifier` 加入的眼鏡 SoftAP
-     * **不會成為 App 的預設網路**，若直接 `Socket()`，流量會走行動網路／原本的 WiFi，
-     * 導致 `failed to connect to /192.168.43.1 from /10.225.98.247`（實測錯誤訊息）。
-     * 必須把 socket 綁到那個 [Network]（[Network.bindSocket]），才會真的走眼鏡 AP。
+     * ⚠ [network] matters (measured 2026-09-13): a glasses SoftAP joined with `WifiNetworkSpecifier` **does not
+     * become the app's default network**, so a plain `Socket()` sends traffic over mobile data / the original WiFi,
+     * producing `failed to connect to /192.168.43.1 from /10.225.98.247` (the measured error message).
+     * The socket must be bound to that [Network] ([Network.bindSocket]) to really go over the glasses AP.
      */
     suspend fun connect(
         host: String,

@@ -1,5 +1,7 @@
 # GhostLock RV101 — 工作狀態交接 v9（第八任 → 第九任，W2 實作回合）
 
+> English: [GHOSTLOCK_HANDOFF_V9_EN.md](GHOSTLOCK_HANDOFF_V9_EN.md)
+
 > 更新於 2026-08-20。本輪（第八任，裝置已接回）完成三件大事：
 > 1. **定位並修復 run51/v9.30 的 kernel panic 根因**（不是 8-byte 塗抹！）。
 > 2. **落地 W2 FOPS 路線的完整程式碼**（fake_fops + configfs 任意讀 + task walk + cred 寫）。

@@ -26,11 +26,11 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * 全螢幕檢視器：
- * - 遠端媒體：先以大縮圖立即顯示，再背景下載原檔（進度條），完成後以原圖替換；
- *   影片下載完自動播放。
- * - 本機媒體：直接讀檔。
- * 照片支援雙指縮放/雙擊放大；點一下切換 chrome。
+ * Full-screen viewer:
+ * - Remote media: show the large thumbnail immediately first, then download the original in the background (progress bar)
+ *   and replace it with the full image when done; a video plays automatically once downloaded.
+ * - Local media: read the file directly.
+ * Photos support pinch-to-zoom / double-tap to zoom; a single tap toggles the chrome.
  */
 class ViewerActivity : AppCompatActivity() {
 
@@ -118,7 +118,7 @@ class ViewerActivity : AppCompatActivity() {
             return
         }
 
-        // ---------------- 遠端 ----------------
+        // ---------------- remote ----------------
         btnDelete.visibility = View.VISIBLE
         btnDelete.setOnClickListener {
             MaterialAlertDialogBuilder(this)
@@ -161,7 +161,7 @@ class ViewerActivity : AppCompatActivity() {
                     if (type == MediaType.VIDEO) playVideo(target) else showImage(target)
                     return@launch
                 }
-                // 先以大縮圖立即顯示（照片）
+                // show the large thumbnail immediately first (photos)
                 if (type == MediaType.PHOTO) {
                     hideMsg()
                     zoom.visibility = View.VISIBLE

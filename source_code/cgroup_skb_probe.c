@@ -1,6 +1,6 @@
 /*
  * CGROUP_SKB BPF Exploit Probe
- * 探測 CGROUP_SKB 的完整功能
+ * Probe the full capabilities of CGROUP_SKB
  */
 #define _GNU_SOURCE
 #include <stdio.h>
