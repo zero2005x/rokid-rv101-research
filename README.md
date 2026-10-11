@@ -7,6 +7,7 @@
 > 發布說明（2026-10-11）：
 > - [`EXCLUDED.md`](EXCLUDED.md) — 未納入版控的檔案與理由（含 SHA-256）
 > - [`REDACTION_LOG.md`](REDACTION_LOG.md) — 個資與洩漏憑證的遮蔽紀錄（before/after 雜湊）
+> - [`GITHUB_PUBLISH_LOG.md`](GITHUB_PUBLISH_LOG.md) — 發布至 GitHub 的驗收紀錄
 > - [`MANIFEST.md`](MANIFEST.md) — 原始工作區版面清單與分類原則
 >
 > 完整工作區（含工具鏈、APK 標的、反編譯輸出、建置快取與影片製作區，約 17 GB）仍保留在本機 `~/rokid_root/`。
