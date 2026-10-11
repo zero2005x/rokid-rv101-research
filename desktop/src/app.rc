@@ -1,0 +1,58 @@
+/*
+ * app.rc — 版本資訊與資訊清單（manifest）資源
+ *
+ * 以 windres（MinGW）或 rc（MSVC）編譯後與 zero_light_desktop.c 連結。
+ * 目的：
+ *   1. 內嵌 manifest → 啟用 v6 通用控制項（現代外觀）與 Per-Monitor V2 高 DPI
+ *   2. 版本資訊 → 檔案內容顯示版本／說明，而非空白
+ */
+
+#include <windows.h>
+
+/* ---- 應用程式資訊清單 ---- */
+1 RT_MANIFEST "app.manifest"
+
+/* ---- 版本資訊 ---- */
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     3,0,0,0
+PRODUCTVERSION  3,0,0,0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+FILEFLAGS       0
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        /*** 語言 0404 = zh-TW，代碼頁 04b0 = Unicode ***/
+        BLOCK "040404b0"
+        BEGIN
+            VALUE "CompanyName",      "ZeroLightRokid Project"
+            VALUE "FileDescription",  "ZeroLightRokid Desktop — RV101 LPE 輔助工具"
+            VALUE "FileVersion",      "3.0.0.0"
+            VALUE "InternalName",     "zero_light_desktop"
+            VALUE "LegalCopyright",   "For authorized security research only"
+            VALUE "OriginalFilename", "zero_light_desktop.exe"
+            VALUE "ProductName",      "ZeroLightRokid Desktop"
+            VALUE "ProductVersion",   "3.0.0.0"
+            VALUE "Comments",         "Self-owned / authorized devices only"
+        END
+        /*** 語言 0409 = en-US ***/
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "ZeroLightRokid Project"
+            VALUE "FileDescription",  "ZeroLightRokid Desktop - RV101 LPE helper"
+            VALUE "FileVersion",      "3.0.0.0"
+            VALUE "InternalName",     "zero_light_desktop"
+            VALUE "LegalCopyright",   "For authorized security research only"
+            VALUE "OriginalFilename", "zero_light_desktop.exe"
+            VALUE "ProductName",      "ZeroLightRokid Desktop"
+            VALUE "ProductVersion",   "3.0.0.0"
+            VALUE "Comments",         "Self-owned / authorized devices only"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0404, 1200, 0x0409, 1200
+    END
+END

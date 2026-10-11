@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 品牌色系 — **深色模式**：深藍底＋亮青 primary＋琥珀 accent（與 launcher icon 一致） -->
+<resources>
+    <color name="primary">#22D3EE</color>
+    <color name="primary_dark">#06B6D4</color>
+    <color name="on_primary">#04252B</color>
+    <color name="secondary">#FFB300</color>
+    <color name="on_secondary">#3A2A00</color>
+    <color name="bg">#0B1220</color>
+    <color name="surface_card">#141D2F</color>
+    <color name="text_primary">#E6EDF3</color>
+    <color name="text_secondary">#93A1B1</color>
+    <color name="outline">#24304A</color>
+    <color name="danger">#F87171</color>
+    <color name="success">#34D399</color>
+    <color name="scrim">#99000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="surface">#0B1220</color>
+    <color name="on_surface">#E6EDF3</color>
+    <color name="surface_variant">#141D2F</color>
+    <color name="on_surface_variant">#93A1B1</color>
+    <color name="secondary_container">#3A2A00</color>
+    <color name="on_secondary_container">#FFD54F</color>
+    <color name="primary_container">#0E3B45</color>
+    <color name="on_primary_container">#A5F3FC</color>
+
+    <color name="on_scrim">#CCFFFFFF</color>
+    <color name="accent_soft">#591A73E8</color>
+</resources>

@@ -1,0 +1,43 @@
+=== 眼鏡媒體索引驗證（2026-09-16 07:54:59）===
+APK: /home/kali/rokid_root/scripts/../dist/app-glasses-v1.0-safe.3.apk
+
+--- 0. 安裝與基準 ---
+  Success
+      versionName=1.0-safe.3
+  ✅ 版本正確
+  索引基準：media=14（磁碟 14 檔）
+     （第 1 次取清單失敗，重試）
+     （第 2 次取清單失敗，重試）
+     （第 3 次取清單失敗，重試）
+  手機端基準：total=     （第 1 次取清單失敗，重試）
+     （第 2 次取清單失敗，重試）
+     （第 3 次取清單失敗，重試）
+  （基準啟動無 reconcile 訊息＝磁碟與索引一致）
+
+--- A. 壞 album 逐筆容錯 ---
+     09-16 07:55:50.880  4111  4111 E MediaRepository: album entry #0 skipped: No value for name
+  ✅ 逐筆跳過（album entry #0 skipped）
+  ✅ media 未受影響（total=14）
+
+--- B. 正向自我修復（磁碟有、索引沒有）---
+     09-16 07:56:17.632  4246  4246 E MediaRepository: album entry #0 skipped: No value for name
+     09-16 07:56:17.667  4246  4246 W MediaRepository: index reconciled: +1 re-registered / -0 removed (file missing on disk)
+  ✅ 自動補登（+1 re-registered）
+  ✅ 手機清單 +1（total=15）
+
+--- C. 反向自我修復（索引有、磁碟沒有）---
+     09-16 07:56:40.738  4377  4377 W MediaRepository: index reconciled: +0 re-registered / -1 removed (file missing on disk)
+  ✅ 自動移除（-1 removed）
+  ✅ 手機清單回到基準（total=14）
+
+--- D. WiFi 為當前通道時的推播 ---
+  ❌ 手機未能切到 WiFi 通道（推播路徑無法在 WiFi 下驗證）
+
+--- E. 關閉 WiFi 通道的通知 ---
+  ✅ 已截圖 /home/kali/rokid_root/scripts/../reports/ui_transport_2026-09-13/05_after_wifi_disconnect.png（人工確認是否已回到藍牙／連線中）
+
+--- 還原索引 ---
+  ✅ 索引已還原（media=14）
+
+=== 結果：PASS=9 FAIL=1 ===
+逐字稿：reports/index_resilience_verification_run2.txt

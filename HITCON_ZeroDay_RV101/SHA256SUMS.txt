@@ -1,0 +1,19 @@
+# SHA-256 manifest for HITCON_ZeroDay_RV101
+# Generated 2026-08-22 (Asia/Taipei)
+# SHA256SUMS.txt intentionally excludes itself.
+# Updated: 2026-10-11 — re-hashed 0 entries after PII/credential redaction (placeholders such as <DEVICE_SERIAL>); 0 unchanged, 13 entries left as-is for files intentionally not included in this repository.
+# Updated: 2026-10-11 — re-hashed 0 entries after PII redaction (placeholders such as <DEVICE_SERIAL>); 13 unchanged, 0 absent. Paths are relative to this directory.
+
+977f4dbd6bbe39de78d6190d9b8e0457043b8a08c1e71c99a0351812035d078c  00_README.md
+6367bfaace9f1716401438d7d1c7d74517e06deb7e5b50f80431fa87c760cbb1  01_Attachments/A01_Device_Baseline_REDACTED.txt
+534dccc82a81bc6caf5e1e8f7e9fb674b917c5455f8da80b4b9a03a26193fe1b  01_Attachments/A02_Privilege_Transition_REDACTED.txt
+881d104c82c5e448fe1f58ab378057905bd20f8d4bb49f4572addd6c575d9f9f  ADB_Collection_Attempt_20260822.md
+111fc612f64b79fa4234408aee875e52fb422fe4d7a5b5029f5af548c22f516b  Coordinated_Disclosure_Risk_Note.md
+7d5d5cbe8f6a923cdc74484fe27243b98d674d3e43414f8269eb56122d9d9c42  Evidence_Attachment_List.md
+15807e02d981a117c6021d86d473677be638014ebc981160039a623d890b2e32  FINAL_REVIEW.md
+12727f563434fdbdfa54f157a8aeb2485bb6eb6d34ed29d768a7188a62468e5d  HITCON_Disclosure_Timeline.md
+f7b2994ce4ce5d55f426026cfa4c9fbca4b8eac4d522b4320776852ef48378c3  HITCON_Pre_Submission_Inquiry_Email.md
+cffba7974183c96ede6bb8112f3c4e3494ca0357ead5a4210db48b1cd6fe14c0  HITCON_RV101_Report_ZH-TW.md
+57be37382e62758396aa46a7000a4bf47d05203260a42b37c094d6946a6379f0  HITCON_Submission_Fields.md
+06879013689701bf59d7c784933a48ec73b125228f0ec0f5f11fe3d7d7e3f2cd  PRIVATE_MATERIALS_NOT_FOR_UPLOAD.md
+8c7684361cc8f4995c00941fb7a5ecb559eac207e945267517c36d11a4f3d7d0  SUBMISSION_GATE.md

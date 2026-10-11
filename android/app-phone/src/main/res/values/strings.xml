@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rokid Remote</string>
+
+    <!-- bottom navigation -->
+    <string name="tab_remote">遙控</string>
+    <string name="tab_albums">相簿</string>
+    <string name="tab_local">本機</string>
+
+    <!-- remote -->
+    <string name="conn_connected">已連線</string>
+    <string name="conn_disconnected">未連線</string>
+    <string name="conn_connecting">連線中…</string>
+    <string name="btn_connect">連線</string>
+    <string name="transport_bt">傳輸：藍牙</string>
+    <string name="transport_wifi">傳輸：WiFi %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">傳輸：WiFi 連線中…</string>
+    <string name="btn_wifi_on">啟用 WiFi 傳輸</string>
+    <string name="btn_wifi_off">關閉 WiFi 傳輸</string>
+    <string name="wifi_failed_manual">無法自動加入 WiFi「%1$s」（密碼 %2$s）。請在系統 WiFi 設定手動加入後重試。</string>
+    <string name="wifi_ap_not_ready">眼鏡 WiFi 熱點未就緒：需先取得 root（或稍後重試）。</string>
+    <string name="btn_disconnect">斷線</string>
+    <string name="conn_card_title">眼鏡連線</string>
+    <string name="conn_no_device">尚未選擇眼鏡</string>
+    <string name="conn_pick_title">選擇眼鏡</string>
+    <string name="sec_capture">拍攝</string>
+    <string name="btn_photo">拍照</string>
+    <string name="btn_video_start">開始錄影</string>
+    <string name="btn_video_stop">停止錄影</string>
+    <string name="sec_led">隱私指示燈</string>
+    <string name="led_switch_label">指示燈（白燈）</string>
+    <string name="chip_white">白</string>
+    <string name="chip_green">綠</string>
+    <string name="chip_blue">藍</string>
+    <string name="chip_red">紅</string>
+    <string name="sec_advanced">進階（root／ghostlock）</string>
+    <string name="btn_advanced_show">展開</string>
+    <string name="btn_advanced_hide">收起</string>
+    <string name="ghost_switch_label">ghostlock 隱蔽模式（拍照壓制隱私燈）</string>
+    <string name="root_auto_label">開機自動取得 root（AUTO）</string>
+    <string name="btn_acquire_root">立即取得 root</string>
+    <string name="btn_device_info">裝置資訊</string>
+    <string name="sec_display">眼鏡顯示</string>
+    <string name="chip_disp_conn">連線</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">相機</string>
+    <string name="chip_disp_storage">儲存</string>
+    <string name="chip_disp_led">指示燈</string>
+    <string name="btn_disp_all">全顯示</string>
+    <string name="btn_disp_none">全隱藏</string>
+    <string name="sec_log">操作紀錄</string>
+    <string name="btn_clear_log">清除</string>
+    <string name="log_dialog_title">操作紀錄（完整）</string>
+    <string name="dialog_close">關閉</string>
+    <string name="log_longpress_hint">長按查看完整紀錄</string>
+
+    <!-- albums -->
+    <string name="toolbar_albums">相簿</string>
+    <string name="content_desc_add">新增相簿</string>
+    <string name="content_desc_refresh">重新整理</string>
+    <string name="empty_albums">尚無相簿\n按右下 ＋ 建立第一本</string>
+    <string name="albums_not_connected">未連線到眼鏡\n請先到「遙控」分頁完成藍牙連線</string>
+    <string name="albums_load_failed">載入相簿失敗</string>
+    <string name="action_retry">重試</string>
+    <string name="album_item_count">%1$d 項</string>
+    <string name="menu_view">檢視</string>
+    <string name="menu_rename">重新命名</string>
+    <string name="menu_delete">刪除</string>
+    <string name="dialog_new_album">新增相簿</string>
+    <string name="dialog_rename_album">重新命名相簿</string>
+    <string name="hint_album_name">相簿名稱</string>
+    <string name="action_create">建立</string>
+    <string name="action_ok">確定</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_delete">刪除</string>
+    <string name="confirm_delete_album">刪除相簿「%1$s」與其中所有媒體？\n（僅刪眼鏡端原檔，不影響本機已下載的副本）</string>
+    <string name="msg_album_created">相簿已建立</string>
+    <string name="msg_album_renamed">相簿已更名</string>
+    <string name="msg_album_deleted">相簿已刪除</string>
+
+    <!-- media grid -->
+    <string name="sel_count">已選 %1$d 項</string>
+    <string name="action_select_all">全選</string>
+    <string name="action_download">下載</string>
+    <string name="empty_media">此相簿沒有媒體</string>
+    <string name="media_load_failed">載入媒體失敗</string>
+    <string name="confirm_delete_media">刪除眼鏡端「%1$s」？\n（僅刪眼鏡端原檔，本機已下載的副本會保留）</string>
+    <string name="batch_deleting">正在刪除 %1$d/%2$d</string>
+    <string name="batch_downloading">正在下載 %1$d/%2$d</string>
+    <string name="msg_deleted">已刪除</string>
+
+    <!-- viewer -->
+    <string name="viewer_delete_remote">刪除眼鏡端原檔</string>
+    <string name="viewer_downloading">下載原檔中（藍牙傳輸，請稍候）…</string>
+    <string name="viewer_play">播放影片</string>
+
+    <!-- local -->
+    <string name="toolbar_local">本機</string>
+    <string name="empty_local">尚未下載任何媒體\n到「相簿」開啟相簿下載照片／影片</string>
+    <string name="local_dir_prefix">已下載到本機</string>
+    <string name="album_unnamed">未命名相簿</string>
+    <string name="silent_switch_label">靜音拍攝（壓制快門／錄影提示音）</string>
+    <string name="btn_language">語言：%1$s</string>
+    <string name="lang_dialog_title">選擇語言</string>
+    <string name="lang_system">跟隨系統</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">已斷線</string>
+    <string name="log_wifi_off">WiFi 傳輸已關閉，媒體改走藍牙</string>
+    <string name="log_wifi_enabling">啟用 WiFi 傳輸…（首次需在系統彈窗確認加入「%1$s」）</string>
+    <string name="log_wifi_enabled">✓ WiFi 傳輸已啟用（%1$s:%2$d）</string>
+    <string name="log_wifi_failed">✗ WiFi 傳輸：%1$s</string>
+    <string name="err_unknown">未知錯誤</string>
+    <string name="toast_not_connected">尚未連線眼鏡</string>
+    <string name="log_capturing">拍照中…</string>
+    <string name="log_photo_ok">✓ 已拍照 %1$s</string>
+    <string name="log_photo_fail">✗ 拍照失敗 %1$s</string>
+    <string name="log_recording">● 錄影中</string>
+    <string name="log_record_fail">✗ 錄影失敗 %1$s</string>
+    <string name="log_video_saved">✓ 已存影片 %1$s</string>
+    <string name="log_stop_fail">✗ 停止失敗 %1$s</string>
+    <string name="log_ghost_fail">ghostlock 設定失敗 %1$s</string>
+    <string name="log_root_mode_fail">root 模式設定失敗 %1$s</string>
+    <string name="silent_applied">✓ 靜音拍攝已開啟（快門／錄影提示音已壓制）</string>
+    <string name="silent_pending">⚠ 靜音已設定，但尚未套用（需先取得 root）</string>
+    <string name="silent_disabled">✓ 靜音拍攝已關閉（提示音已還原）</string>
+    <string name="log_silent_fail">✗ 靜音設定失敗 %1$s</string>
+    <string name="log_led_enabling">開啟隱私指示燈…</string>
+    <string name="log_led_disabling">關閉隱私指示燈…</string>
+    <string name="log_led_on_ok">✓ 指示燈：亮</string>
+    <string name="log_led_off_ok">✓ 指示燈：熄</string>
+    <string name="log_led_fail">✗ 指示燈設定失敗 %1$s</string>
+    <string name="log_root_acquiring">取得 root 中（可能需數分鐘）…</string>
+    <string name="log_root_ready">✓ root 已就緒</string>
+    <string name="log_root_failed">✗ root 取得失敗</string>
+    <string name="log_root_fail">✗ root 失敗 %1$s</string>
+    <string name="log_querying">查詢裝置資訊…</string>
+    <string name="log_query_fail">✗ 查詢失敗 %1$s</string>
+    <string name="log_progress">[進度] %1$s</string>
+    <string name="log_display_ok">✓ 眼鏡顯示已更新</string>
+    <string name="log_display_fail">✗ 顯示設定失敗 %1$s</string>
+    <string name="led_name">%1$s燈</string>
+    <string name="log_led_switch">%1$s%2$s…</string>
+    <string name="log_led_done">✓ %1$s：%2$s</string>
+    <string name="log_led_switch_fail">✗ %1$s失敗 %2$s</string>
+    <string name="state_on">亮</string>
+    <string name="state_off">熄</string>
+    <string name="state_enabled">開</string>
+    <string name="state_disabled">關</string>
+    <string name="status_summary">相簿 %1$d · 媒體 %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ 語言已切換：%1$s</string>
+    <string name="toast_bt_disabled">請先開啟藍牙</string>
+    <string name="toast_no_paired_device">沒有已配對的藍牙設備，請先在系統藍牙設定中配對眼鏡</string>
+    <string name="toast_connect_failed">連線失敗：%1$s</string>
+    <string name="toast_no_local_media">本機沒有此相簿的檔案</string>
+    <string name="confirm_delete_local_files">刪除本機的 %1$d 個檔案？（眼鏡端不受影響）</string>
+    <string name="batch_downloading_file">下載中 %1$d/%2$d：%3$s</string>
+    <string name="toast_delete_done">刪除完成：成功 %1$d</string>
+    <string name="toast_delete_done_fail">刪除完成：成功 %1$d、失敗 %2$d</string>
+    <string name="toast_download_done">下載完成：成功 %1$d</string>
+    <string name="toast_download_done_fail">下載完成：成功 %1$d、失敗 %2$d</string>
+    <string name="dialog_download_note">\n將從眼鏡端下載原檔（藍牙傳輸較慢）。</string>
+    <string name="err_local_file_missing">本機檔案不存在</string>
+    <string name="toast_delete_fail">刪除失敗 %1$s</string>
+    <string name="err_download_fail">下載失敗：%1$s</string>
+    <string name="toast_opening">開啟 %1$s…</string>
+    <string name="toast_create_fail">建立失敗 %1$s</string>
+    <string name="toast_rename_fail">更名失敗 %1$s</string>
+    <string name="local_album_delete">刪除本機相簿</string>
+    <string name="local_album_delete_msg">刪除手機上的「%1$s」（%2$s）？\n眼鏡端原檔不受影響。</string>
+    <string name="toast_local_album_deleted">本機相簿已刪除</string>
+    <string name="media_type_video">影片</string>
+    <string name="media_type_photo">照片</string>
+    <string name="wifi_ap_timeout">眼鏡 WiFi 熱點啟動逾時，請稍後重試</string>
+    <string name="wifi_tcp_failed">TCP 連線失敗：%1$s</string>
+    <string name="sec_ring">戒指控制</string>
+    <string name="ring_switch_label">啟用戒指手勢控制</string>
+    <string name="ring_hint">單擊＝拍照 · 雙擊＝錄影 · 長按＝靜音 · 滾輪＝切換顯示</string>
+    <string name="ring_status_idle">尚未收到手勢</string>
+    <string name="ring_status_fmt">累計 %1$d 次 · 最近：%2$s</string>
+    <string name="ring_learn_btn">手勢學習</string>
+    <string name="ring_learn_hint">請按下戒指按鍵…</string>
+    <string name="ring_learn_result">收到鍵碼 %1$s</string>
+    <string name="ring_map_title">選擇這個鍵碼的動作</string>
+    <string name="ring_action_photo">拍照</string>
+    <string name="ring_action_video">錄影開始／停止</string>
+    <string name="ring_action_silent">靜音拍攝切換</string>
+    <string name="ring_action_display_next">顯示資訊（下一組）</string>
+    <string name="ring_action_display_prev">顯示資訊（上一組）</string>
+    <string name="ring_action_none">不動作</string>
+    <string name="ring_map_saved">已對應 %1$s → %2$s</string>
+    <string name="ring_map_cleared">已清除自訂鍵碼對應</string>
+    <string name="ring_pair_btn">配對戒指</string>
+    <string name="ring_glasses_switch">眼鏡端戒指控制</string>
+    <string name="ring_glasses_status">眼鏡端：%1$s</string>
+    <string name="nav_settings">設定</string>
+    <string name="log_expand">放大</string>
+    <string name="sec_connection">連線</string>
+    <string name="sec_capture_root">拍攝與權限</string>
+    <string name="sec_led_settings">隱私指示燈</string>
+    <string name="sec_language">語言</string>
+    <string name="wifi_switch_hint">媒體與控制都優先走 WiFi，藍牙僅在 WiFi 不可用時作為備援</string>
+    <string name="led_colors_hint">選擇要開啟的燈色</string>
+    <string name="ring_a_label">手機端手勢（戒指連手機）</string>
+    <string name="ring_a_hint">需 App 在前景；支援滑鼠點擊與媒體鍵</string>
+    <string name="ring_b_label">眼鏡端手勢（戒指／觸控板連眼鏡）</string>
+    <string name="ring_b_hint">眼鏡以 root 直讀 evdev，背景也能觸發</string>
+    <string name="state_running">執行中</string>
+    <string name="state_stopped">未執行</string>
+    <string name="ring_phone_prefix">手機端：%1$s</string>
+    <string name="log_app_started">App 已就緒</string>
+    <string name="action_search">搜尋相簿</string>
+    <string name="action_sort">排序</string>
+    <string name="sort_name">名稱</string>
+    <string name="sort_count">項數</string>
+    <string name="sort_newest">最新建立</string>
+    <string name="local_summary">已下載 %1$d 本 · %2$d 項 · 佔用 %3$s</string>
+    <string name="selected_albums">已選 %1$d 本</string>
+    <string name="toast_local_albums_deleted">已刪除 %1$d 本本機相簿</string>
+    <string name="confirm_delete_local_albums">刪除手機上的 %1$d 本相簿？\n（眼鏡端原檔不受影響）</string>
+    <string name="ring_state_enabled">已啟用</string>
+    <string name="ring_state_disabled">已停用</string>
+    <string name="ring_learn_waiting">等待按鍵…</string>
+    <string name="ring_map_set">已對應 %1$s → %2$s</string>
+    <string name="ring_map_cleared_short">已清除自訂鍵碼對應</string>
+    <string name="ring_no_action">%1$s → （未指定動作）</string>
+    <string name="ring_err_prefix">例外：%1$s</string>
+    <string name="ring_photo_ok">已拍照 %1$s</string>
+    <string name="ring_photo_fail">拍照失敗：%1$s</string>
+    <string name="ring_video_start">開始錄影</string>
+    <string name="ring_video_fail">錄影失敗：%1$s</string>
+    <string name="ring_video_saved">已存影片 %1$s</string>
+    <string name="ring_stop_fail">停止失敗：%1$s</string>
+    <string name="ring_status_read_fail">讀取狀態失敗</string>
+    <string name="ring_silent_on">靜音開啟</string>
+    <string name="ring_silent_on_pending">靜音開啟（待 root）</string>
+    <string name="ring_silent_off">靜音關閉</string>
+    <string name="ring_silent_fail">靜音設定失敗：%1$s</string>
+    <string name="ring_display_switched">顯示切換為 %1$s</string>
+    <string name="ring_display_fail">顯示設定失敗：%1$s</string>
+    <string name="ring_on">ON</string>
+    <string name="ring_off">OFF</string>
+    <string name="sec_appearance">外觀</string>
+    <string name="light_mode_label">淺色模式</string>
+    <string name="light_mode_hint">關閉＝深色品牌主題（深藍底）；開啟＝白底淺色</string>
+    <string name="ring_camera_not_ready">相機未就緒（請在眼鏡上開啟 App）</string>
+    <string name="ring_status_no_device">找不到輸入裝置（%1$s）</string>
+    <string name="ring_status_start_failed">getevent 啟動失敗</string>
+    <string name="ring_status_stopped">已停止</string>
+    <string name="ring_display_none">全部隱藏</string>
+    <string name="ghost_skip_lpe">已偵測到常駐 root daemon，跳過 LPE</string>
+    <string name="ghost_prepare_payload">準備 payload</string>
+    <string name="ghost_done">完成</string>
+    <string name="ghost_failed">失敗：%1$s</string>
+    <string name="ghost_bridge_dir_missing">bridge 目錄不存在或不可寫：%1$s（請先跑 deploy/root_bridge.sh）</string>
+    <string name="ghost_bridge_sent">已送出指令，等待 helper 跑 exploit（可能數分鐘）</string>
+    <string name="ghost_bridge_timeout">bridge 逾時（helper 是否常駐？見 %1$s）</string>
+    <string name="ghost_bridge_report">bridge 回報：%1$s</string>
+    <string name="ghost_attempt">跑 exploit 第 %1$s 次嘗試</string>
+    <string name="ghost_helper_started">helper 已開始處理</string>
+    <string name="ghost_ready_seen">exploit 已達 ready 標記</string>
+    <string name="ghost_payload_replaced">置換 payload</string>
+    <string name="ghost_wait_payload_root">等待 payload 以 root 執行完成</string>
+    <string name="ghost_binary_missing">binary 不存在或不可執行：%1$s</string>
+    <string name="ghost_exploit_started">啟動 exploit</string>
+    <string name="ghost_exploit_start_failed">無法啟動 exploit（見 %1$s）</string>
+    <string name="ghost_wait_ready">等待 ready 標記</string>
+    <string name="ghost_ready_timeout">ready 標記逾時：%1$s</string>
+    <string name="ghost_ready_timeout_retry">ready 標記逾時</string>
+    <string name="ghost_payload_write_failed">無法寫入 %1$s（App 對 /data/local/tmp 的寫入權限？）</string>
+    <string name="ghost_wait_payload">等待 payload 完成</string>
+    <string name="ghost_payload_timeout">done 標記逾時。payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit: %1$s</string>
+    <string name="ghost_shizuku_not_running">Shizuku server 未執行（每 boot 需一次：deploy/start_shizuku.sh）</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku 未授權（已送出授權請求）</string>
+    <string name="ghost_shizuku_bind_failed">Shizuku UserService 綁定失敗</string>
+    <string name="ghost_shizuku_root_run_shell">Shizuku server 為 root 啟動，使用 run_shell 降權跑 exploit</string>
+    <string name="ghost_shizuku_no_run_shell">Shizuku server 為 root 啟動且無 run_shell 可降權；請改以 adb/shell 啟動 server</string>
+    <string name="ghost_shizuku_bad_identity">Shizuku 執行身份異常：%1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku 不可用（%1$s）→ 回退 bridge helper</string>
+    <string name="ghost_attempt_shizuku">跑 exploit 第 %1$s 次嘗試（Shizuku/shell 身份）</string>
+    <string name="ghost_kernel_panic">kernel panic：裝置已重啟（正常失敗，需重試）</string>
+    <string name="ghost_process_died">exploit 行程提前結束（可能被 OOM 殺）</string>
+    <string name="ghost_process_died_retry">exploit 行程提前結束（可能被 OOM 殺），重試</string>
+    <string name="ghost_retry_after">%1$s，重試</string>
+    <string name="ghost_attempts_exhausted">exploit 嘗試皆未成功（見 %1$s）</string>
+    <string name="ghost_fallback_failed">fallback 失敗：%1$s</string>
+    <string name="root_state_ok">root：可用</string>
+    <string name="root_state_rearming">root：失效，自動重建中…</string>
+    <string name="root_state_rearmed">root：已自動重建</string>
+    <string name="root_state_lost">root：已失效，需重新武裝</string>
+    <string name="root_state_cooldown">root：已失效（冷卻中，稍後自動重試）</string>
+    <string name="root_state_unknown">root：未知</string>
+    <string name="root_hint_run_scripts">請執行：%1$s</string>
+    <string name="root_hint_engine">可透過 %1$s 觸發</string>
+    <string name="root_metrics_fmt">上次 %1$d 秒（%2$s）· 成功 %3$d/%4$d</string>
+    <string name="root_keeper_fmt">看守 %1$d 次 · 自動重建 %2$d 次</string>
+    <string name="sec_root_status">root 狀態</string>
+    <string name="ghost_engine_selected">使用引擎：%1$s</string>
+    <string name="root_help_body">沒有 root 時：靜音拍攝、隱私燈抑制、WiFi 媒體傳輸、眼鏡端戒指控制都會失效。\n眼鏡端需以 adb 先武裝觸發管線：deploy/root_bridge.sh（或 deploy/start_shizuku.sh）</string>
+    <string name="ring_err_busy_recording">錄影中，無法拍照</string>
+    <string name="ring_err_busy">操作太頻繁，請稍候</string>
+    <string name="ring_err_record_timeout">錄影啟動逾時，已切回拍照</string>
+    <string name="ring_pick_title">選擇戒指裝置</string>
+    <string name="ring_pick_scan">掃描新裝置…</string>
+    <string name="ring_pick_scanning">掃描中…</string>
+    <string name="ring_pick_empty">找不到戒指裝置（請先用手機藍牙設定配對，或靠近後重新掃描）</string>
+    <string name="ring_pick_selected">已選擇：%1$s</string>
+    <string name="ring_pick_bonded">✓ 已配對 %1$s</string>
+    <string name="ring_pick_fail">✗ 配對失敗：%1$s</string>
+</resources>

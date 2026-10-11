@@ -1,0 +1,69 @@
+--- detect_A_baseline_unmasked.txt	2026-09-30 15:52:23.991522384 +0800
++++ detect_B_masked_ondevice.txt	2026-09-30 16:23:02.850954130 +0800
+@@ -1,43 +1,43 @@
+ CHECK probe.package = com.rokid.rc.debugdetectprobe
+ CHECK probe.uid = 10362
+-CHECK settings.Global.getInt:adb_enabled = 1
+-CHECK settings.Global.getString:adb_enabled = 1
++CHECK settings.Global.getInt:adb_enabled = 0
++CHECK settings.Global.getString:adb_enabled = 0
+ CHECK settings.Global.getInt:adb_wifi_enabled = 0
+ CHECK settings.Global.getString:adb_wifi_enabled = 0
+-CHECK settings.Global.getInt:development_settings_enabled = 1
+-CHECK settings.Global.getString:development_settings_enabled = 1
+-CHECK query.single:adb_enabled = 1
+-CHECK query.path:adb_enabled = 1
++CHECK settings.Global.getInt:development_settings_enabled = 0
++CHECK settings.Global.getString:development_settings_enabled = 0
++CHECK query.single:adb_enabled = 0
++CHECK query.path:adb_enabled = 0
+ CHECK query.single:adb_wifi_enabled = 0
+ CHECK query.path:adb_wifi_enabled = 0
+-CHECK query.single:development_settings_enabled = 1
+-CHECK query.path:development_settings_enabled = 1
+-CHECK query.fulltable = adb_wifi_enabled=0 development_settings_enabled=1 adb_enabled=1
++CHECK query.single:development_settings_enabled = 0
++CHECK query.path:development_settings_enabled = 0
++CHECK query.fulltable = adb_wifi_enabled=0 development_settings_enabled=0 adb_enabled=0
+ CHECK query.list_global = rows=489
+-CHECK prop.java:sys.usb.config = adb
+-CHECK prop.java:sys.usb.state = adb
+-CHECK prop.java:persist.sys.usb.config = adb
+-CHECK prop.java:init.svc.adbd = running
+-CHECK prop.java:service.adb.tcp.port = (null)
+-CHECK prop.java:service.adb.root = (null)
++CHECK prop.java:sys.usb.config = mtp
++CHECK prop.java:sys.usb.state = mtp
++CHECK prop.java:persist.sys.usb.config = mtp
++CHECK prop.java:init.svc.adbd = stopped
++CHECK prop.java:service.adb.tcp.port = -1
++CHECK prop.java:service.adb.root = 0
+ CHECK prop.java:ro.debuggable = 0
+ CHECK prop.java:ro.adb.secure = 1
+ CHECK prop.java:ro.build.type = user
+ CHECK prop.java:ro.build.tags = release-keys
+-CHECK prop.java:sys.usb.ffs.ready = (null)
++CHECK prop.java:sys.usb.ffs.ready = 0
+ CHECK prop.java.getInt:ro.debuggable = 0
+ CHECK prop.java.getBoolean:ro.debuggable = false
+-CHECK prop.native:sys.usb.config = adb
+-CHECK prop.native:sys.usb.state = adb
+-CHECK prop.native:persist.sys.usb.config = adb
+-CHECK prop.native:init.svc.adbd = running
+-CHECK prop.native:service.adb.tcp.port = (empty)
+-CHECK prop.native:service.adb.root = (empty)
++CHECK prop.native:sys.usb.config = mtp
++CHECK prop.native:sys.usb.state = mtp
++CHECK prop.native:persist.sys.usb.config = mtp
++CHECK prop.native:init.svc.adbd = stopped
++CHECK prop.native:service.adb.tcp.port = -1
++CHECK prop.native:service.adb.root = 0
+ CHECK prop.native:ro.debuggable = 0
+ CHECK prop.native:ro.adb.secure = 1
+ CHECK prop.native:ro.build.type = user
+ CHECK prop.native:ro.build.tags = release-keys
+-CHECK prop.native:sys.usb.ffs.ready = (empty)
++CHECK prop.native:sys.usb.ffs.ready = 0
+ CHECK net.listen_ports = (no listener)
+ CHECK build.TYPE = user
+ CHECK build.TAGS = release-keys

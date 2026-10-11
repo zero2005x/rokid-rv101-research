@@ -1,0 +1,70 @@
+0xffffffc008774d68: mov      x11, x1
+0xffffffc008774d6c: str      x8, [x11]
+0xffffffc008774d70: cbnz     x8, #0xffffffc008774d84
+0xffffffc008774d74: tbnz     w9, #0, #0xffffffc008774c4c
+0xffffffc008774d78: autiasp  
+0xffffffc008774d7c: ret      
+0xffffffc008774d80: orr      x9, x9, #1
+0xffffffc008774d84: str      x9, [x8]
+0xffffffc008774d88: autiasp  
+0xffffffc008774d8c: ret      
+0xffffffc008774d90: str      x10, [x8, #0x10]
+0xffffffc008774d94: autiasp  
+0xffffffc008774d98: ret      
+0xffffffc008774d9c: mov      x10, x9
+0xffffffc008774da0: mov      x9, x11
+0xffffffc008774da4: b        #0xffffffc008774dc4
+0xffffffc008774da8: ldr      x11, [x10, #8]
+0xffffffc008774dac: str      x11, [x9, #0x10]
+0xffffffc008774db0: str      x9, [x10, #8]
+0xffffffc008774db4: str      x10, [x8, #8]
+0xffffffc008774db8: cbz      x11, #0xffffffc008774dc4
+0xffffffc008774dbc: orr      x12, x9, #1
+0xffffffc008774dc0: str      x12, [x11]
+0xffffffc008774dc4: ldr      x12, [x10, #0x10]
+0xffffffc008774dc8: orr      x11, x10, #1
+0xffffffc008774dcc: str      x12, [x8, #8]
+0xffffffc008774dd0: str      x8, [x10, #0x10]
+0xffffffc008774dd4: str      x11, [x9]
+0xffffffc008774dd8: cbz      x12, #0xffffffc008774dec
+0xffffffc008774ddc: ldr      x9, [x12]
+0xffffffc008774de0: and      x9, x9, #1
+0xffffffc008774de4: orr      x9, x9, x8
+0xffffffc008774de8: str      x9, [x12]
+0xffffffc008774dec: ldr      x12, [x8]
+0xffffffc008774df0: ands     x9, x12, #-4
+0xffffffc008774df4: str      x12, [x10]
+0xffffffc008774df8: str      x11, [x8]
+0xffffffc008774dfc: b.eq     #0xffffffc008774e18
+0xffffffc008774e00: ldr      x11, [x9, #0x10]
+0xffffffc008774e04: cmp      x11, x8
+0xffffffc008774e08: b.eq     #0xffffffc008774e24
+0xffffffc008774e0c: str      x10, [x9, #8]
+0xffffffc008774e10: autiasp  
+0xffffffc008774e14: ret      
+0xffffffc008774e18: str      x10, [x1]
+0xffffffc008774e1c: autiasp  
+0xffffffc008774e20: ret      
+0xffffffc008774e24: str      x10, [x9, #0x10]
+0xffffffc008774e28: autiasp  
+0xffffffc008774e2c: ret      
+0xffffffc008774e30: mov      x10, x9
+0xffffffc008774e34: mov      x9, x11
+0xffffffc008774e38: b        #0xffffffc008774e58
+0xffffffc008774e3c: ldr      x11, [x10, #0x10]
+0xffffffc008774e40: str      x11, [x9, #8]
+0xffffffc008774e44: str      x9, [x10, #0x10]
+0xffffffc008774e48: str      x10, [x8, #0x10]
+0xffffffc008774e4c: cbz      x11, #0xffffffc008774e58
+0xffffffc008774e50: orr      x12, x9, #1
+0xffffffc008774e54: str      x12, [x11]
+0xffffffc008774e58: ldr      x12, [x10, #8]
+0xffffffc008774e5c: orr      x11, x10, #1
+0xffffffc008774e60: str      x12, [x8, #0x10]
+0xffffffc008774e64: str      x8, [x10, #8]
+0xffffffc008774e68: str      x11, [x9]
+0xffffffc008774e6c: cbnz     x12, #0xffffffc008774ddc
+0xffffffc008774e70: b        #0xffffffc008774dec
+0xffffffc008774e74: paciasp  
+0xffffffc008774e78: str      x30, [x18], #8
+0xffffffc008774e7c: stp      x29, x30, [sp, #-0x40]!

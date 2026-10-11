@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Rokid Capture</string>
+    <string name="dash_title">Rokid Capture</string>
+    <string name="dash_collapsed">Rokid Capture</string>
+    <string name="dash_hint_collapse">タップで閉じる</string>
+    <string name="dash_row_conn">接続</string>
+    <string name="dash_row_root">Root</string>
+    <string name="dash_row_camera">カメラ</string>
+    <string name="dash_row_storage">ストレージ</string>
+    <string name="dash_row_led">インジケーター</string>
+    <string name="dash_v_none">未接続</string>
+    <string name="dash_v_bt">Bluetooth</string>
+    <string name="dash_v_wifi">Wi-Fi</string>
+    <string name="dash_v_bt_wifi">Bluetooth + Wi-Fi</string>
+    <string name="dash_v_root_yes">取得済み</string>
+    <string name="dash_v_root_no">未取得</string>
+    <string name="dash_v_on">オン</string>
+    <string name="dash_v_off">オフ</string>
+    <string name="dash_v_cam_ready">準備完了</string>
+    <string name="dash_v_cam_rec">録画中</string>
+    <string name="dash_v_cam_off">未準備</string>
+    <string name="dash_v_storage">%1$s 空き</string>
+    <string name="dash_v_root_fmt">%1$s · ghost %2$s</string>
+    <string name="dash_v_led_fmt">白ランプ %1$s</string>
+</resources>

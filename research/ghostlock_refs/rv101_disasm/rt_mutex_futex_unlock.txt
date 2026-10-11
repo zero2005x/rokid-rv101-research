@@ -1,0 +1,53 @@
+0xffffffc00940802c: paciasp  
+0xffffffc009408030: sub      sp, sp, #0x40
+0xffffffc009408034: str      x30, [x18], #8
+0xffffffc009408038: stp      x29, x30, [sp, #0x20]
+0xffffffc00940803c: stp      x20, x19, [sp, #0x30]
+0xffffffc009408040: add      x29, sp, #0x20
+0xffffffc009408044: adrp     x8, #0xffffffc009efd000
+0xffffffc009408048: ldr      x8, [x8, #0xbb0]
+0xffffffc00940804c: mov      w9, #1
+0xffffffc009408050: mov      x10, sp
+0xffffffc009408054: mov      x19, x0
+0xffffffc009408058: stur     x8, [x29, #-8]
+0xffffffc00940805c: stp      x10, xzr, [sp, #8]
+0xffffffc009408060: str      x9, [sp]
+0xffffffc009408064: str      wzr, [sp, #0x10]
+0xffffffc009408068: bl       #0xffffffc00940a004
+0xffffffc00940806c: add      x8, x19, #8
+0xffffffc009408070: ldar     x8, [x8]
+0xffffffc009408074: mov      x20, x0
+0xffffffc009408078: cbz      x8, #0xffffffc0094080c4
+0xffffffc00940807c: mov      x0, sp
+0xffffffc009408080: mov      x1, x19
+0xffffffc009408084: bl       #0xffffffc0081cf754
+0xffffffc009408088: mov      x0, x19
+0xffffffc00940808c: mov      x1, x20
+0xffffffc009408090: bl       #0xffffffc00940a258
+0xffffffc009408094: mov      x0, sp
+0xffffffc009408098: bl       #0xffffffc008193764
+0xffffffc00940809c: mrs      x9, sp_el0
+0xffffffc0094080a0: add      x8, x9, #0x18
+0xffffffc0094080a4: ldar     x10, [x8]
+0xffffffc0094080a8: subs     x10, x10, #1
+0xffffffc0094080ac: str      w10, [x9, #0x18]
+0xffffffc0094080b0: b.eq     #0xffffffc0094080bc
+0xffffffc0094080b4: ldar     x8, [x8]
+0xffffffc0094080b8: cbnz     x8, #0xffffffc0094080d4
+0xffffffc0094080bc: bl       #0xffffffc009401d1c
+0xffffffc0094080c0: b        #0xffffffc0094080d4
+0xffffffc0094080c4: mov      x0, x19
+0xffffffc0094080c8: mov      x1, x20
+0xffffffc0094080cc: str      xzr, [x19, #0x18]
+0xffffffc0094080d0: bl       #0xffffffc00940a258
+0xffffffc0094080d4: adrp     x9, #0xffffffc009efd000
+0xffffffc0094080d8: ldur     x8, [x29, #-8]
+0xffffffc0094080dc: ldr      x9, [x9, #0xbb0]
+0xffffffc0094080e0: cmp      x9, x8
+0xffffffc0094080e4: b.ne     #0xffffffc009408100
+0xffffffc0094080e8: ldp      x29, x30, [sp, #0x20]
+0xffffffc0094080ec: ldp      x20, x19, [sp, #0x30]
+0xffffffc0094080f0: ldr      x30, [x18, #-8]!
+0xffffffc0094080f4: add      sp, sp, #0x40
+0xffffffc0094080f8: autiasp  
+0xffffffc0094080fc: ret      

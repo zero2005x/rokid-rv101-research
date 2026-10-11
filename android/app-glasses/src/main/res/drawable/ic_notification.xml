@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通知小圖示：簡化眼鏡標誌（純 alpha，白色） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M2,9.5 A2.5,2.5 0 0 1 4.5,7 H8.5 A2.5,2.5 0 0 1 11,9.5 V14.5 A2.5,2.5 0 0 1 8.5,17 H4.5 A2.5,2.5 0 0 1 2,14.5 Z M13,9.5 A2.5,2.5 0 0 1 15.5,7 H19.5 A2.5,2.5 0 0 1 22,9.5 V14.5 A2.5,2.5 0 0 1 19.5,17 H15.5 A2.5,2.5 0 0 1 13,14.5 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M10.8,8.6 H13.2 V10.6 H10.8 Z"
+        android:fillColor="#FFFFFF" />
+</vector>

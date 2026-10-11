@@ -1,0 +1,183 @@
+========================================================================
+ GhostLock (CVE-2026-43499) Patch Check Report
+========================================================================
+檢查時間          : 2026-09-03 23:06:17
+裝置目前版本      : 1.22.009-20260710-150201  (SPL 2024-07-05)
+分析 OTA 版本     : ?
+kernel base       : 0xffffffc008000000
+remove_waiter     : 0xffffffc0081cffb0
+
+--- 反組譯 remove_waiter ---
+  0xffffffc0081cffb0: paciasp  
+  0xffffffc0081cffb4: str      x30, [x18], #8
+  0xffffffc0081cffb8: stp      x29, x30, [sp, #-0x40]!
+  0xffffffc0081cffbc: stp      x24, x23, [sp, #0x10]
+  0xffffffc0081cffc0: stp      x22, x21, [sp, #0x20]
+  0xffffffc0081cffc4: stp      x20, x19, [sp, #0x30]
+  0xffffffc0081cffc8: mov      x29, sp
+  0xffffffc0081cffcc: ldr      x22, [x0, #0x10]
+  0xffffffc0081cffd0: mov      x19, x0
+  0xffffffc0081cffd4: mov      x23, x1
+  0xffffffc0081cffd8: cbz      x22, #0xffffffc0081cffe8
+  0xffffffc0081cffdc: ldr      x8, [x22, #0x38]
+  0xffffffc0081cffe0: cmp      x8, x19
+  0xffffffc0081cffe4: b.ne     #0xffffffc0081d0200
+  0xffffffc0081cffe8: add      x8, x19, #0x18
+  0xffffffc0081cffec: ldar     x24, [x8]
+  0xffffffc0081cfff0: ldr      x20, [x23, #0x30]
+  0xffffffc0081cfff4: add      x21, x20, #0x85c
+  0xffffffc0081cfff8: mov      x0, x21
+  0xffffffc0081cfffc: bl       #0xffffffc009409f70
+  0xffffffc0081d0000: ldr      x8, [x23]
+  0xffffffc0081d0004: cmp      x8, x23
+  0xffffffc0081d0008: b.eq     #0xffffffc0081d0034
+  0xffffffc0081d000c: ldr      x8, [x19, #0x10]
+  0xffffffc0081d0010: cmp      x8, x23
+  0xffffffc0081d0014: b.ne     #0xffffffc0081d0024
+  0xffffffc0081d0018: mov      x0, x23
+  0xffffffc0081d001c: bl       #0xffffffc00877512c
+  0xffffffc0081d0020: str      x0, [x19, #0x10]
+  0xffffffc0081d0024: add      x1, x19, #8
+  0xffffffc0081d0028: mov      x0, x23
+  0xffffffc0081d002c: bl       #0xffffffc008774b38
+  0xffffffc0081d0030: str      x23, [x23]
+  0xffffffc0081d0034: mov      x0, x21
+  0xffffffc0081d0038: str      xzr, [x20, #0x888]
+  0xffffffc0081d003c: bl       #0xffffffc00940a208
+  0xffffffc0081d0040: cmp      x22, x23
+  0xffffffc0081d0044: b.ne     #0xffffffc0081d01dc
+  0xffffffc0081d0048: and      x21, x24, #0xfffffffffffffffe
+  0xffffffc0081d004c: cbz      x21, #0xffffffc0081d01dc
+  0xffffffc0081d0050: add      x22, x21, #0x85c
+  0xffffffc0081d0054: mov      x0, x22
+  0xffffffc0081d0058: bl       #0xffffffc009409f70
+  0xffffffc0081d005c: ldr      x8, [x23, #0x18]!
+  0xffffffc0081d0060: cmp      x8, x23
+  0xffffffc0081d0064: b.eq     #0xffffffc0081d0090
+  0xffffffc0081d0068: ldr      x8, [x21, #0x878]
+  0xffffffc0081d006c: cmp      x8, x23
+  0xffffffc0081d0070: b.ne     #0xffffffc0081d0080
+  0xffffffc0081d0074: mov      x0, x23
+  0xffffffc0081d0078: bl       #0xffffffc00877512c
+  0xffffffc0081d007c: str      x0, [x21, #0x878]
+  0xffffffc0081d0080: add      x1, x21, #0x870
+  0xffffffc0081d0084: mov      x0, x23
+  0xffffffc0081d0088: bl       #0xffffffc008774b38
+  0xffffffc0081d008c: str      x23, [x23]
+  0xffffffc0081d0090: add      x8, x19, #8
+  0xffffffc0081d0094: ldar     x8, [x8]
+  0xffffffc0081d0098: cbz      x8, #0xffffffc0081d0144
+  0xffffffc0081d009c: ldr      x0, [x19, #0x10]
+  0xffffffc0081d00a0: cbz      x0, #0xffffffc0081d00b0
+  0xffffffc0081d00a4: ldr      x8, [x0, #0x38]
+  0xffffffc0081d00a8: cmp      x8, x19
+  0xffffffc0081d00ac: b.ne     #0xffffffc0081d022c
+  0xffffffc0081d00b0: ldr      x14, [x21, #0x870]
+  0xffffffc0081d00b4: add      x1, x21, #0x870
+  0xffffffc0081d00b8: cbz      x14, #0xffffffc0081d0120
+  0xffffffc0081d00bc: ldr      w10, [x0, #0x40]
+  0xffffffc0081d00c0: mov      w8, #1
+  0xffffffc0081d00c4: mov      w11, #0x10
+  0xffffffc0081d00c8: mov      w12, #8
+  0xffffffc0081d00cc: b        #0xffffffc0081d00f4
+  0xffffffc0081d00d0: cmp      w13, #0
+  0xffffffc0081d00d4: csel     x14, x12, x11, eq
+  0xffffffc0081d00d8: ldr      x14, [x9, x14]
+  0xffffffc0081d00dc: cset     w13, ne
+  0xffffffc0081d00e0: add      x15, x9, #0x10
+  0xffffffc0081d00e4: add      x16, x9, #8
+  0xffffffc0081d00e8: and      w8, w8, w13
+  0xffffffc0081d00ec: csel     x13, x16, x15, eq
+  0xffffffc0081d00f0: cbz      x14, #0xffffffc0081d012c
+  0xffffffc0081d00f4: ldr      w13, [x14, #0x28]
+  0xffffffc0081d00f8: mov      x9, x14
+  0xffffffc0081d00fc: cmp      w10, w13
+  0xffffffc0081d0100: cset     w13, lt
+  0xffffffc0081d0104: tbz      w10, #0x1f, #0xffffffc0081d00d0
+  0xffffffc0081d0108: b.lt     #0xffffffc0081d00d0
+  0xffffffc0081d010c: ldr      x13, [x0, #0x48]
+  0xffffffc0081d0110: ldr      x14, [x9, #0x30]
+  0xffffffc0081d0114: sub      x13, x13, x14
+  0xffffffc0081d0118: lsr      x13, x13, #0x3f
+  0xffffffc0081d011c: b        #0xffffffc0081d00d0
+  0xffffffc0081d0120: mov      x9, xzr
+  0xffffffc0081d0124: mov      w8, #1
+  0xffffffc0081d0128: mov      x13, x1
+  0xffffffc0081d012c: str      x9, [x0, #0x18]!
+  0xffffffc0081d0130: stp      xzr, xzr, [x0, #8]
+  0xffffffc0081d0134: str      x0, [x13]
+  0xffffffc0081d0138: cbz      w8, #0xffffffc0081d0140
+  0xffffffc0081d013c: str      x0, [x21, #0x878]
+  0xffffffc0081d0140: bl       #0xffffffc0087749e4
+  0xffffffc0081d0144: add      x8, x21, #0x870
+  0xffffffc0081d0148: ldar     x8, [x8]
+  0xffffffc0081d014c: cbz      x8, #0xffffffc0081d015c
+  0xffffffc0081d0150: ldr      x8, [x21, #0x878]
+  0xffffffc0081d0154: ldr      x1, [x8, #0x18]
+  0xffffffc0081d0158: b        #0xffffffc0081d0160
+  0xffffffc0081d015c: mov      x1, xzr
+  0xffffffc0081d0160: mov      x0, x21
+  0xffffffc0081d0164: bl       #0xffffffc0081985f0
+  0xffffffc0081d0168: ldr      x8, [x21, #0x888]
+  0xffffffc0081d016c: cbz      x8, #0xffffffc0081d01d4
+  0xffffffc0081d0170: ldr      x23, [x8, #0x38]
+  0xffffffc0081d0174: mov      x0, x22
+  0xffffffc0081d0178: bl       #0xffffffc00940a208
+  0xffffffc0081d017c: cbz      x23, #0xffffffc0081d01dc
+  0xffffffc0081d0180: add      x0, x21, #0x40
+  0xffffffc0081d0184: b        #0xffffffc0081d0204
+  0xffffffc0081d0188: b        #0xffffffc0081d0204
+  0xffffffc0081d018c: mov      w8, #1
+  0xffffffc0081d0190: ldadd    w8, w8, [x0]
+  0xffffffc0081d0194: cbz      w8, #0xffffffc0081d0220
+  0xffffffc0081d0198: add      w9, w8, #1
+  0xffffffc0081d019c: orr      w8, w9, w8
+  0xffffffc0081d01a0: tbnz     w8, #0x1f, #0xffffffc0081d01f8
+  0xffffffc0081d01a4: mov      x0, x19
+  0xffffffc0081d01a8: bl       #0xffffffc00940a2ac
+  0xffffffc0081d01ac: mov      x0, x21
+  0xffffffc0081d01b0: mov      w1, wzr
+  0xffffffc0081d01b4: mov      x2, x19
+  0xffffffc0081d01b8: mov      x3, x23
+  0xffffffc0081d01bc: mov      x4, xzr
+  0xffffffc0081d01c0: mov      x5, x20
+  0xffffffc0081d01c4: bl       #0xffffffc0081ceaf4
+  0xffffffc0081d01c8: mov      x0, x19
+  0xffffffc0081d01cc: bl       #0xffffffc00940a0c8
+  0xffffffc0081d01d0: b        #0xffffffc0081d01dc
+  0xffffffc0081d01d4: mov      x0, x22
+  0xffffffc0081d01d8: bl       #0xffffffc00940a208
+  0xffffffc0081d01dc: ldp      x20, x19, [sp, #0x30]
+  0xffffffc0081d01e0: ldp      x22, x21, [sp, #0x20]
+  0xffffffc0081d01e4: ldp      x24, x23, [sp, #0x10]
+  0xffffffc0081d01e8: ldp      x29, x30, [sp], #0x40
+  0xffffffc0081d01ec: ldr      x30, [x18, #-8]!
+  0xffffffc0081d01f0: autiasp  
+  0xffffffc0081d01f4: ret      
+  0xffffffc0081d01f8: mov      w1, #1
+  0xffffffc0081d01fc: b        #0xffffffc0081d0224
+  0xffffffc0081d0200: brk      #0x800
+  0xffffffc0081d0204: bti      j
+  0xffffffc0081d0208: prfm     pstl1strm, [x0]
+  0xffffffc0081d020c: ldxr     w8, [x0]
+  0xffffffc0081d0210: add      w9, w8, #1
+  0xffffffc0081d0214: stxr     w10, w9, [x0]
+  0xffffffc0081d0218: cbnz     w10, #0xffffffc0081d020c
+  0xffffffc0081d021c: cbnz     w8, #0xffffffc0081d0198
+  0xffffffc0081d0220: mov      w1, #2
+  0xffffffc0081d0224: bl       #0xffffffc0086f5ab8
+  0xffffffc0081d0228: b        #0xffffffc0081d01a4
+  0xffffffc0081d022c: brk      #0x800
+  0xffffffc0081d0230: ldapr    x24, [x8]
+  0xffffffc0081d0234: ldapr    x8, [x8]
+  0xffffffc0081d0238: ldapr    x8, [x8]
+
+--- 與官方 patch (commit 3bfdc63) 比對 ---
+  官方修補：remove_waiter 的 current → waiter->task
+  本 kernel 是否有 mrs sp_el0 (current 存取)：否
+  本 kernel 是否有 waiter->task 載入(offset 0x30)：是
+
+  [判定] PATCHED
+  [說明] remove_waiter 使用 waiter->task → 已修補
+
+========================================================================

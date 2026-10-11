@@ -1,0 +1,334 @@
+<resources>
+    <string name="app_name">Rokid Remote</string>
+    <string name="tab_remote">Fernbedienung</string>
+    <string name="tab_albums">Alben</string>
+    <string name="tab_local">Lokal</string>
+    <string name="conn_connected">Verbunden</string>
+    <string name="conn_disconnected">Nicht verbunden</string>
+    <string name="conn_connecting">Verbinde…</string>
+    <string name="btn_connect">Verbinden</string>
+    <string name="transport_bt">Übertragung: Bluetooth</string>
+    <string name="transport_wifi">Übertragung: WLAN %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">Übertragung: WLAN verbindet…</string>
+    <string name="btn_wifi_on">WLAN-Übertragung aktivieren</string>
+    <string name="btn_wifi_off">WLAN-Übertragung deaktivieren</string>
+    <string name="wifi_failed_manual">Automatisches Verbinden mit WLAN „%1$s“ (Passwort %2$s) nicht möglich. Bitte manuell in den WLAN-Einstellungen verbinden und erneut versuchen.</string>
+    <string name="wifi_ap_not_ready">WLAN-Hotspot der Brille nicht bereit: zuerst root erlangen (oder später erneut versuchen).</string>
+    <string name="btn_disconnect">Trennen</string>
+    <string name="conn_card_title">Brillenverbindung</string>
+    <string name="conn_no_device">Keine Brille ausgewählt</string>
+    <string name="conn_pick_title">Brille auswählen</string>
+    <string name="sec_capture">Aufnahme</string>
+    <string name="btn_photo">Foto</string>
+    <string name="btn_video_start">Video starten</string>
+    <string name="btn_video_stop">Video stoppen</string>
+    <string name="sec_led">Datenschutz-Anzeige</string>
+    <string name="led_switch_label">Anzeige (weiß)</string>
+    <string name="chip_white">Weiß</string>
+    <string name="chip_green">Grün</string>
+    <string name="chip_blue">Blau</string>
+    <string name="chip_red">Rot</string>
+    <string name="sec_advanced">Erweitert (root/ghostlock)</string>
+    <string name="btn_advanced_show">Ausklappen</string>
+    <string name="btn_advanced_hide">Einklappen</string>
+    <string name="ghost_switch_label">ghostlock Tarnmodus (schaltet die Anzeige beim Aufnehmen aus)</string>
+    <string name="root_auto_label">root beim Start automatisch erlangen (AUTO)</string>
+    <string name="btn_acquire_root">Jetzt root erlangen</string>
+    <string name="btn_device_info">Geräteinformationen</string>
+    <string name="sec_display">Brillenanzeige</string>
+    <string name="chip_disp_conn">Verbindung</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">Kamera</string>
+    <string name="chip_disp_storage">Speicher</string>
+    <string name="chip_disp_led">Anzeige</string>
+    <string name="btn_disp_all">Alles anzeigen</string>
+    <string name="btn_disp_none">Alles ausblenden</string>
+    <string name="sec_log">Aktivitätsprotokoll</string>
+    <string name="btn_clear_log">Leeren</string>
+    <string name="toolbar_albums">Alben</string>
+    <string name="content_desc_add">Album hinzufügen</string>
+    <string name="content_desc_refresh">Aktualisieren</string>
+    <string name="empty_albums">Noch keine Alben\nTippe unten rechts auf ＋, um das erste zu erstellen</string>
+    <string name="albums_not_connected">Nicht mit der Brille verbunden\nBitte zuerst im Tab „Fernbedienung“ per Bluetooth verbinden</string>
+    <string name="albums_load_failed">Alben konnten nicht geladen werden</string>
+    <string name="action_retry">Erneut versuchen</string>
+    <string name="album_item_count">%1$d Elemente</string>
+    <string name="menu_view">Ansehen</string>
+    <string name="menu_rename">Umbenennen</string>
+    <string name="menu_delete">Löschen</string>
+    <string name="dialog_new_album">Neues Album</string>
+    <string name="dialog_rename_album">Album umbenennen</string>
+    <string name="hint_album_name">Albumname</string>
+    <string name="action_create">Erstellen</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_delete">Löschen</string>
+    <string name="confirm_delete_album">Album „%1$s“ mit allen Medien löschen?\n(Nur die Originale auf der Brille werden entfernt; lokale Kopien bleiben erhalten.)</string>
+    <string name="msg_album_created">Album erstellt</string>
+    <string name="msg_album_renamed">Album umbenannt</string>
+    <string name="msg_album_deleted">Album gelöscht</string>
+    <string name="sel_count">%1$d ausgewählt</string>
+    <string name="action_select_all">Alle auswählen</string>
+    <string name="action_download">Herunterladen</string>
+    <string name="empty_media">Dieses Album enthält keine Medien</string>
+    <string name="media_load_failed">Medien konnten nicht geladen werden</string>
+    <string name="confirm_delete_media">„%1$s“ auf der Brille löschen?\n(Nur das Original wird entfernt; deine lokale Kopie bleibt erhalten.)</string>
+    <string name="batch_deleting">Lösche %1$d/%2$d</string>
+    <string name="batch_downloading">Lade %1$d/%2$d herunter</string>
+    <string name="msg_deleted">Gelöscht</string>
+    <string name="viewer_delete_remote">Original auf der Brille löschen</string>
+    <string name="viewer_downloading">Original wird heruntergeladen (Bluetooth-Übertragung, bitte warten)…</string>
+    <string name="viewer_play">Video abspielen</string>
+    <string name="toolbar_local">Lokal</string>
+    <string name="empty_local">Noch nichts heruntergeladen\nÖffne ein Album unter „Alben“, um Fotos/Videos herunterzuladen</string>
+    <string name="local_dir_prefix">Lokal heruntergeladen</string>
+    <string name="album_unnamed">Unbenanntes Album</string>
+    <string name="log_dialog_title">Protokoll (vollständig)</string>
+    <string name="dialog_close">Schließen</string>
+    <string name="log_longpress_hint">Zum Anzeigen des vollständigen Protokolls lange drücken</string>
+    <string name="silent_switch_label">Stille Aufnahme (Auslöser-/Aufnahmeton stumm)</string>
+    <string name="btn_language">Sprache: %1$s</string>
+    <string name="lang_dialog_title">Sprache wählen</string>
+    <string name="lang_system">Systemeinstellung</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">Getrennt</string>
+    <string name="log_wifi_off">WLAN-Übertragung deaktiviert, Medien wechseln zu Bluetooth</string>
+    <string name="log_wifi_enabling">WLAN-Übertragung wird aktiviert… (beim ersten Mal im Systemdialog den Beitritt zu "%1$s" bestätigen)</string>
+    <string name="log_wifi_enabled">✓ WLAN-Übertragung aktiviert (%1$s:%2$d)</string>
+    <string name="log_wifi_failed">✗ WLAN-Übertragung: %1$s</string>
+    <string name="err_unknown">Unbekannter Fehler</string>
+    <string name="toast_not_connected">Brille nicht verbunden</string>
+    <string name="log_capturing">Foto wird aufgenommen…</string>
+    <string name="log_photo_ok">✓ Foto aufgenommen: %1$s</string>
+    <string name="log_photo_fail">✗ Foto fehlgeschlagen: %1$s</string>
+    <string name="log_recording">● Aufnahme läuft</string>
+    <string name="log_record_fail">✗ Aufnahme fehlgeschlagen: %1$s</string>
+    <string name="log_video_saved">✓ Video gespeichert: %1$s</string>
+    <string name="log_stop_fail">✗ Stoppen fehlgeschlagen: %1$s</string>
+    <string name="log_ghost_fail">ghostlock-Einstellung fehlgeschlagen: %1$s</string>
+    <string name="log_root_mode_fail">root-Modus-Einstellung fehlgeschlagen: %1$s</string>
+    <string name="silent_applied">✓ Stille Aufnahme an (Auslöser-/Aufnahmetöne unterdrückt)</string>
+    <string name="silent_pending">⚠ Stiller Modus gesetzt, aber noch nicht angewendet (root erforderlich)</string>
+    <string name="silent_disabled">✓ Stille Aufnahme aus (Töne wiederhergestellt)</string>
+    <string name="log_silent_fail">✗ Stiller Modus fehlgeschlagen: %1$s</string>
+    <string name="log_led_enabling">Datenschutz-Anzeige wird eingeschaltet…</string>
+    <string name="log_led_disabling">Datenschutz-Anzeige wird ausgeschaltet…</string>
+    <string name="log_led_on_ok">✓ Anzeige: an</string>
+    <string name="log_led_off_ok">✓ Anzeige: aus</string>
+    <string name="log_led_fail">✗ Anzeige-Einstellung fehlgeschlagen: %1$s</string>
+    <string name="log_root_acquiring">root wird angefordert… (kann einige Minuten dauern)</string>
+    <string name="log_root_ready">✓ root bereit</string>
+    <string name="log_root_failed">✗ root konnte nicht angefordert werden</string>
+    <string name="log_root_fail">✗ root fehlgeschlagen: %1$s</string>
+    <string name="log_querying">Geräteinformationen werden abgefragt…</string>
+    <string name="log_query_fail">✗ Abfrage fehlgeschlagen: %1$s</string>
+    <string name="log_progress">[Fortschritt] %1$s</string>
+    <string name="log_display_ok">✓ Brillenanzeige aktualisiert</string>
+    <string name="log_display_fail">✗ Anzeigeeinstellung fehlgeschlagen: %1$s</string>
+    <string name="led_name">%1$s-LED</string>
+    <string name="log_led_switch">%1$s %2$s…</string>
+    <string name="log_led_done">✓ %1$s: %2$s</string>
+    <string name="log_led_switch_fail">✗ %1$s fehlgeschlagen: %2$s</string>
+    <string name="state_on">an</string>
+    <string name="state_off">aus</string>
+    <string name="state_enabled">ein</string>
+    <string name="state_disabled">aus</string>
+    <string name="status_summary">Alben %1$d · Medien %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ Sprache gewechselt: %1$s</string>
+    <string name="toast_bt_disabled">Bitte zuerst Bluetooth einschalten</string>
+    <string name="toast_no_paired_device">Kein gekoppeltes Bluetooth-Gerät. Bitte die Brille zuerst in den System-Bluetooth-Einstellungen koppeln.</string>
+    <string name="toast_connect_failed">Verbindung fehlgeschlagen: %1$s</string>
+    <string name="toast_no_local_media">Keine lokalen Dateien für dieses Album</string>
+    <string name="confirm_delete_local_files">%1$d lokale Datei(en) löschen? (Originale auf der Brille bleiben unberührt)</string>
+    <string name="batch_downloading_file">Download %1$d/%2$d: %3$s</string>
+    <string name="toast_delete_done">Löschen fertig: %1$d erfolgreich</string>
+    <string name="toast_delete_done_fail">Löschen fertig: %1$d erfolgreich, %2$d fehlgeschlagen</string>
+    <string name="toast_download_done">Download fertig: %1$d erfolgreich</string>
+    <string name="toast_download_done_fail">Download fertig: %1$d erfolgreich, %2$d fehlgeschlagen</string>
+    <string name="dialog_download_note">\nOriginaldateien werden von der Brille heruntergeladen (Bluetooth-Übertragung ist langsam).</string>
+    <string name="err_local_file_missing">Lokale Datei nicht gefunden</string>
+    <string name="toast_delete_fail">Löschen fehlgeschlagen: %1$s</string>
+    <string name="err_download_fail">Download fehlgeschlagen: %1$s</string>
+    <string name="toast_opening">%1$s wird geöffnet…</string>
+    <string name="toast_create_fail">Erstellen fehlgeschlagen: %1$s</string>
+    <string name="toast_rename_fail">Umbenennen fehlgeschlagen: %1$s</string>
+    <string name="local_album_delete">Lokales Album löschen</string>
+    <string name="local_album_delete_msg">"%1$s" (%2$s) vom Telefon löschen?\nOriginale auf der Brille bleiben unberührt.</string>
+    <string name="toast_local_album_deleted">Lokales Album gelöscht</string>
+    <string name="media_type_video">Video</string>
+    <string name="media_type_photo">Foto</string>
+    <string name="wifi_ap_timeout">WLAN-Hotspot der Brille Zeitüberschreitung, bitte später erneut versuchen</string>
+    <string name="wifi_tcp_failed">TCP-Verbindung fehlgeschlagen: %1$s</string>
+    <string name="sec_ring">Ring-Steuerung</string>
+    <string name="ring_switch_label">Ring-Gestensteuerung aktivieren</string>
+    <string name="ring_hint">Tippen = Foto · Doppeltippen = Video · Lang drücken = Lautlos · Scrollen = Anzeige wechseln</string>
+    <string name="ring_status_idle">Noch keine Geste empfangen</string>
+    <string name="ring_status_fmt">%1$d Gesten · zuletzt: %2$s</string>
+    <string name="ring_learn_btn">Geste anlernen</string>
+    <string name="ring_learn_hint">Bitte eine Ringtaste drücken…</string>
+    <string name="ring_learn_result">Tastencode %1$s empfangen</string>
+    <string name="ring_map_title">Aktion für diesen Tastencode wählen</string>
+    <string name="ring_action_photo">Foto</string>
+    <string name="ring_action_video">Video starten/stoppen</string>
+    <string name="ring_action_silent">Stille Aufnahme umschalten</string>
+    <string name="ring_action_display_next">Anzeigeinfo (weiter)</string>
+    <string name="ring_action_display_prev">Anzeigeinfo (zurück)</string>
+    <string name="ring_action_none">Keine Aktion</string>
+    <string name="ring_map_saved">%1$s → %2$s zugeordnet</string>
+    <string name="ring_map_cleared">Eigene Tastenzuordnungen gelöscht</string>
+    <string name="ring_pair_btn">Ring koppeln</string>
+    <string name="ring_glasses_switch">Ring-Steuerung (Brille)</string>
+    <string name="ring_glasses_status">Brille: %1$s</string>
+    <string name="nav_settings">Einstellungen</string>
+    <string name="log_expand">Vergrößern</string>
+    <string name="sec_connection">Verbindung</string>
+    <string name="sec_capture_root">Aufnahme und Rechte</string>
+    <string name="sec_led_settings">Datenschutz-Anzeige</string>
+    <string name="sec_language">Sprache</string>
+    <string name="wifi_switch_hint">Medien und Steuerung bevorzugen WLAN; Bluetooth dient nur als Ausweichlösung</string>
+    <string name="led_colors_hint">Farbe(n) zum Aktivieren wählen</string>
+    <string name="ring_a_label">Gesten am Telefon (Ring mit Telefon gekoppelt)</string>
+    <string name="ring_a_hint">App muss im Vordergrund sein (Mausklicks und Medientasten werden unterstützt)</string>
+    <string name="ring_b_label">Gesten an der Brille (Ring/Touchpad mit Brille gekoppelt)</string>
+    <string name="ring_b_hint">Brille liest evdev als root; funktioniert im Hintergrund</string>
+    <string name="state_running">läuft</string>
+    <string name="state_stopped">gestoppt</string>
+    <string name="ring_phone_prefix">Telefon: %1$s</string>
+    <string name="log_app_started">App bereit</string>
+    <string name="action_search">Alben suchen</string>
+    <string name="action_sort">Sortieren</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_count">Anzahl</string>
+    <string name="sort_newest">Neueste</string>
+    <string name="local_summary">%1$d Alben · %2$d Elemente · %3$s belegt</string>
+    <string name="selected_albums">%1$d ausgewählt</string>
+    <string name="toast_local_albums_deleted">%1$d lokale Alben gelöscht</string>
+    <string name="confirm_delete_local_albums">%1$d Album/Alben vom Telefon löschen?\n(Originale auf der Brille bleiben unberührt)</string>
+    <string name="ring_state_enabled">Aktiviert</string>
+    <string name="ring_state_disabled">Deaktiviert</string>
+    <string name="ring_learn_waiting">Warte auf Taste…</string>
+    <string name="ring_map_set">%1$s → %2$s zugeordnet</string>
+    <string name="ring_map_cleared_short">Eigene Tastenzuordnungen gelöscht</string>
+    <string name="ring_no_action">%1$s → (keine Aktion)</string>
+    <string name="ring_err_prefix">Fehler: %1$s</string>
+    <string name="ring_photo_ok">Foto aufgenommen: %1$s</string>
+    <string name="ring_photo_fail">Foto fehlgeschlagen: %1$s</string>
+    <string name="ring_video_start">Aufnahme gestartet</string>
+    <string name="ring_video_fail">Aufnahme fehlgeschlagen: %1$s</string>
+    <string name="ring_video_saved">Video gespeichert: %1$s</string>
+    <string name="ring_stop_fail">Stoppen fehlgeschlagen: %1$s</string>
+    <string name="ring_status_read_fail">Status lesen fehlgeschlagen</string>
+    <string name="ring_silent_on">Stille Aufnahme an</string>
+    <string name="ring_silent_on_pending">Stille Aufnahme an (warte auf root)</string>
+    <string name="ring_silent_off">Stille Aufnahme aus</string>
+    <string name="ring_silent_fail">Stiller Modus fehlgeschlagen: %1$s</string>
+    <string name="ring_display_switched">Anzeige gewechselt zu %1$s</string>
+    <string name="ring_display_fail">Anzeigeeinstellung fehlgeschlagen: %1$s</string>
+    <string name="ring_on">ein</string>
+    <string name="ring_off">aus</string>
+    <string name="sec_appearance">Darstellung</string>
+    <string name="light_mode_label">Heller Modus</string>
+    <string name="light_mode_hint">Aus = dunkles Theme; Ein = helles Theme</string>
+    <string name="ring_camera_not_ready">Kamera nicht bereit (App auf der Brille öffnen)</string>
+    <string name="ring_status_no_device">Kein Eingabegerät gefunden (%1$s)</string>
+    <string name="ring_status_start_failed">getevent-Start fehlgeschlagen</string>
+    <string name="ring_status_stopped">Gestoppt</string>
+    <string name="ring_display_none">Alle ausblenden</string>
+    <string name="ghost_skip_lpe">Persistenter root-daemon erkannt, LPE wird übersprungen</string>
+    <string name="ghost_prepare_payload">payload wird vorbereitet</string>
+    <string name="ghost_done">Fertig</string>
+    <string name="ghost_failed">Fehlgeschlagen: %1$s</string>
+    <string name="ghost_bridge_dir_missing">bridge-Verzeichnis fehlt oder ist nicht beschreibbar: %1$s (zuerst deploy/root_bridge.sh ausführen)</string>
+    <string name="ghost_bridge_sent">Befehl gesendet, warte auf den helper für den exploit (kann Minuten dauern)</string>
+    <string name="ghost_bridge_timeout">bridge-Zeitüberschreitung (läuft der helper? siehe %1$s)</string>
+    <string name="ghost_bridge_report">Meldung von bridge: %1$s</string>
+    <string name="ghost_attempt">exploit-Versuch %1$s</string>
+    <string name="ghost_helper_started">Verarbeitung durch helper gestartet</string>
+    <string name="ghost_ready_seen">exploit hat die ready-Markierung erreicht</string>
+    <string name="ghost_payload_replaced">payload wird ersetzt</string>
+    <string name="ghost_wait_payload_root">Warte, bis payload als root fertig ist</string>
+    <string name="ghost_binary_missing">binary fehlt oder ist nicht ausführbar: %1$s</string>
+    <string name="ghost_exploit_started">exploit wird gestartet</string>
+    <string name="ghost_exploit_start_failed">exploit kann nicht gestartet werden (siehe %1$s)</string>
+    <string name="ghost_wait_ready">Warte auf die ready-Markierung</string>
+    <string name="ghost_ready_timeout">Zeitüberschreitung bei der ready-Markierung: %1$s</string>
+    <string name="ghost_ready_timeout_retry">Zeitüberschreitung bei der ready-Markierung</string>
+    <string name="ghost_payload_write_failed">Schreiben von %1$s nicht möglich (Schreibrecht der App für /data/local/tmp?)</string>
+    <string name="ghost_wait_payload">Warte, bis payload fertig ist</string>
+    <string name="ghost_payload_timeout">Zeitüberschreitung bei der done-Markierung. payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit: %1$s</string>
+    <string name="ghost_shizuku_not_running">Shizuku-Server läuft nicht (einmal pro boot nötig: deploy/start_shizuku.sh)</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku nicht autorisiert (Berechtigungsanfrage gesendet)</string>
+    <string name="ghost_shizuku_bind_failed">Bindung an den Shizuku UserService fehlgeschlagen</string>
+    <string name="ghost_shizuku_root_run_shell">Shizuku-Server läuft als root; run_shell startet den exploit ohne root-Rechte</string>
+    <string name="ghost_shizuku_no_run_shell">Shizuku-Server läuft als root, kein run_shell für den Start ohne root-Rechte; Server stattdessen über adb/shell starten</string>
+    <string name="ghost_shizuku_bad_identity">Unerwartete Shizuku-Identität: %1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku nicht verfügbar (%1$s) → Rückfall auf bridge-helper</string>
+    <string name="ghost_attempt_shizuku">exploit-Versuch %1$s (Shizuku/shell-Identität)</string>
+    <string name="ghost_kernel_panic">kernel panic: Gerät neu gestartet (erwarteter Fehler, neuer Versuch nötig)</string>
+    <string name="ghost_process_died">exploit-Prozess früh beendet (evtl. durch OOM getötet)</string>
+    <string name="ghost_process_died_retry">exploit-Prozess früh beendet (evtl. durch OOM getötet), neuer Versuch</string>
+    <string name="ghost_retry_after">%1$s, neuer Versuch</string>
+    <string name="ghost_attempts_exhausted">Alle exploit-Versuche fehlgeschlagen (siehe %1$s)</string>
+    <string name="ghost_fallback_failed">Fallback fehlgeschlagen: %1$s</string>
+    <string name="root_state_ok">root: verfügbar</string>
+    <string name="root_state_rearming">root: verloren, Neuaufbau…</string>
+    <string name="root_state_rearmed">root: automatisch neu aufgebaut</string>
+    <string name="root_state_lost">root: verloren, Neustart nötig</string>
+    <string name="root_state_cooldown">root: verloren (Abkühlung, neuer Versuch später)</string>
+    <string name="root_state_unknown">root: unbekannt</string>
+    <string name="root_hint_run_scripts">Ausführen: %1$s</string>
+    <string name="root_hint_engine">Auslösbar über %1$s</string>
+    <string name="root_metrics_fmt">Letzte %1$d s (%2$s) · Erfolg %3$d/%4$d</string>
+    <string name="root_keeper_fmt">%1$d Prüfungen · %2$d Auto-Neuaufbauten</string>
+    <string name="sec_root_status">root Status</string>
+    <string name="ghost_engine_selected">Verwendete Engine: %1$s</string>
+    <string name="root_help_body">Ohne root funktionieren stille Aufnahme, LED-Unterdrückung, WLAN-Medientransfer und Ring-Steuerung an der Brille nicht.\nZuerst die Auslösekette per adb einrichten: deploy/root_bridge.sh (oder deploy/start_shizuku.sh)</string>
+    <string name="ring_err_busy_recording">Aufnahme läuft – Foto nicht möglich</string>
+    <string name="ring_err_busy">Zu viele Anfragen – bitte warten</string>
+    <string name="ring_err_record_timeout">Zeitüberschreitung beim Aufnahmestart – zurück zum Fotomodus</string>
+    <string name="ring_pick_title">Ringgerät auswählen</string>
+    <string name="ring_pick_scan">Neues Gerät suchen…</string>
+    <string name="ring_pick_scanning">Suche läuft…</string>
+    <string name="ring_pick_empty">Kein Ringgerät gefunden (zuerst in den Telefon-Einstellungen koppeln oder näher herangehen und erneut suchen)</string>
+    <string name="ring_pick_selected">Ausgewählt: %1$s</string>
+    <string name="ring_pick_bonded">✓ Gekoppelt %1$s</string>
+    <string name="ring_pick_fail">✗ Kopplung fehlgeschlagen: %1$s</string>
+</resources>

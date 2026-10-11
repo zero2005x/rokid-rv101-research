@@ -1,0 +1,18 @@
+[2026-09-13 09:14:36] ===== get_root_now 開始（serial=<DEVICE_SERIAL>）=====
+[2026-09-13 09:14:36] ===== BOOT ROUND 1/6 =====
+[2026-09-13 09:15:29] [boot] 裝置已上線，uptime=161s
+[2026-09-13 09:15:32] [helper] 不存在，執行 root_bridge.sh 重建並啟動
+[2026-09-13 09:15:39] --- trigger 1/2 (boot 1) ---
+[2026-09-13 09:15:40] [trigger] last.cmd 已寫入，等待 exploit...
+[2026-09-13 09:17:36] [wait] last.out = OK（payload 已以 root 執行完畢）
+[2026-09-13 09:17:36] [verify] last.done 內容：
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+__GHOSTLOCK_PAYLOAD_DONE__
+[2026-09-13 09:17:36] [verify] 經 root_daemon socket 執行 id/getenforce：
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+drwxrwxrwx 2 root root 3452 2026-09-09 21:32 /data/root_proof
+root         27328 root_daemon
+shell        27384 nc -U /data/local/tmp/root_daemon.sock
+root         27386 root_daemon
+[2026-09-13 09:17:36] ===== ROOT 已達成並驗證（boot 1, trigger 1）=====

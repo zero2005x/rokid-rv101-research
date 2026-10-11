@@ -1,0 +1,49 @@
+# DebugMask scope — 銀行 ＋ 支付 ＋ 加密貨幣 ＋ 2FA
+# 用途：./deploy/usbdebug_hider_ctl.sh scope-from-file deploy/usbdebug_hider_scope.txt
+# 格式：每行一個 package；# 之後為註解；空行忽略。
+# 標籤（2026-09-30）逐一由「設定 → 應用程式資訊」標題核對，非由包名推測。
+
+# ── 銀行（11）───────────────────────────────────────────────
+com.cathaybk.mymobibank.android      # 國泰世華
+com.chinatrust.mobilebank            # 中國信託
+com.esunbank                         # 玉山銀行
+com.fubon.aibank                     # 台北富邦
+tw.com.taishinbank.ccapp             # Richart Life（台新）
+tw.com.taishinbank.richart           # Richart（台新數位帳戶）
+com.tbb.mb.prod                      # 臺灣企銀
+com.landbank.newrelease.android      # 土銀行動銀行
+tw.com.hncb.nmbank                   # 華南銀行+
+com.ubot.dbank                       # New New Bank（聯邦）
+tw.gov.post.mpost                    # 行動郵局
+
+# ── 支付／電子票證／錢包（9）────────────────────────────────
+tw.com.twmp.twhcewallet              # 台灣行動支付（台灣Pay）
+com.easycard.wallet                  # Easy Wallet（悠遊卡）
+com.ipass.ipassmoney                 # iPASS MONEY（一卡通）
+com.allpay.tw                        # 歐付寶
+tw.net.pic.m.openpoint               # OPENPOINT（統一超商）
+grasea.familife                      # 全家便利商店（FamiPay）
+com.hilife.vipapp                    # Hi-Life VIP（萊爾富）
+com.pxmart.android                   # 全聯福利中心（PX Pay）
+com.google.android.apps.walletnfcrel # Google 錢包
+
+# ── 加密貨幣（5）───────────────────────────────────────────
+com.binance.dev                      # 幣安 Binance
+io.metamask                          # MetaMask
+com.maicoin.maicoin                  # MaiCoin
+com.maicoin.max                      # MAX
+com.nicehash.metallum                # NiceHash（同類別一併納入；不需要可刪這行）
+
+# ── 2FA 驗證器（3）─────────────────────────────────────────
+com.azure.authenticator              # Microsoft Authenticator（包名 azure＝微軟）
+com.google.android.apps.authenticator2 # Google Authenticator
+com.twofasapp                        # 2FAS
+
+# ── 驗證用（對照組探針；不需要時可移除）────────────────────
+com.rokid.rc.debugdetectprobe        # DebugDetectProbe（本專案探針）
+
+# ── 未納入但可隨時加 ───────────────────────────────────────
+# 電商錢包：com.shopee.tw（蝦皮 ShopeePay）/ com.tencent.mm（微信支付）/ tw.com.costco（好市多 Costco Pay）/ com.starbucks.tw（星巴克隨行卡）
+# 記帳報稅：com.lib.cwmoneyex（CWMoney）/ com.tradevan.android.forms（EZ Way）/ tw.gov.invoice（統一發票兌獎）
+# 交通綁卡：com.ubercab / dbx.taiwantaxi（55688）/ com.cht.easyrent.irent / com.wemoscooter / tw.com.chailease.android.shareCar
+# 保險證券：com.uniprosperity.mobile.one（萬家福，非金融，勿加）

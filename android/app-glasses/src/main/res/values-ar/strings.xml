@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Rokid Capture</string>
+    <string name="dash_title">Rokid Capture</string>
+    <string name="dash_collapsed">Rokid Capture</string>
+    <string name="dash_hint_collapse">انقر للطي</string>
+    <string name="dash_row_conn">الاتصال</string>
+    <string name="dash_row_root">Root</string>
+    <string name="dash_row_camera">الكاميرا</string>
+    <string name="dash_row_storage">التخزين</string>
+    <string name="dash_row_led">المؤشر</string>
+    <string name="dash_v_none">غير متصل</string>
+    <string name="dash_v_bt">بلوتوث</string>
+    <string name="dash_v_wifi">واي فاي</string>
+    <string name="dash_v_bt_wifi">بلوتوث + واي فاي</string>
+    <string name="dash_v_root_yes">تم الحصول</string>
+    <string name="dash_v_root_no">لا يوجد</string>
+    <string name="dash_v_on">تشغيل</string>
+    <string name="dash_v_off">إيقاف</string>
+    <string name="dash_v_cam_ready">جاهز</string>
+    <string name="dash_v_cam_rec">جارٍ التسجيل</string>
+    <string name="dash_v_cam_off">غير جاهز</string>
+    <string name="dash_v_storage">%1$s متاح</string>
+    <string name="dash_v_root_fmt">%1$s · ghost %2$s</string>
+    <string name="dash_v_led_fmt">أبيض %1$s</string>
+</resources>

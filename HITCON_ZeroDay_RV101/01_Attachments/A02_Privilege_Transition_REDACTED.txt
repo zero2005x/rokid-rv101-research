@@ -1,0 +1,66 @@
+================================================================================
+HITCON DERIVED REDACTED EVIDENCE — PRIVILEGE TRANSITION
+================================================================================
+Status:            DERIVED REDACTED COPY; kernel addresses, exploit internals,
+                   process identifier and device identifier removed
+Raw source:        RV101_Disclosure/confidential/raw_evidence/run_w2_v960_143215.log
+Original collected: 2026-08-22 14:32–14:39 CST (UTC+8)
+Device identifier: [REDACTED FOR PLATFORM COPY]
+Firmware/build:    1.22.009-20260710-150201
+Procedure:         private PoC executed from uid 2000 adb shell; post-state
+                   captured by spawned shell
+================================================================================
+
+----- BEFORE EXPLOIT -----
+# getenforce
+Enforcing
+
+# exploit entry privilege (PID redacted only)
+startup: pid=[REDACTED] uid=2000 euid=2000 gid=2000
+
+----- AFTER EXPLOIT -----
+# whoami
+root
+
+# id
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+
+# id -Z
+u:r:kernel:s0
+
+# getenforce
+Permissive
+
+# grep -E '^(Uid|Gid|CapInh|CapPrm|CapEff|CapBnd):' /proc/self/status
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+CapInh:	0000000000000000
+CapPrm:	000001ffffffffff
+CapEff:	000001ffffffffff
+CapBnd:	000001ffffffffff
+
+----- NON-DESTRUCTIVE DEMONSTRATION -----
+# Before creation
+ls: /data/root_proof: No such file or directory
+
+# After creation
+-rw-rw-rw- 1 root root 0 2026-08-22 14:39 /data/root_proof
+
+# Root-only directory metadata
+drwx------ 2 root root 3452 1970-01-08 22:21 /data/adb
+
+----- POST-EXPLOIT MOUNT STATUS -----
+/dev/block/dm-13 on /system_ext type ext4 (ro,seclabel,relatime,discard)
+/dev/block/dm-15 on /vendor type ext4 (ro,seclabel,relatime,discard)
+/dev/block/dm-16 on /vendor_dlkm type ext4 (ro,seclabel,relatime,discard)
+
+================================================================================
+SUPPORTED CONCLUSION
+  Successful runtime local privilege escalation to uid=0/gid=0 with full
+  effective capabilities and SELinux Permissive on the tested RV101 firmware.
+
+NOT CLAIMED
+  Persistence, AVB/dm-verity/Secure Boot bypass, writable system/vendor,
+  remote exploitation, arbitrary-app exploitability, or all-firmware coverage.
+================================================================================
+

@@ -1,0 +1,85 @@
+# KGSL micronode / ioctl (nr,size) 矩陣回測 — 本世代 1.22.009
+# 日期：2026-09-13 11:31:36  裝置：<DEVICE_SERIAL>
+# 工具：deploy/kgsl_micronode_probe.c（zig 交叉編譯 aarch64-linux-musl 靜態）
+
+=== KGSL micronode / ioctl (nr,size) 矩陣探針 ===
+open(/dev/kgsl-3d0)=OK uid=2000
+
+DEVICE_GETPROPERTY             nr=0x02 size=0x10 cmd=0xc0100902 ret= -1 errno= 19 ?          
+DRAWCTXT_CREATE                nr=0x13 size=0x10 cmd=0xc0100913 ret= -1 errno= 22 EINVAL     
+DRAWCTXT_DESTROY               nr=0x14 size=0x08 cmd=0xc0080914 ret= -1 errno= 22 EINVAL     
+GPUMEM_ALLOC?0x20              nr=0x20 size=0x18 cmd=0xc0180920 ret= -1 errno= 95 EOPNOTSUPP 
+GPUMEM_ALLOC?0x20b             nr=0x20 size=0x20 cmd=0xc0200920 ret= -1 errno= 95 EOPNOTSUPP 
+GPUMEM_ALLOC 0x2f/0x18         nr=0x2f size=0x18 cmd=0xc018092f ret= -1 errno= 22 EINVAL     
+GPUMEM_ALLOC 0x2f/0x20         nr=0x2f size=0x20 cmd=0xc020092f ret= -1 errno= 22 EINVAL     
+GPUOBJ_ALLOC 0x45/0x20         nr=0x45 size=0x20 cmd=0xc0200945 ret= -1 errno= 22 EINVAL     
+AUX_CMD 0x58/0x20              nr=0x58 size=0x20 cmd=0xc0200958 ret=  0 errno=  0 OK         
+GPUOBJ_IMPORT 0x58/0x28        nr=0x58 size=0x28 cmd=0xc0280958 ret=  0 errno=  0 OK         
+0x58/0x18                      nr=0x58 size=0x18 cmd=0xc0180958 ret=  0 errno=  0 OK         
+0x58/0x30                      nr=0x58 size=0x30 cmd=0xc0300958 ret=  0 errno=  0 OK         
+GPU_COMMAND 0x3d/0x58          nr=0x3d size=0x58 cmd=0xc058093d ret= -1 errno= 22 EINVAL     
+GPU_COMMAND 0x40/0x58          nr=0x40 size=0x58 cmd=0xc0580940 ret=  0 errno=  0 OK         
+GPU_COMMAND 0x4a/0x58          nr=0x4a size=0x58 cmd=0xc058094a ret= -1 errno= 22 EINVAL     
+SYNCSOURCE_CREATE 0x30/0x08    nr=0x30 size=0x08 cmd=0xc0080930 ret= -1 errno= 25 ENOTTY     
+SYNCSOURCE_FENCE 0x32/0x18     nr=0x32 size=0x18 cmd=0xc0180932 ret= -1 errno= 19 ?          
+TIMESTAMP_EVENT 0x33/0x10      nr=0x33 size=0x10 cmd=0xc0100933 ret= -1 errno= 22 EINVAL     
+GPUOBJ_INFO 0x39/0x20          nr=0x39 size=0x20 cmd=0xc0200939 ret= -1 errno= 19 ?          
+GPUOBJ_SET_INFO 0x3a/0x18      nr=0x3a size=0x18 cmd=0xc018093a ret=  0 errno=  0 OK         
+GPUOBJ_SYNC 0x56/0x18          nr=0x56 size=0x18 cmd=0xc0180956 ret=  0 errno=  0 OK         
+SPARSE_BIND 0x57/0x28          nr=0x57 size=0x28 cmd=0xc0280957 ret= -1 errno= 22 EINVAL     
+RINGBUF_IBCMDS 0x10/0x28       nr=0x10 size=0x28 cmd=0xc0280910 ret= -1 errno= 22 EINVAL     
+
+=== 變體掃描（已接受的號碼 × 參數變化）===
+nr=0x58 size=0x20 variant=0 ret=  0 errno=  0 OK
+nr=0x58 size=0x20 variant=1 ret=  0 errno=  0 OK
+nr=0x58 size=0x20 variant=2 ret=  0 errno=  0 OK
+nr=0x58 size=0x20 variant=3 ret=  0 errno=  0 OK
+nr=0x3d size=0x20 variant=0 ret= -1 errno= 22 EINVAL
+nr=0x3d size=0x20 variant=1 ret= -1 errno= 22 EINVAL
+nr=0x3d size=0x20 variant=2 ret= -1 errno= 22 EINVAL
+nr=0x3d size=0x20 variant=3 ret= -1 errno= 22 EINVAL
+nr=0x40 size=0x20 variant=0 ret=  0 errno=  0 OK
+nr=0x40 size=0x20 variant=1 ret=  0 errno=  0 OK
+nr=0x40 size=0x20 variant=2 ret=  0 errno=  0 OK
+nr=0x40 size=0x20 variant=3 ret=  0 errno=  0 OK
+nr=0x4a size=0x20 variant=0 ret= -1 errno= 22 EINVAL
+nr=0x4a size=0x20 variant=1 ret= -1 errno= 22 EINVAL
+nr=0x4a size=0x20 variant=2 ret= -1 errno= 22 EINVAL
+nr=0x4a size=0x20 variant=3 ret= -1 errno= 22 EINVAL
+nr=0x20 size=0x20 variant=0 ret= -1 errno= 95 EOPNOTSUPP
+nr=0x20 size=0x20 variant=1 ret= -1 errno= 95 EOPNOTSUPP
+nr=0x20 size=0x20 variant=2 ret= -1 errno= 95 EOPNOTSUPP
+nr=0x20 size=0x20 variant=3 ret= -1 errno= 95 EOPNOTSUPP
+nr=0x2f size=0x20 variant=0 ret= -1 errno= 22 EINVAL
+nr=0x2f size=0x20 variant=1 ret= -1 errno= 22 EINVAL
+nr=0x2f size=0x20 variant=2 ret= -1 errno= 22 EINVAL
+nr=0x2f size=0x20 variant=3 ret= -1 errno= 22 EINVAL
+
+SUMMARY cases=23 enotty=1 accepted=12
+
+=== v2：0x58 語意驗證（11:32:05）===
+=== KGSL 0x58 語意驗證 v2 ===
+open=OK uid=2000
+
+--- T1: arg=NULL（真正 kernel 路徑應 EFAULT）---
+0x58/0x20 NULL                             nr=0x58 sz=0x20 ret= -1 errno= 14 EFAULT
+0x40/0x58 NULL (GPU_COMMAND)               nr=0x40 sz=0x58 ret= -1 errno= 14 EFAULT
+0x45/0x20 NULL (GPUOBJ_ALLOC)              nr=0x45 sz=0x20 ret= -1 errno= 14 EFAULT
+
+--- T2/T3: 非 gpuaddr（0xdead0000 / 0x4000000000）---
+0x58/0x20 gpuaddr=0xdead0000               nr=0x58 sz=0x20 ret=  0 errno=  0 OK
+0x58/0x20 gpuaddr=0x4000000000             nr=0x58 sz=0x20 ret=  0 errno=  0 OK
+0x45/0x20 size=0x1000                      nr=0x45 sz=0x20 ret= -1 errno= 22 EINVAL
+
+--- T4: 極大值 ---
+0x58/0x20 全 0xffff                       nr=0x58 sz=0x20 ret=  0 errno=  0 OK
+
+--- T5: 合法 GPUMEM_ALLOC 嘗試（size=0x1000）---
+GPUMEM_ALLOC nr=0x2f size=0x18 ret= -1 errno= 22 EINVAL      id=0 gpuaddr=0x0
+GPUMEM_ALLOC nr=0x20 size=0x18 ret= -1 errno= 95 EOPNOTSUPP  id=0 gpuaddr=0x0
+
+--- T6: GPU_COMMAND(0x40) 空批次 vs 假 cmdlist ---
+0x40/0x58 空批次                        nr=0x40 sz=0x58 ret=  0 errno=  0 OK
+0x40/0x58 假 cmdlist                      nr=0x40 sz=0x58 ret=  0 errno=  0 OK
+
+SUMMARY done

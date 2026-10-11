@@ -1,0 +1,20 @@
+# ZeroLightRokid Desktop — 交付檔案雜湊
+#
+# 驗證（只檢查仍納入版控的檔案）：
+#   grep -v '^#EXCLUDED' SHA256SUMS.txt | sha256sum -c -
+#
+# 建置可重現：build_mingw.sh 使用 -Wl,--no-insert-timestamp，
+#       同樣原始碼會產生位元組完全相同的執行檔。
+#
+# --- 2026-10-11 monorepo 發布說明 ------------------------------------------
+# zero_light_desktop.exe 為編譯產物，未納入本 repo（可由 build_mingw.sh 重建）。
+# assets/ 下兩個二進位為本工具「執行期必需品」：工具會把它們 push 到眼鏡的
+# /data/local/tmp/ 後執行，因此必須隨工具散布，故予以保留。
+# 其原始碼位於 source_code/ghostlock_rv101/ 與 deploy/root_daemon.c；
+# 交付時的原始雜湊見 ../EXCLUDED.md。
+# -------------------------------------------------------------------------
+#EXCLUDED 2c8470998dad7ba74473fb8c4766bdf97fb331ee52f09004e3e35c29295cca20  zero_light_desktop.exe
+
+26575a724704aaee3b5c40a883a58b0a032f51b18738d121ec06cd859177ffce  assets/ghostlock_rv101
+c24f9bb9a85b67d647c3be13eadcd13664d811f9e24fee8ef51e08dd5b1d6e9d  assets/root_daemon
+fff7d96a058e2edbe114dc03b43c62c00165525a4588654c24be90bdd7ef5636  assets/silent_camera.ogg

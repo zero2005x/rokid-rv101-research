@@ -1,0 +1,334 @@
+<resources>
+    <string name="app_name">Rokid Remote</string>
+    <string name="tab_remote">Télécommande</string>
+    <string name="tab_albums">Albums</string>
+    <string name="tab_local">Local</string>
+    <string name="conn_connected">Connecté</string>
+    <string name="conn_disconnected">Déconnecté</string>
+    <string name="conn_connecting">Connexion…</string>
+    <string name="btn_connect">Connecter</string>
+    <string name="transport_bt">Transport : Bluetooth</string>
+    <string name="transport_wifi">Transport : Wi-Fi %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">Transport : connexion Wi-Fi…</string>
+    <string name="btn_wifi_on">Activer le transfert Wi-Fi</string>
+    <string name="btn_wifi_off">Désactiver le transfert Wi-Fi</string>
+    <string name="wifi_failed_manual">Impossible de rejoindre automatiquement le Wi-Fi « %1$s » (mot de passe %2$s). Rejoignez-le manuellement dans les réglages Wi-Fi puis réessayez.</string>
+    <string name="wifi_ap_not_ready">Point d\'accès Wi-Fi des lunettes non prêt : obtenez d\'abord root (ou réessayez plus tard).</string>
+    <string name="btn_disconnect">Déconnecter</string>
+    <string name="conn_card_title">Connexion aux lunettes</string>
+    <string name="conn_no_device">Aucune lunette sélectionnée</string>
+    <string name="conn_pick_title">Sélectionner les lunettes</string>
+    <string name="sec_capture">Capture</string>
+    <string name="btn_photo">Photo</string>
+    <string name="btn_video_start">Démarrer la vidéo</string>
+    <string name="btn_video_stop">Arrêter la vidéo</string>
+    <string name="sec_led">Voyant de confidentialité</string>
+    <string name="led_switch_label">Voyant (blanc)</string>
+    <string name="chip_white">Blanc</string>
+    <string name="chip_green">Vert</string>
+    <string name="chip_blue">Bleu</string>
+    <string name="chip_red">Rouge</string>
+    <string name="sec_advanced">Avancé (root/ghostlock)</string>
+    <string name="btn_advanced_show">Déplier</string>
+    <string name="btn_advanced_hide">Replier</string>
+    <string name="ghost_switch_label">mode furtif ghostlock (éteint le voyant pendant la capture)</string>
+    <string name="root_auto_label">Obtenir root automatiquement au démarrage (AUTO)</string>
+    <string name="btn_acquire_root">Obtenir root maintenant</string>
+    <string name="btn_device_info">Infos appareil</string>
+    <string name="sec_display">Affichage des lunettes</string>
+    <string name="chip_disp_conn">Connexion</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">Caméra</string>
+    <string name="chip_disp_storage">Stockage</string>
+    <string name="chip_disp_led">Voyant</string>
+    <string name="btn_disp_all">Tout afficher</string>
+    <string name="btn_disp_none">Tout masquer</string>
+    <string name="sec_log">Journal d\'activité</string>
+    <string name="btn_clear_log">Effacer</string>
+    <string name="toolbar_albums">Albums</string>
+    <string name="content_desc_add">Ajouter un album</string>
+    <string name="content_desc_refresh">Actualiser</string>
+    <string name="empty_albums">Aucun album\nTouchez ＋ en bas à droite pour en créer un</string>
+    <string name="albums_not_connected">Non connecté aux lunettes\nConnectez-vous d\'abord en Bluetooth depuis l\'onglet « Télécommande »</string>
+    <string name="albums_load_failed">Échec du chargement des albums</string>
+    <string name="action_retry">Réessayer</string>
+    <string name="album_item_count">%1$d éléments</string>
+    <string name="menu_view">Afficher</string>
+    <string name="menu_rename">Renommer</string>
+    <string name="menu_delete">Supprimer</string>
+    <string name="dialog_new_album">Nouvel album</string>
+    <string name="dialog_rename_album">Renommer l\'album</string>
+    <string name="hint_album_name">Nom de l\'album</string>
+    <string name="action_create">Créer</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="confirm_delete_album">Supprimer l\'album « %1$s » et tout son contenu ?\n(Seuls les originaux sur les lunettes sont supprimés ; vos copies locales restent.)</string>
+    <string name="msg_album_created">Album créé</string>
+    <string name="msg_album_renamed">Album renommé</string>
+    <string name="msg_album_deleted">Album supprimé</string>
+    <string name="sel_count">%1$d sélectionné(s)</string>
+    <string name="action_select_all">Tout sélectionner</string>
+    <string name="action_download">Télécharger</string>
+    <string name="empty_media">Cet album ne contient aucun média</string>
+    <string name="media_load_failed">Échec du chargement des médias</string>
+    <string name="confirm_delete_media">Supprimer « %1$s » sur les lunettes ?\n(Seul l\'original est supprimé ; votre copie locale est conservée.)</string>
+    <string name="batch_deleting">Suppression %1$d/%2$d</string>
+    <string name="batch_downloading">Téléchargement %1$d/%2$d</string>
+    <string name="msg_deleted">Supprimé</string>
+    <string name="viewer_delete_remote">Supprimer l\'original sur les lunettes</string>
+    <string name="viewer_downloading">Téléchargement de l\'original (transfert Bluetooth, patientez)…</string>
+    <string name="viewer_play">Lire la vidéo</string>
+    <string name="toolbar_local">Local</string>
+    <string name="empty_local">Aucun média téléchargé\nOuvrez un album dans « Albums » pour télécharger photos/vidéos</string>
+    <string name="local_dir_prefix">Téléchargé en local</string>
+    <string name="album_unnamed">Album sans nom</string>
+    <string name="log_dialog_title">Journal (complet)</string>
+    <string name="dialog_close">Fermer</string>
+    <string name="log_longpress_hint">Appui long pour voir tout le journal</string>
+    <string name="silent_switch_label">Capture silencieuse (couper les sons d\'obturateur et d\'enregistrement)</string>
+    <string name="btn_language">Langue : %1$s</string>
+    <string name="lang_dialog_title">Choisir la langue</string>
+    <string name="lang_system">Suivre le système</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">Déconnecté</string>
+    <string name="log_wifi_off">Transfert Wi-Fi désactivé, le média passe en Bluetooth</string>
+    <string name="log_wifi_enabling">Activation du transfert Wi-Fi… (à la première utilisation, confirmez l\'ajout de « %1$s » dans la boîte de dialogue système)</string>
+    <string name="log_wifi_enabled">✓ Transfert Wi-Fi activé (%1$s:%2$d)</string>
+    <string name="log_wifi_failed">✗ Transfert Wi-Fi : %1$s</string>
+    <string name="err_unknown">Erreur inconnue</string>
+    <string name="toast_not_connected">Lunettes non connectées</string>
+    <string name="log_capturing">Prise de photo…</string>
+    <string name="log_photo_ok">✓ Photo prise : %1$s</string>
+    <string name="log_photo_fail">✗ Échec de la photo : %1$s</string>
+    <string name="log_recording">● Enregistrement</string>
+    <string name="log_record_fail">✗ Échec de l\'enregistrement : %1$s</string>
+    <string name="log_video_saved">✓ Vidéo enregistrée : %1$s</string>
+    <string name="log_stop_fail">✗ Échec de l\'arrêt : %1$s</string>
+    <string name="log_ghost_fail">Échec du réglage ghostlock : %1$s</string>
+    <string name="log_root_mode_fail">Échec du réglage du mode root : %1$s</string>
+    <string name="silent_applied">✓ Capture silencieuse activée (sons de déclencheur/enregistrement supprimés)</string>
+    <string name="silent_pending">⚠ Mode silencieux défini mais pas encore appliqué (root requis)</string>
+    <string name="silent_disabled">✓ Capture silencieuse désactivée (sons restaurés)</string>
+    <string name="log_silent_fail">✗ Échec du mode silencieux : %1$s</string>
+    <string name="log_led_enabling">Allumage du voyant de confidentialité…</string>
+    <string name="log_led_disabling">Extinction du voyant de confidentialité…</string>
+    <string name="log_led_on_ok">✓ Voyant : allumé</string>
+    <string name="log_led_off_ok">✓ Voyant : éteint</string>
+    <string name="log_led_fail">✗ Échec du réglage du voyant : %1$s</string>
+    <string name="log_root_acquiring">Obtention de root… (cela peut prendre quelques minutes)</string>
+    <string name="log_root_ready">✓ root prêt</string>
+    <string name="log_root_failed">✗ Échec de l\'obtention de root</string>
+    <string name="log_root_fail">✗ Échec de root : %1$s</string>
+    <string name="log_querying">Interrogation des informations de l\'appareil…</string>
+    <string name="log_query_fail">✗ Échec de la requête : %1$s</string>
+    <string name="log_progress">[Progression] %1$s</string>
+    <string name="log_display_ok">✓ Affichage des lunettes mis à jour</string>
+    <string name="log_display_fail">✗ Échec du réglage d\'affichage : %1$s</string>
+    <string name="led_name">Voyant %1$s</string>
+    <string name="log_led_switch">%1$s %2$s…</string>
+    <string name="log_led_done">✓ %1$s : %2$s</string>
+    <string name="log_led_switch_fail">✗ Échec de %1$s : %2$s</string>
+    <string name="state_on">allumée</string>
+    <string name="state_off">éteinte</string>
+    <string name="state_enabled">activé</string>
+    <string name="state_disabled">désactivé</string>
+    <string name="status_summary">Albums %1$d · Média %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ Langue changée : %1$s</string>
+    <string name="toast_bt_disabled">Veuillez d\'abord activer le Bluetooth</string>
+    <string name="toast_no_paired_device">Aucun appareil Bluetooth appairé. Appairez d\'abord les lunettes dans les réglages Bluetooth du système.</string>
+    <string name="toast_connect_failed">Échec de la connexion : %1$s</string>
+    <string name="toast_no_local_media">Aucun fichier local pour cet album</string>
+    <string name="confirm_delete_local_files">Supprimer %1$d fichier(s) local(aux) ? (les originaux sur les lunettes ne sont pas affectés)</string>
+    <string name="batch_downloading_file">Téléchargement %1$d/%2$d : %3$s</string>
+    <string name="toast_delete_done">Suppression terminée : %1$d réussie(s)</string>
+    <string name="toast_delete_done_fail">Suppression terminée : %1$d réussie(s), %2$d échouée(s)</string>
+    <string name="toast_download_done">Téléchargement terminé : %1$d réussi(s)</string>
+    <string name="toast_download_done_fail">Téléchargement terminé : %1$d réussi(s), %2$d échoué(s)</string>
+    <string name="dialog_download_note">\nLes originaux seront téléchargés depuis les lunettes (le transfert Bluetooth est lent).</string>
+    <string name="err_local_file_missing">Fichier local introuvable</string>
+    <string name="toast_delete_fail">Échec de la suppression : %1$s</string>
+    <string name="err_download_fail">Échec du téléchargement : %1$s</string>
+    <string name="toast_opening">Ouverture de %1$s…</string>
+    <string name="toast_create_fail">Échec de la création : %1$s</string>
+    <string name="toast_rename_fail">Échec du renommage : %1$s</string>
+    <string name="local_album_delete">Supprimer l\'album local</string>
+    <string name="local_album_delete_msg">Supprimer « %1$s » (%2$s) du téléphone ?\nLes originaux sur les lunettes ne sont pas affectés.</string>
+    <string name="toast_local_album_deleted">Album local supprimé</string>
+    <string name="media_type_video">Vidéo</string>
+    <string name="media_type_photo">Photo</string>
+    <string name="wifi_ap_timeout">Le point d\'accès Wi-Fi des lunettes a expiré, veuillez réessayer plus tard</string>
+    <string name="wifi_tcp_failed">Échec de la connexion TCP : %1$s</string>
+    <string name="sec_ring">Commande par bague</string>
+    <string name="ring_switch_label">Activer la commande gestuelle par bague</string>
+    <string name="ring_hint">Appui = photo · Double appui = vidéo · Appui long = silencieux · Molette = changer l\'affichage</string>
+    <string name="ring_status_idle">Aucun geste reçu</string>
+    <string name="ring_status_fmt">%1$d gestes · dernier : %2$s</string>
+    <string name="ring_learn_btn">Apprendre un geste</string>
+    <string name="ring_learn_hint">Appuyez sur un bouton de la bague…</string>
+    <string name="ring_learn_result">Code touche %1$s reçu</string>
+    <string name="ring_map_title">Choisir l\'action pour ce code</string>
+    <string name="ring_action_photo">Photo</string>
+    <string name="ring_action_video">Démarrer/arrêter la vidéo</string>
+    <string name="ring_action_silent">Basculer la capture silencieuse</string>
+    <string name="ring_action_display_next">Infos affichées (suivant)</string>
+    <string name="ring_action_display_prev">Infos affichées (précédent)</string>
+    <string name="ring_action_none">Aucune action</string>
+    <string name="ring_map_saved">%1$s → %2$s associé</string>
+    <string name="ring_map_cleared">Associations personnalisées effacées</string>
+    <string name="ring_pair_btn">Associer la bague</string>
+    <string name="ring_glasses_switch">Commande par bague (lunettes)</string>
+    <string name="ring_glasses_status">Lunettes : %1$s</string>
+    <string name="nav_settings">Paramètres</string>
+    <string name="log_expand">Agrandir</string>
+    <string name="sec_connection">Connexion</string>
+    <string name="sec_capture_root">Capture et permissions</string>
+    <string name="sec_led_settings">Voyant de confidentialité</string>
+    <string name="sec_language">Langue</string>
+    <string name="wifi_switch_hint">Médias et commandes passent en priorité par Wi-Fi ; le Bluetooth ne sert que de secours</string>
+    <string name="led_colors_hint">Choisissez les couleurs à activer</string>
+    <string name="ring_a_label">Gestes côté téléphone (bague appairée au téléphone)</string>
+    <string name="ring_a_hint">L\'app doit être au premier plan (clics souris et touches média pris en charge)</string>
+    <string name="ring_b_label">Gestes côté lunettes (bague/touchpad appairé aux lunettes)</string>
+    <string name="ring_b_hint">Les lunettes lisent evdev en root ; fonctionne en arrière-plan</string>
+    <string name="state_running">actif</string>
+    <string name="state_stopped">arrêté</string>
+    <string name="ring_phone_prefix">Téléphone : %1$s</string>
+    <string name="log_app_started">App prête</string>
+    <string name="action_search">Rechercher un album</string>
+    <string name="action_sort">Trier</string>
+    <string name="sort_name">Nom</string>
+    <string name="sort_count">Nombre d\'éléments</string>
+    <string name="sort_newest">Plus récent</string>
+    <string name="local_summary">%1$d albums · %2$d éléments · %3$s utilisés</string>
+    <string name="selected_albums">%1$d sélectionné(s)</string>
+    <string name="toast_local_albums_deleted">%1$d album(s) local(aux) supprimé(s)</string>
+    <string name="confirm_delete_local_albums">Supprimer %1$d album(s) du téléphone ?\n(les originaux sur les lunettes ne sont pas affectés)</string>
+    <string name="ring_state_enabled">Activé</string>
+    <string name="ring_state_disabled">Désactivé</string>
+    <string name="ring_learn_waiting">En attente d\'une touche…</string>
+    <string name="ring_map_set">%1$s → %2$s associé</string>
+    <string name="ring_map_cleared_short">Associations personnalisées effacées</string>
+    <string name="ring_no_action">%1$s → (aucune action)</string>
+    <string name="ring_err_prefix">Erreur : %1$s</string>
+    <string name="ring_photo_ok">Photo prise : %1$s</string>
+    <string name="ring_photo_fail">Échec de la photo : %1$s</string>
+    <string name="ring_video_start">Enregistrement démarré</string>
+    <string name="ring_video_fail">Échec de l\'enregistrement : %1$s</string>
+    <string name="ring_video_saved">Vidéo enregistrée : %1$s</string>
+    <string name="ring_stop_fail">Échec de l\'arrêt : %1$s</string>
+    <string name="ring_status_read_fail">Échec de la lecture de l\'état</string>
+    <string name="ring_silent_on">Capture silencieuse activée</string>
+    <string name="ring_silent_on_pending">Capture silencieuse activée (en attente de root)</string>
+    <string name="ring_silent_off">Capture silencieuse désactivée</string>
+    <string name="ring_silent_fail">Échec du mode silencieux : %1$s</string>
+    <string name="ring_display_switched">Affichage basculé vers %1$s</string>
+    <string name="ring_display_fail">Échec du réglage d\'affichage : %1$s</string>
+    <string name="ring_on">activé</string>
+    <string name="ring_off">désactivé</string>
+    <string name="sec_appearance">Apparence</string>
+    <string name="light_mode_label">Mode clair</string>
+    <string name="light_mode_hint">Désactivé = thème sombre ; activé = thème clair</string>
+    <string name="ring_camera_not_ready">Caméra non prête (ouvrez l\'application sur les lunettes)</string>
+    <string name="ring_status_no_device">Aucun périphérique d\'entrée (%1$s)</string>
+    <string name="ring_status_start_failed">Échec du démarrage de getevent</string>
+    <string name="ring_status_stopped">Arrêté</string>
+    <string name="ring_display_none">Tout masquer</string>
+    <string name="ghost_skip_lpe">Détection d\'un daemon root persistant, LPE ignoré</string>
+    <string name="ghost_prepare_payload">Préparation du payload</string>
+    <string name="ghost_done">Terminé</string>
+    <string name="ghost_failed">Échec : %1$s</string>
+    <string name="ghost_bridge_dir_missing">Répertoire bridge absent ou non inscriptible : %1$s (lancez d\'abord deploy/root_bridge.sh)</string>
+    <string name="ghost_bridge_sent">Commande envoyée, attente du helper pour lancer l\'exploit (peut prendre plusieurs minutes)</string>
+    <string name="ghost_bridge_timeout">Délai du bridge dépassé (le helper tourne-t-il ? voir %1$s)</string>
+    <string name="ghost_bridge_report">Rapport du bridge : %1$s</string>
+    <string name="ghost_attempt">Tentative d\'exploit %1$s</string>
+    <string name="ghost_helper_started">Le helper a commencé le traitement</string>
+    <string name="ghost_ready_seen">L\'exploit a atteint le marqueur ready</string>
+    <string name="ghost_payload_replaced">Remplacement du payload</string>
+    <string name="ghost_wait_payload_root">Attente de la fin du payload en root</string>
+    <string name="ghost_binary_missing">binary absent ou non exécutable : %1$s</string>
+    <string name="ghost_exploit_started">Lancement de l\'exploit</string>
+    <string name="ghost_exploit_start_failed">Impossible de lancer l\'exploit (voir %1$s)</string>
+    <string name="ghost_wait_ready">Attente du marqueur ready</string>
+    <string name="ghost_ready_timeout">Délai du marqueur ready dépassé : %1$s</string>
+    <string name="ghost_ready_timeout_retry">Délai du marqueur ready dépassé</string>
+    <string name="ghost_payload_write_failed">Impossible d\'écrire %1$s (droits d\'écriture de l\'app sur /data/local/tmp ?)</string>
+    <string name="ghost_wait_payload">Attente de la fin du payload</string>
+    <string name="ghost_payload_timeout">Délai du marqueur done dépassé. payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit : %1$s</string>
+    <string name="ghost_shizuku_not_running">Serveur Shizuku non lancé (nécessaire une fois par boot : deploy/start_shizuku.sh)</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku non autorisé (demande d\'autorisation envoyée)</string>
+    <string name="ghost_shizuku_bind_failed">Échec de la liaison au Shizuku UserService</string>
+    <string name="ghost_shizuku_root_run_shell">Serveur Shizuku lancé en root ; run_shell sert à lancer l\'exploit sans privilèges</string>
+    <string name="ghost_shizuku_no_run_shell">Serveur Shizuku lancé en root sans run_shell pour retirer les privilèges ; lancez plutôt le serveur via adb/shell</string>
+    <string name="ghost_shizuku_bad_identity">Identité d\'exécution Shizuku anormale : %1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku indisponible (%1$s) → repli sur le helper bridge</string>
+    <string name="ghost_attempt_shizuku">Tentative d\'exploit %1$s (identité Shizuku/shell)</string>
+    <string name="ghost_kernel_panic">kernel panic : appareil redémarré (échec normal, nouvelle tentative requise)</string>
+    <string name="ghost_process_died">Processus exploit terminé trop tôt (peut-être tué par OOM)</string>
+    <string name="ghost_process_died_retry">Processus exploit terminé trop tôt (peut-être tué par OOM), nouvelle tentative</string>
+    <string name="ghost_retry_after">%1$s, nouvelle tentative</string>
+    <string name="ghost_attempts_exhausted">Toutes les tentatives d\'exploit ont échoué (voir %1$s)</string>
+    <string name="ghost_fallback_failed">Échec du fallback : %1$s</string>
+    <string name="root_state_ok">root : disponible</string>
+    <string name="root_state_rearming">root : perdu, réarmement…</string>
+    <string name="root_state_rearmed">root : réarmé automatiquement</string>
+    <string name="root_state_lost">root : perdu, réarmement requis</string>
+    <string name="root_state_cooldown">root : perdu (refroidissement, nouvel essai plus tard)</string>
+    <string name="root_state_unknown">root : inconnu</string>
+    <string name="root_hint_run_scripts">Exécuter : %1$s</string>
+    <string name="root_hint_engine">Déclenchable via %1$s</string>
+    <string name="root_metrics_fmt">Dernier %1$d s (%2$s) · succès %3$d/%4$d</string>
+    <string name="root_keeper_fmt">%1$d vérifications · %2$d réarmements auto</string>
+    <string name="sec_root_status">État root</string>
+    <string name="ghost_engine_selected">Moteur utilisé : %1$s</string>
+    <string name="root_help_body">Sans root : capture silencieuse, suppression du voyant, transfert média Wi-Fi et bague côté lunettes ne fonctionnent plus.\nArmez d\'abord le déclencheur via adb : deploy/root_bridge.sh (ou deploy/start_shizuku.sh)</string>
+    <string name="ring_err_busy_recording">Enregistrement en cours — impossible de prendre une photo</string>
+    <string name="ring_err_busy">Trop de requêtes — veuillez patienter</string>
+    <string name="ring_err_record_timeout">Délai de démarrage de l\'enregistrement dépassé — retour au mode photo</string>
+    <string name="ring_pick_title">Choisir l\'appareil bague</string>
+    <string name="ring_pick_scan">Rechercher un nouvel appareil…</string>
+    <string name="ring_pick_scanning">Recherche en cours…</string>
+    <string name="ring_pick_empty">Aucun appareil bague trouvé (associez-le d\'abord dans les réglages du téléphone, ou rapprochez-vous et relancez la recherche)</string>
+    <string name="ring_pick_selected">Sélectionné : %1$s</string>
+    <string name="ring_pick_bonded">✓ Associé %1$s</string>
+    <string name="ring_pick_fail">✗ Échec de l\'association : %1$s</string>
+</resources>

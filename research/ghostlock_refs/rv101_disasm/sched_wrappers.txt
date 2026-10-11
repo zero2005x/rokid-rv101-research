@@ -1,0 +1,50 @@
+0xffffffc0081992f4: paciasp  
+0xffffffc0081992f8: sub      sp, sp, #0x50
+0xffffffc0081992fc: str      x30, [x18], #8
+0xffffffc008199300: stp      x29, x30, [sp, #0x40]
+0xffffffc008199304: add      x29, sp, #0x40
+0xffffffc008199308: adrp     x8, #0xffffffc009efd000
+0xffffffc00819930c: ldr      x8, [x8, #0xbb0]
+0xffffffc008199310: cmn      w1, #1
+0xffffffc008199314: stur     x8, [x29, #-8]
+0xffffffc008199318: stp      xzr, xzr, [sp, #0x28]
+0xffffffc00819931c: stp      xzr, xzr, [sp, #0x18]
+0xffffffc008199320: stp      xzr, xzr, [sp, #8]
+0xffffffc008199324: str      xzr, [sp]
+0xffffffc008199328: str      w1, [sp, #4]
+0xffffffc00819932c: ldr      w8, [x0, #0x88]
+0xffffffc008199330: sub      w9, w8, #0x78
+0xffffffc008199334: ldr      w8, [x2]
+0xffffffc008199338: stp      w9, w8, [sp, #0x10]
+0xffffffc00819933c: b.eq     #0xffffffc008199354
+0xffffffc008199340: tbz      w1, #0x1e, #0xffffffc008199354
+0xffffffc008199344: mov      w8, #1
+0xffffffc008199348: and      w9, w1, #0xbfffffff
+0xffffffc00819934c: str      x8, [sp, #8]
+0xffffffc008199350: str      w9, [sp, #4]
+0xffffffc008199354: mov      x1, sp
+0xffffffc008199358: mov      w2, #1
+0xffffffc00819935c: mov      w3, #1
+0xffffffc008199360: bl       #0xffffffc0081993bc
+0xffffffc008199364: adrp     x9, #0xffffffc009efd000
+0xffffffc008199368: ldur     x8, [x29, #-8]
+0xffffffc00819936c: ldr      x9, [x9, #0xbb0]
+0xffffffc008199370: cmp      x9, x8
+0xffffffc008199374: b.ne     #0xffffffc00819938c
+0xffffffc008199378: ldp      x29, x30, [sp, #0x40]
+0xffffffc00819937c: ldr      x30, [x18, #-8]!
+0xffffffc008199380: add      sp, sp, #0x50
+0xffffffc008199384: autiasp  
+0xffffffc008199388: ret      
+0xffffffc00819938c: bl       #0xffffffc009178eb0
+0xffffffc008199390: paciasp  
+0xffffffc008199394: str      x30, [x18], #8
+0xffffffc008199398: stp      x29, x30, [sp, #-0x10]!
+0xffffffc00819939c: mov      x29, sp
+0xffffffc0081993a0: mov      w2, #1
+0xffffffc0081993a4: mov      w3, #1
+0xffffffc0081993a8: bl       #0xffffffc0081993bc
+0xffffffc0081993ac: ldp      x29, x30, [sp], #0x10
+0xffffffc0081993b0: ldr      x30, [x18, #-8]!
+0xffffffc0081993b4: autiasp  
+0xffffffc0081993b8: ret      

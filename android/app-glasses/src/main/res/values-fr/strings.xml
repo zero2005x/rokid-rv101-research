@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Rokid Capture</string>
+    <string name="dash_title">Rokid Capture</string>
+    <string name="dash_collapsed">Rokid Capture</string>
+    <string name="dash_hint_collapse">Toucher pour réduire</string>
+    <string name="dash_row_conn">Connexion</string>
+    <string name="dash_row_root">Root</string>
+    <string name="dash_row_camera">Caméra</string>
+    <string name="dash_row_storage">Stockage</string>
+    <string name="dash_row_led">Voyant</string>
+    <string name="dash_v_none">Déconnecté</string>
+    <string name="dash_v_bt">Bluetooth</string>
+    <string name="dash_v_wifi">Wi-Fi</string>
+    <string name="dash_v_bt_wifi">Bluetooth + Wi-Fi</string>
+    <string name="dash_v_root_yes">Obtenu</string>
+    <string name="dash_v_root_no">Aucun</string>
+    <string name="dash_v_on">Activé</string>
+    <string name="dash_v_off">Désactivé</string>
+    <string name="dash_v_cam_ready">Prêt</string>
+    <string name="dash_v_cam_rec">Enregistrement</string>
+    <string name="dash_v_cam_off">Pas prêt</string>
+    <string name="dash_v_storage">%1$s libres</string>
+    <string name="dash_v_root_fmt">%1$s · ghost %2$s</string>
+    <string name="dash_v_led_fmt">Blanc %1$s</string>
+</resources>

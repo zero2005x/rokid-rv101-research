@@ -1,0 +1,334 @@
+<resources>
+    <string name="app_name">Rokid Remote</string>
+    <string name="tab_remote">รีโมท</string>
+    <string name="tab_albums">อัลบั้ม</string>
+    <string name="tab_local">ในเครื่อง</string>
+    <string name="conn_connected">เชื่อมต่อแล้ว</string>
+    <string name="conn_disconnected">ไม่ได้เชื่อมต่อ</string>
+    <string name="conn_connecting">กำลังเชื่อมต่อ…</string>
+    <string name="btn_connect">เชื่อมต่อ</string>
+    <string name="transport_bt">การถ่ายโอน: บลูทูธ</string>
+    <string name="transport_wifi">การถ่ายโอน: Wi-Fi %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">การถ่ายโอน: กำลังเชื่อมต่อ Wi-Fi…</string>
+    <string name="btn_wifi_on">เปิดการถ่ายโอน Wi-Fi</string>
+    <string name="btn_wifi_off">ปิดการถ่ายโอน Wi-Fi</string>
+    <string name="wifi_failed_manual">ไม่สามารถเชื่อมต่อ Wi-Fi “%1$s” โดยอัตโนมัติ (รหัสผ่าน %2$s) โปรดเชื่อมต่อด้วยตนเองในการตั้งค่า Wi-Fi แล้วลองใหม่</string>
+    <string name="wifi_ap_not_ready">ฮอตสปอต Wi-Fi ของแว่นยังไม่พร้อม: ต้องรับ root ก่อน (หรือลองใหม่ภายหลัง)</string>
+    <string name="btn_disconnect">ตัดการเชื่อมต่อ</string>
+    <string name="conn_card_title">การเชื่อมต่อแว่น</string>
+    <string name="conn_no_device">ยังไม่ได้เลือกแว่น</string>
+    <string name="conn_pick_title">เลือกแว่น</string>
+    <string name="sec_capture">ถ่ายภาพ</string>
+    <string name="btn_photo">ถ่ายรูป</string>
+    <string name="btn_video_start">เริ่มบันทึกวิดีโอ</string>
+    <string name="btn_video_stop">หยุดบันทึกวิดีโอ</string>
+    <string name="sec_led">ไฟแสดงความเป็นส่วนตัว</string>
+    <string name="led_switch_label">ไฟแสดงสถานะ (สีขาว)</string>
+    <string name="chip_white">ขาว</string>
+    <string name="chip_green">เขียว</string>
+    <string name="chip_blue">น้ำเงิน</string>
+    <string name="chip_red">แดง</string>
+    <string name="sec_advanced">ขั้นสูง (root/ghostlock)</string>
+    <string name="btn_advanced_show">ขยาย</string>
+    <string name="btn_advanced_hide">ย่อ</string>
+    <string name="ghost_switch_label">โหมดซ่อน ghostlock (ดับไฟความเป็นส่วนตัวขณะถ่าย)</string>
+    <string name="root_auto_label">รับ root อัตโนมัติเมื่อเปิดเครื่อง (AUTO)</string>
+    <string name="btn_acquire_root">รับ root ทันที</string>
+    <string name="btn_device_info">ข้อมูลอุปกรณ์</string>
+    <string name="sec_display">การแสดงผลของแว่น</string>
+    <string name="chip_disp_conn">การเชื่อมต่อ</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">กล้อง</string>
+    <string name="chip_disp_storage">พื้นที่เก็บข้อมูล</string>
+    <string name="chip_disp_led">ไฟแสดงสถานะ</string>
+    <string name="btn_disp_all">แสดงทั้งหมด</string>
+    <string name="btn_disp_none">ซ่อนทั้งหมด</string>
+    <string name="sec_log">บันทึกการทำงาน</string>
+    <string name="btn_clear_log">ล้าง</string>
+    <string name="toolbar_albums">อัลบั้ม</string>
+    <string name="content_desc_add">เพิ่มอัลบั้ม</string>
+    <string name="content_desc_refresh">รีเฟรช</string>
+    <string name="empty_albums">ยังไม่มีอัลบั้ม\nแตะ ＋ มุมขวาล่างเพื่อสร้างอัลบั้มแรก</string>
+    <string name="albums_not_connected">ไม่ได้เชื่อมต่อกับแว่น\nโปรดเชื่อมต่อบลูทูธที่แท็บ “รีโมท” ก่อน</string>
+    <string name="albums_load_failed">โหลดอัลบั้มล้มเหลว</string>
+    <string name="action_retry">ลองใหม่</string>
+    <string name="album_item_count">%1$d รายการ</string>
+    <string name="menu_view">ดู</string>
+    <string name="menu_rename">เปลี่ยนชื่อ</string>
+    <string name="menu_delete">ลบ</string>
+    <string name="dialog_new_album">อัลบั้มใหม่</string>
+    <string name="dialog_rename_album">เปลี่ยนชื่ออัลบั้ม</string>
+    <string name="hint_album_name">ชื่ออัลบั้ม</string>
+    <string name="action_create">สร้าง</string>
+    <string name="action_ok">ตกลง</string>
+    <string name="action_cancel">ยกเลิก</string>
+    <string name="action_delete">ลบ</string>
+    <string name="confirm_delete_album">ลบอัลบั้ม “%1$s” และสื่อทั้งหมด?\n(ลบเฉพาะไฟล์ต้นฉบับในแว่น สำเนาในเครื่องยังคงอยู่)</string>
+    <string name="msg_album_created">สร้างอัลบั้มแล้ว</string>
+    <string name="msg_album_renamed">เปลี่ยนชื่ออัลบั้มแล้ว</string>
+    <string name="msg_album_deleted">ลบอัลบั้มแล้ว</string>
+    <string name="sel_count">เลือก %1$d รายการ</string>
+    <string name="action_select_all">เลือกทั้งหมด</string>
+    <string name="action_download">ดาวน์โหลด</string>
+    <string name="empty_media">อัลบั้มนี้ไม่มีสื่อ</string>
+    <string name="media_load_failed">โหลดสื่อล้มเหลว</string>
+    <string name="confirm_delete_media">ลบ “%1$s” ในแว่น?\n(ลบเฉพาะไฟล์ต้นฉบับ สำเนาในเครื่องจะถูกเก็บไว้)</string>
+    <string name="batch_deleting">กำลังลบ %1$d/%2$d</string>
+    <string name="batch_downloading">กำลังดาวน์โหลด %1$d/%2$d</string>
+    <string name="msg_deleted">ลบแล้ว</string>
+    <string name="viewer_delete_remote">ลบไฟล์ต้นฉบับในแว่น</string>
+    <string name="viewer_downloading">กำลังดาวน์โหลดต้นฉบับ (ถ่ายโอนบลูทูธ โปรดรอ)…</string>
+    <string name="viewer_play">เล่นวิดีโอ</string>
+    <string name="toolbar_local">ในเครื่อง</string>
+    <string name="empty_local">ยังไม่มีการดาวน์โหลด\nเปิดอัลบั้มใน “อัลบั้ม” เพื่อดาวน์โหลดรูป/วิดีโอ</string>
+    <string name="local_dir_prefix">ดาวน์โหลดลงเครื่องแล้ว</string>
+    <string name="album_unnamed">อัลบั้มไม่มีชื่อ</string>
+    <string name="log_dialog_title">บันทึก (เต็ม)</string>
+    <string name="dialog_close">ปิด</string>
+    <string name="log_longpress_hint">กดค้างเพื่อดูบันทึกทั้งหมด</string>
+    <string name="silent_switch_label">ถ่ายแบบเงียบ (ปิดเสียงชัตเตอร์/บันทึกวิดีโอ)</string>
+    <string name="btn_language">ภาษา: %1$s</string>
+    <string name="lang_dialog_title">เลือกภาษา</string>
+    <string name="lang_system">ตามระบบ</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">ตัดการเชื่อมต่อแล้ว</string>
+    <string name="log_wifi_off">ปิดการส่งผ่าน Wi-Fi แล้ว สื่อจะใช้บลูทูธแทน</string>
+    <string name="log_wifi_enabling">กำลังเปิดการส่งผ่าน Wi-Fi… (ครั้งแรกต้องยืนยันเข้าร่วม "%1$s" ในหน้าต่างระบบ)</string>
+    <string name="log_wifi_enabled">✓ เปิดการส่งผ่าน Wi-Fi แล้ว (%1$s:%2$d)</string>
+    <string name="log_wifi_failed">✗ การส่งผ่าน Wi-Fi: %1$s</string>
+    <string name="err_unknown">ข้อผิดพลาดที่ไม่ทราบสาเหตุ</string>
+    <string name="toast_not_connected">ยังไม่ได้เชื่อมต่อแว่น</string>
+    <string name="log_capturing">กำลังถ่ายภาพ…</string>
+    <string name="log_photo_ok">✓ ถ่ายภาพแล้ว: %1$s</string>
+    <string name="log_photo_fail">✗ ถ่ายภาพไม่สำเร็จ: %1$s</string>
+    <string name="log_recording">● กำลังบันทึกวิดีโอ</string>
+    <string name="log_record_fail">✗ บันทึกวิดีโอไม่สำเร็จ: %1$s</string>
+    <string name="log_video_saved">✓ บันทึกวิดีโอแล้ว: %1$s</string>
+    <string name="log_stop_fail">✗ หยุดไม่สำเร็จ: %1$s</string>
+    <string name="log_ghost_fail">ตั้งค่า ghostlock ไม่สำเร็จ: %1$s</string>
+    <string name="log_root_mode_fail">ตั้งค่าโหมด root ไม่สำเร็จ: %1$s</string>
+    <string name="silent_applied">✓ เปิดโหมดถ่ายเงียบแล้ว (ปิดเสียงชัตเตอร์และบันทึกวิดีโอ)</string>
+    <string name="silent_pending">⚠ ตั้งค่าโหมดเงียบแล้วแต่ยังไม่มีผล (ต้องมี root)</string>
+    <string name="silent_disabled">✓ ปิดโหมดถ่ายเงียบแล้ว (คืนค่าเสียงแล้ว)</string>
+    <string name="log_silent_fail">✗ ตั้งค่าโหมดเงียบไม่สำเร็จ: %1$s</string>
+    <string name="log_led_enabling">กำลังเปิดไฟแสดงความเป็นส่วนตัว…</string>
+    <string name="log_led_disabling">กำลังปิดไฟแสดงความเป็นส่วนตัว…</string>
+    <string name="log_led_on_ok">✓ ไฟแสดงสถานะ: เปิด</string>
+    <string name="log_led_off_ok">✓ ไฟแสดงสถานะ: ปิด</string>
+    <string name="log_led_fail">✗ ตั้งค่าไฟแสดงสถานะไม่สำเร็จ: %1$s</string>
+    <string name="log_root_acquiring">กำลังขอสิทธิ์ root… (อาจใช้เวลาสองสามนาที)</string>
+    <string name="log_root_ready">✓ root พร้อมแล้ว</string>
+    <string name="log_root_failed">✗ ขอสิทธิ์ root ไม่สำเร็จ</string>
+    <string name="log_root_fail">✗ root ล้มเหลว: %1$s</string>
+    <string name="log_querying">กำลังดึงข้อมูลอุปกรณ์…</string>
+    <string name="log_query_fail">✗ ดึงข้อมูลไม่สำเร็จ: %1$s</string>
+    <string name="log_progress">[ความคืบหน้า] %1$s</string>
+    <string name="log_display_ok">✓ อัปเดตการแสดงผลของแว่นแล้ว</string>
+    <string name="log_display_fail">✗ ตั้งค่าการแสดงผลไม่สำเร็จ: %1$s</string>
+    <string name="led_name">ไฟ %1$s</string>
+    <string name="log_led_switch">%1$s %2$s…</string>
+    <string name="log_led_done">✓ %1$s: %2$s</string>
+    <string name="log_led_switch_fail">✗ %1$s ไม่สำเร็จ: %2$s</string>
+    <string name="state_on">เปิด</string>
+    <string name="state_off">ปิด</string>
+    <string name="state_enabled">เปิด</string>
+    <string name="state_disabled">ปิด</string>
+    <string name="status_summary">อัลบั้ม %1$d · สื่อ %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ เปลี่ยนภาษาแล้ว: %1$s</string>
+    <string name="toast_bt_disabled">กรุณาเปิดบลูทูธก่อน</string>
+    <string name="toast_no_paired_device">ไม่มีอุปกรณ์บลูทูธที่จับคู่ไว้ กรุณาจับคู่แว่นในตั้งค่าบลูทูธของระบบก่อน</string>
+    <string name="toast_connect_failed">เชื่อมต่อไม่สำเร็จ: %1$s</string>
+    <string name="toast_no_local_media">ไม่มีไฟล์ในเครื่องสำหรับอัลบั้มนี้</string>
+    <string name="confirm_delete_local_files">ลบไฟล์ในเครื่อง %1$d ไฟล์? (ไฟล์ต้นฉบับในแว่นไม่ได้รับผลกระทบ)</string>
+    <string name="batch_downloading_file">กำลังดาวน์โหลด %1$d/%2$d: %3$s</string>
+    <string name="toast_delete_done">ลบเสร็จแล้ว: สำเร็จ %1$d</string>
+    <string name="toast_delete_done_fail">ลบเสร็จแล้ว: สำเร็จ %1$d, ล้มเหลว %2$d</string>
+    <string name="toast_download_done">ดาวน์โหลดเสร็จแล้ว: สำเร็จ %1$d</string>
+    <string name="toast_download_done_fail">ดาวน์โหลดเสร็จแล้ว: สำเร็จ %1$d, ล้มเหลว %2$d</string>
+    <string name="dialog_download_note">\nจะดาวน์โหลดไฟล์ต้นฉบับจากแว่น (ส่งผ่านบลูทูธได้ช้า)</string>
+    <string name="err_local_file_missing">ไม่พบไฟล์ในเครื่อง</string>
+    <string name="toast_delete_fail">ลบไม่สำเร็จ: %1$s</string>
+    <string name="err_download_fail">ดาวน์โหลดไม่สำเร็จ: %1$s</string>
+    <string name="toast_opening">กำลังเปิด %1$s…</string>
+    <string name="toast_create_fail">สร้างไม่สำเร็จ: %1$s</string>
+    <string name="toast_rename_fail">เปลี่ยนชื่อไม่สำเร็จ: %1$s</string>
+    <string name="local_album_delete">ลบอัลบั้มในเครื่อง</string>
+    <string name="local_album_delete_msg">ลบ "%1$s" (%2$s) จากโทรศัพท์หรือไม่?\nไฟล์ต้นฉบับในแว่นไม่ได้รับผลกระทบ</string>
+    <string name="toast_local_album_deleted">ลบอัลบั้มในเครื่องแล้ว</string>
+    <string name="media_type_video">วิดีโอ</string>
+    <string name="media_type_photo">รูปภาพ</string>
+    <string name="wifi_ap_timeout">ฮอตสปอต Wi-Fi ของแว่นหมดเวลา กรุณาลองใหม่ภายหลัง</string>
+    <string name="wifi_tcp_failed">เชื่อมต่อ TCP ไม่สำเร็จ: %1$s</string>
+    <string name="sec_ring">ควบคุมด้วยแหวน</string>
+    <string name="ring_switch_label">เปิดใช้การควบคุมด้วยท่าทางของแหวน</string>
+    <string name="ring_hint">แตะ = ถ่ายภาพ · แตะสองครั้ง = วิดีโอ · กดค้าง = เงียบ · เลื่อน = สลับการแสดงผล</string>
+    <string name="ring_status_idle">ยังไม่ได้รับท่าทาง</string>
+    <string name="ring_status_fmt">สะสม %1$d ครั้ง · ล่าสุด: %2$s</string>
+    <string name="ring_learn_btn">เรียนรู้ท่าทาง</string>
+    <string name="ring_learn_hint">กรุณากดปุ่มบนแหวน…</string>
+    <string name="ring_learn_result">ได้รับรหัสปุ่ม %1$s</string>
+    <string name="ring_map_title">เลือกการทำงานสำหรับรหัสปุ่มนี้</string>
+    <string name="ring_action_photo">ถ่ายภาพ</string>
+    <string name="ring_action_video">เริ่ม/หยุดวิดีโอ</string>
+    <string name="ring_action_silent">สลับโหมดถ่ายเงียบ</string>
+    <string name="ring_action_display_next">ข้อมูลที่แสดง (ถัดไป)</string>
+    <string name="ring_action_display_prev">ข้อมูลที่แสดง (ก่อนหน้า)</string>
+    <string name="ring_action_none">ไม่ทำอะไร</string>
+    <string name="ring_map_saved">กำหนด %1$s → %2$s แล้ว</string>
+    <string name="ring_map_cleared">ล้างการกำหนดปุ่มแล้ว</string>
+    <string name="ring_pair_btn">จับคู่แหวน</string>
+    <string name="ring_glasses_switch">ควบคุมแหวนฝั่งแว่น</string>
+    <string name="ring_glasses_status">แว่น: %1$s</string>
+    <string name="nav_settings">ตั้งค่า</string>
+    <string name="log_expand">ขยาย</string>
+    <string name="sec_connection">การเชื่อมต่อ</string>
+    <string name="sec_capture_root">การถ่ายและสิทธิ์</string>
+    <string name="sec_led_settings">ไฟแสดงความเป็นส่วนตัว</string>
+    <string name="sec_language">ภาษา</string>
+    <string name="wifi_switch_hint">สื่อและการควบคุมใช้ Wi-Fi ก่อน และใช้ บลูทูธ เป็นเพียงทางสำรอง</string>
+    <string name="led_colors_hint">เลือกสีไฟที่ต้องการเปิด</string>
+    <string name="ring_a_label">ท่าทางฝั่งมือถือ (แหวนเชื่อมกับมือถือ)</string>
+    <string name="ring_a_hint">ต้องให้แอปอยู่เบื้องหน้า (รองรับคลิกเมาส์และปุ่มมีเดีย)</string>
+    <string name="ring_b_label">ท่าทางฝั่งแว่น (แหวน/ทัชแพดเชื่อมกับแว่น)</string>
+    <string name="ring_b_hint">แว่นอ่าน evdev ด้วย root ทำงานได้แม้อยู่เบื้องหลัง</string>
+    <string name="state_running">ทำงานอยู่</string>
+    <string name="state_stopped">หยุด</string>
+    <string name="ring_phone_prefix">มือถือ: %1$s</string>
+    <string name="log_app_started">แอปพร้อมใช้งาน</string>
+    <string name="action_search">ค้นหาอัลบั้ม</string>
+    <string name="action_sort">เรียงลำดับ</string>
+    <string name="sort_name">ชื่อ</string>
+    <string name="sort_count">จำนวนรายการ</string>
+    <string name="sort_newest">ใหม่สุด</string>
+    <string name="local_summary">%1$d อัลบั้ม · %2$d รายการ · ใช้ %3$s</string>
+    <string name="selected_albums">เลือก %1$d รายการ</string>
+    <string name="toast_local_albums_deleted">ลบอัลบั้มในเครื่อง %1$d อัลบั้มแล้ว</string>
+    <string name="confirm_delete_local_albums">ลบ %1$d อัลบั้มในมือถือหรือไม่?\n(ไฟล์ต้นฉบับในแว่นไม่ได้รับผลกระทบ)</string>
+    <string name="ring_state_enabled">เปิดใช้งานแล้ว</string>
+    <string name="ring_state_disabled">ปิดใช้งานแล้ว</string>
+    <string name="ring_learn_waiting">กำลังรอการกดปุ่ม…</string>
+    <string name="ring_map_set">กำหนด %1$s → %2$s แล้ว</string>
+    <string name="ring_map_cleared_short">ล้างการกำหนดปุ่มแล้ว</string>
+    <string name="ring_no_action">%1$s → (ยังไม่ได้กำหนดการทำงาน)</string>
+    <string name="ring_err_prefix">ข้อผิดพลาด: %1$s</string>
+    <string name="ring_photo_ok">ถ่ายภาพแล้ว: %1$s</string>
+    <string name="ring_photo_fail">ถ่ายภาพไม่สำเร็จ: %1$s</string>
+    <string name="ring_video_start">เริ่มบันทึกวิดีโอ</string>
+    <string name="ring_video_fail">บันทึกวิดีโอไม่สำเร็จ: %1$s</string>
+    <string name="ring_video_saved">บันทึกวิดีโอแล้ว: %1$s</string>
+    <string name="ring_stop_fail">หยุดไม่สำเร็จ: %1$s</string>
+    <string name="ring_status_read_fail">อ่านสถานะไม่สำเร็จ</string>
+    <string name="ring_silent_on">เปิดโหมดถ่ายเงียบ</string>
+    <string name="ring_silent_on_pending">เปิดโหมดถ่ายเงียบ (รอ root)</string>
+    <string name="ring_silent_off">ปิดโหมดถ่ายเงียบ</string>
+    <string name="ring_silent_fail">ตั้งค่าโหมดเงียบไม่สำเร็จ: %1$s</string>
+    <string name="ring_display_switched">สลับการแสดงผลเป็น %1$s</string>
+    <string name="ring_display_fail">ตั้งค่าการแสดงผลไม่สำเร็จ: %1$s</string>
+    <string name="ring_on">เปิด</string>
+    <string name="ring_off">ปิด</string>
+    <string name="sec_appearance">ธีม</string>
+    <string name="light_mode_label">โหมดสว่าง</string>
+    <string name="light_mode_hint">ปิด = ธีมมืด; เปิด = ธีมสว่าง</string>
+    <string name="ring_camera_not_ready">กล้องยังไม่พร้อม (โปรดเปิดแอปบนแว่น)</string>
+    <string name="ring_status_no_device">ไม่พบอุปกรณ์อินพุต (%1$s)</string>
+    <string name="ring_status_start_failed">เริ่ม getevent ไม่สำเร็จ</string>
+    <string name="ring_status_stopped">หยุดแล้ว</string>
+    <string name="ring_display_none">ซ่อนทั้งหมด</string>
+    <string name="ghost_skip_lpe">ตรวจพบ root daemon ที่ทำงานอยู่แล้ว; ข้าม LPE</string>
+    <string name="ghost_prepare_payload">กำลังเตรียม payload</string>
+    <string name="ghost_done">เสร็จสิ้น</string>
+    <string name="ghost_failed">ข้อผิดพลาด: %1$s</string>
+    <string name="ghost_bridge_dir_missing">ไม่พบไดเรกทอรี bridge หรือเขียนไม่ได้: %1$s (ให้รัน deploy/root_bridge.sh ก่อน)</string>
+    <string name="ghost_bridge_sent">ส่งคำสั่งแล้ว; กำลังรอ helper รัน exploit (อาจใช้เวลาหลายนาที)</string>
+    <string name="ghost_bridge_timeout">bridge หมดเวลา (helper ทำงานอยู่หรือไม่? ดู %1$s)</string>
+    <string name="ghost_bridge_report">bridge รายงาน: %1$s</string>
+    <string name="ghost_attempt">ลอง exploit ครั้งที่ %1$s</string>
+    <string name="ghost_helper_started">helper เริ่มประมวลผลแล้ว</string>
+    <string name="ghost_ready_seen">exploit ถึงเครื่องหมาย ready แล้ว</string>
+    <string name="ghost_payload_replaced">กำลังสลับ payload</string>
+    <string name="ghost_wait_payload_root">กำลังรอ payload ทำงานเสร็จในฐานะ root</string>
+    <string name="ghost_binary_missing">ไม่พบ binary หรือรันไม่ได้: %1$s</string>
+    <string name="ghost_exploit_started">กำลังเริ่ม exploit</string>
+    <string name="ghost_exploit_start_failed">เริ่ม exploit ไม่ได้ (ดู %1$s)</string>
+    <string name="ghost_wait_ready">กำลังรอเครื่องหมาย ready</string>
+    <string name="ghost_ready_timeout">เครื่องหมาย ready หมดเวลา: %1$s</string>
+    <string name="ghost_ready_timeout_retry">เครื่องหมาย ready หมดเวลา</string>
+    <string name="ghost_payload_write_failed">เขียน %1$s ไม่ได้ (แอปมีสิทธิ์เขียน /data/local/tmp หรือไม่?)</string>
+    <string name="ghost_wait_payload">กำลังรอ payload ทำงานเสร็จ</string>
+    <string name="ghost_payload_timeout">เครื่องหมาย done หมดเวลา. payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit: %1$s</string>
+    <string name="ghost_shizuku_not_running">Shizuku server ไม่ได้ทำงาน (ต้องรันครั้งเดียวต่อ boot: deploy/start_shizuku.sh)</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku ยังไม่ได้รับอนุญาต (ส่งคำขออนุญาตแล้ว)</string>
+    <string name="ghost_shizuku_bind_failed">ผูก Shizuku UserService ไม่สำเร็จ</string>
+    <string name="ghost_shizuku_root_run_shell">Shizuku server ทำงานเป็น root; ใช้ run_shell ลดสิทธิ์ก่อนรัน exploit</string>
+    <string name="ghost_shizuku_no_run_shell">Shizuku server ทำงานเป็น root และไม่มี run_shell ให้ลดสิทธิ์; ให้เริ่ม server ผ่าน adb/shell แทน</string>
+    <string name="ghost_shizuku_bad_identity">สถานะตัวตนของ Shizuku ผิดปกติ: %1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku ใช้ไม่ได้ (%1$s) → ถอยกลับไปใช้ bridge helper</string>
+    <string name="ghost_attempt_shizuku">ลอง exploit ครั้งที่ %1$s (ตัวตน Shizuku/shell)</string>
+    <string name="ghost_kernel_panic">kernel panic: อุปกรณ์รีบูตแล้ว (ความล้มเหลวปกติ ต้องลองใหม่)</string>
+    <string name="ghost_process_died">โปรเซส exploit จบก่อนกำหนด (อาจถูกฆ่าเพราะ OOM)</string>
+    <string name="ghost_process_died_retry">โปรเซส exploit จบก่อนกำหนด (อาจถูกฆ่าเพราะ OOM); กำลังลองใหม่</string>
+    <string name="ghost_retry_after">%1$s; กำลังลองใหม่</string>
+    <string name="ghost_attempts_exhausted">ทุกความพยายาม exploit ไม่สำเร็จ (ดู %1$s)</string>
+    <string name="ghost_fallback_failed">fallback ล้มเหลว: %1$s</string>
+    <string name="root_state_ok">root: ใช้งานได้</string>
+    <string name="root_state_rearming">root: หลุด กำลังกู้คืน…</string>
+    <string name="root_state_rearmed">root: กู้คืนอัตโนมัติแล้ว</string>
+    <string name="root_state_lost">root: หลุด ต้องกู้คืนใหม่</string>
+    <string name="root_state_cooldown">root: หลุด (พักชั่วคราว จะลองใหม่)</string>
+    <string name="root_state_unknown">root: ไม่ทราบ</string>
+    <string name="root_hint_run_scripts">รัน: %1$s</string>
+    <string name="root_hint_engine">เรียกใช้ผ่าน %1$s ได้</string>
+    <string name="root_metrics_fmt">ล่าสุด %1$d วิ (%2$s) · สำเร็จ %3$d/%4$d</string>
+    <string name="root_keeper_fmt">ตรวจ %1$d ครั้ง · กู้คืนอัตโนมัติ %2$d ครั้ง</string>
+    <string name="sec_root_status">สถานะ root</string>
+    <string name="ghost_engine_selected">เอนจินที่ใช้: %1$s</string>
+    <string name="root_help_body">หากไม่มี root: การถ่ายเงียบ การปิดไฟแสดง ส่งสื่อผ่าน Wi-Fi และการควบคุมแหวนฝั่งแว่นจะใช้ไม่ได้\nเตรียมทริกเกอร์ผ่าน adb ก่อน: deploy/root_bridge.sh (หรือ deploy/start_shizuku.sh)</string>
+    <string name="ring_err_busy_recording">กำลังบันทึกวิดีโอ จึงถ่ายภาพไม่ได้</string>
+    <string name="ring_err_busy">มีคำขอมากเกินไป โปรดรอสักครู่</string>
+    <string name="ring_err_record_timeout">เริ่มบันทึกวิดีโอหมดเวลา — กลับสู่โหมดถ่ายภาพแล้ว</string>
+    <string name="ring_pick_title">เลือกอุปกรณ์แหวน</string>
+    <string name="ring_pick_scan">สแกนอุปกรณ์ใหม่…</string>
+    <string name="ring_pick_scanning">กำลังสแกน…</string>
+    <string name="ring_pick_empty">ไม่พบอุปกรณ์แหวน (โปรดจับคู่ในตั้งค่าโทรศัพท์ก่อน หรือเข้าใกล้แล้วสแกนใหม่)</string>
+    <string name="ring_pick_selected">เลือกแล้ว: %1$s</string>
+    <string name="ring_pick_bonded">✓ จับคู่แล้ว %1$s</string>
+    <string name="ring_pick_fail">✗ จับคู่ไม่สำเร็จ: %1$s</string>
+</resources>

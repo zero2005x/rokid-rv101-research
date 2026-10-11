@@ -1,0 +1,80 @@
+# ============================================================================
+# rokid-research monorepo — 版控排除規則
+# 未納入版控的完整清單、理由與 SHA-256 見 EXCLUDED.md
+# ============================================================================
+
+# === 建置產物（可重建）===
+android/*/build/
+android/.gradle/
+android/local.properties
+# 註：不排除 *.apk —— dist/*.apk 是交付成品，須納入（改用 LFS）。
+*.aab
+*.dex
+*.class
+*.o
+*.obj
+*.res
+
+# === 工具鏈 / 環境（可重建，體積大）===
+gradle_home/
+/tools/
+.venv/
+frida/frida-server
+# 注意：不排除 *.zip／*.jar，因為 research/ghostlock_refs/*.zip 與
+# reports/app_phone_v11_src.zip 是研究輸入，需保留（見 EXCLUDED.md）。
+
+# === 研究輸入（大型，不納版控）===
+apks/
+analysis/
+
+# === 快取 / 暫存（可重建）===
+.zig-cache/
+build-cache/
+__pycache__/
+*.pyc
+# 執行期暫存 log 不納入；證據類 run log 例外保留（canonical 位置：reports/）
+deploy/*.log
+android/.gradle/**/*.log
+
+# 證據 run logs — 明確保留
+!reports/ghostlock_runlogs/*.log
+!reports/led_validation/*.log
+!reports/evidence_*.log
+!RV101_Disclosure/**/*.log
+
+# === 影片製作工作區（7.5 GB）===
+docs/video10/
+
+# === 協調式揭露機密附錄（HITCON SUBMISSION_GATE 禁止送出）===
+RV101_Disclosure/confidential/
+
+# === 核心符號傾印（可由 kernel image 重新產生）===
+research/ghostlock_refs/rv101_kallsyms.err
+research/ghostlock_refs/rv101_kallsyms.txt
+research/ghostlock_refs/rv101_kallsyms.txt.kallsyms
+
+# === 備份 / 暫存 ===
+*_backup.zip
+rokid_root_*_backup.zip
+wm_work/
+*.tmp
+*.part
+*~
+*.swp
+# 注意：不排除 *.bak／*.orig —— research/ 內的 .bak 是研究素材的一部分；
+#       本 repo 的檔案層級備份放在工作區外（~/rokid_root_unredacted_backup/）。
+
+# === 憑證 / 敏感 ===
+*.keystore
+*.jks
+*.pem
+*.key
+adbkey*
+*_keys
+
+# === 桌面工具（desktop/）===
+desktop/*.exe
+desktop/settings.ini
+desktop/**/*.o
+desktop/**/*.obj
+desktop/**/*.res

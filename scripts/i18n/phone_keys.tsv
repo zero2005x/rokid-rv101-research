@@ -1,0 +1,204 @@
+key	zh-TW	en
+log_disconnected	已斷線	Disconnected
+log_wifi_off	WiFi 傳輸已關閉，媒體改走藍牙	WiFi transfer off, media falls back to Bluetooth
+log_wifi_enabling	啟用 WiFi 傳輸…（首次需在系統彈窗確認加入「%1$s」）	Enabling WiFi transfer… (on first use, confirm joining “%1$s” in the system dialog)
+log_wifi_enabled	✓ WiFi 傳輸已啟用（%1$s:%2$d）	✓ WiFi transfer enabled (%1$s:%2$d)
+log_wifi_failed	✗ WiFi 傳輸：%1$s	✗ WiFi transfer: %1$s
+err_unknown	未知錯誤	Unknown error
+toast_not_connected	尚未連線眼鏡	Glasses not connected
+log_capturing	拍照中…	Taking photo…
+log_photo_ok	✓ 已拍照 %1$s	✓ Photo captured: %1$s
+log_photo_fail	✗ 拍照失敗 %1$s	✗ Photo capture failed: %1$s
+log_recording	● 錄影中	● Recording
+log_record_fail	✗ 錄影失敗 %1$s	✗ Recording failed: %1$s
+log_video_saved	✓ 已存影片 %1$s	✓ Video saved: %1$s
+log_stop_fail	✗ 停止失敗 %1$s	✗ Stop failed: %1$s
+log_ghost_fail	ghostlock 設定失敗 %1$s	ghostlock setting failed: %1$s
+log_root_mode_fail	root 模式設定失敗 %1$s	root mode setting failed: %1$s
+silent_applied	✓ 靜音拍攝已開啟（快門／錄影提示音已壓制）	✓ Silent capture on (shutter/recording sounds muted)
+silent_pending	⚠ 靜音已設定，但尚未套用（需先取得 root）	⚠ Silent mode set but not applied yet (root required)
+silent_disabled	✓ 靜音拍攝已關閉（提示音已還原）	✓ Silent capture off (sounds restored)
+log_silent_fail	✗ 靜音設定失敗 %1$s	✗ Silent mode failed: %1$s
+log_led_enabling	開啟隱私指示燈…	Turning privacy indicator on…
+log_led_disabling	關閉隱私指示燈…	Turning privacy indicator off…
+log_led_on_ok	✓ 指示燈：亮	✓ Indicator: on
+log_led_off_ok	✓ 指示燈：熄	✓ Indicator: off
+log_led_fail	✗ 指示燈設定失敗 %1$s	✗ Indicator setting failed: %1$s
+log_root_acquiring	取得 root 中（可能需數分鐘）…	Acquiring root… (may take a few minutes)
+log_root_ready	✓ root 已就緒	✓ root ready
+log_root_failed	✗ root 取得失敗	✗ Failed to acquire root
+log_root_fail	✗ root 失敗 %1$s	✗ root failed: %1$s
+log_querying	查詢裝置資訊…	Querying device info…
+log_query_fail	✗ 查詢失敗 %1$s	✗ Query failed: %1$s
+log_progress	[進度] %1$s	[Progress] %1$s
+log_display_ok	✓ 眼鏡顯示已更新	✓ Glasses display updated
+log_display_fail	✗ 顯示設定失敗 %1$s	✗ Display setting failed: %1$s
+led_name	%1$s燈	%1$s LED
+log_led_switch	%1$s%2$s…	%1$s %2$s…
+log_led_done	✓ %1$s：%2$s	✓ %1$s: %2$s
+log_led_switch_fail	✗ %1$s失敗 %2$s	✗ %1$s failed: %2$s
+state_on	亮	on
+state_off	熄	off
+state_enabled	開	on
+state_disabled	關	off
+status_summary	相簿 %1$d · 媒體 %2$d · root %3$s · ghostlock %4$s	Albums %1$d · Media %2$d · root %3$s · ghostlock %4$s
+log_lang_switched	✓ 語言已切換：%1$s	✓ Language switched: %1$s
+toast_bt_disabled	請先開啟藍牙	Please turn on Bluetooth first
+toast_no_paired_device	沒有已配對的藍牙設備，請先在系統藍牙設定中配對眼鏡	No paired Bluetooth device. Pair the glasses in system Bluetooth settings first.
+toast_connect_failed	連線失敗：%1$s	Connection failed: %1$s
+toast_no_local_media	本機沒有此相簿的檔案	No local files for this album
+confirm_delete_local_files	刪除本機的 %1$d 個檔案？（眼鏡端不受影響）	Delete %1$d local file(s)? (originals on the glasses are unaffected)
+batch_downloading_file	下載中 %1$d/%2$d：%3$s	Downloading %1$d/%2$d: %3$s
+toast_delete_done	刪除完成：成功 %1$d	Deleted %1$d item(s)
+toast_delete_done_fail	刪除完成：成功 %1$d、失敗 %2$d	Deleted %1$d item(s), %2$d failed
+toast_download_done	下載完成：成功 %1$d	Downloaded %1$d item(s)
+toast_download_done_fail	下載完成：成功 %1$d、失敗 %2$d	Downloaded %1$d item(s), %2$d failed
+dialog_download_note	\n將從眼鏡端下載原檔（藍牙傳輸較慢）。	\nOriginal files will be downloaded from the glasses (Bluetooth transfer is slow).
+err_local_file_missing	本機檔案不存在	Local file not found
+toast_delete_fail	刪除失敗 %1$s	Failed to delete: %1$s
+err_download_fail	下載失敗：%1$s	Download failed: %1$s
+toast_opening	開啟 %1$s…	Opening %1$s…
+toast_create_fail	建立失敗 %1$s	Failed to create: %1$s
+toast_rename_fail	更名失敗 %1$s	Failed to rename: %1$s
+local_album_delete	刪除本機相簿	Delete local album
+local_album_delete_msg	刪除手機上的「%1$s」（%2$s）？\n眼鏡端原檔不受影響。	Delete “%1$s” (%2$s) from the phone?\nGlasses originals are unaffected.
+toast_local_album_deleted	本機相簿已刪除	Local album deleted
+media_type_video	影片	Video
+media_type_photo	照片	Photo
+wifi_ap_timeout	眼鏡 WiFi 熱點啟動逾時，請稍後重試	Glasses WiFi hotspot timed out; please try again later
+wifi_tcp_failed	TCP 連線失敗：%1$s	TCP connection failed: %1$s
+sec_ring	戒指控制	Ring control
+ring_switch_label	啟用戒指手勢控制	Enable ring gesture control
+ring_hint	單擊＝拍照 · 雙擊＝錄影 · 長按＝靜音 · 滾輪＝切換顯示	Tap = photo · Double-tap = video · Long-press = silent · Scroll = switch display
+ring_status_idle	尚未收到手勢	No gestures yet
+ring_status_fmt	累計 %1$d 次 · 最近：%2$s	%1$d gestures · last: %2$s
+ring_learn_btn	手勢學習	Learn gesture
+ring_learn_hint	請按下戒指按鍵…	Press a ring button…
+ring_learn_result	收到鍵碼 %1$s	Received keycode %1$s
+ring_map_title	選擇這個鍵碼的動作	Choose action for this key
+ring_action_photo	拍照	Photo
+ring_action_video	錄影開始／停止	Start/stop video
+ring_action_silent	靜音拍攝切換	Toggle silent capture
+ring_action_display_next	顯示資訊（下一組）	Display info (next)
+ring_action_display_prev	顯示資訊（上一組）	Display info (previous)
+ring_action_none	不動作	No action
+ring_map_saved	已對應 %1$s → %2$s	Mapped %1$s → %2$s
+ring_map_cleared	已清除自訂鍵碼對應	Custom key mappings cleared
+ring_pair_btn	配對戒指	Pair ring
+ring_glasses_switch	眼鏡端戒指控制	Glasses-side ring control
+ring_glasses_status	眼鏡端：%1$s	Glasses: %1$s
+nav_settings	設定	Settings
+log_expand	放大	Expand
+sec_connection	連線	Connection
+sec_capture_root	拍攝與權限	Capture & permissions
+sec_led_settings	隱私指示燈	Privacy indicator
+sec_language	語言	Language
+wifi_switch_hint	媒體與控制都優先走 WiFi，藍牙僅在 WiFi 不可用時作為備援	Both media and control prefer WiFi; Bluetooth is only a fallback
+led_colors_hint	選擇要開啟的燈色	Choose which LED colors to enable
+ring_a_label	手機端手勢（戒指連手機）	Phone-side gestures (ring paired to phone)
+ring_a_hint	需 App 在前景；支援滑鼠點擊與媒體鍵	Needs the app in the foreground; supports mouse clicks and media keys
+ring_b_label	眼鏡端手勢（戒指／觸控板連眼鏡）	Glasses-side gestures (ring/touchpad paired to glasses)
+ring_b_hint	眼鏡以 root 直讀 evdev，背景也能觸發	Glasses read evdev as root; works in the background
+state_running	執行中	running
+state_stopped	未執行	stopped
+ring_phone_prefix	手機端：%1$s	Phone: %1$s
+log_app_started	App 已就緒	App ready
+action_search	搜尋相簿	Search albums
+action_sort	排序	Sort
+sort_name	名稱	Name
+sort_count	項數	Item count
+sort_newest	最新建立	Newest
+local_summary	已下載 %1$d 本 · %2$d 項 · 佔用 %3$s	%1$d albums · %2$d items · %3$s used
+selected_albums	已選 %1$d 本	%1$d selected
+toast_local_albums_deleted	已刪除 %1$d 本本機相簿	Deleted %1$d local album(s)
+confirm_delete_local_albums	刪除手機上的 %1$d 本相簿？\n（眼鏡端原檔不受影響）	Delete %1$d album(s) from the phone?\n(Glasses originals are unaffected)
+ring_state_enabled	已啟用	Enabled
+ring_state_disabled	已停用	Disabled
+ring_learn_waiting	等待按鍵…	Waiting for a key…
+ring_map_set	已對應 %1$s → %2$s	Mapped %1$s → %2$s
+ring_map_cleared_short	已清除自訂鍵碼對應	Custom key mappings cleared
+ring_no_action	%1$s → （未指定動作）	%1$s → (no action assigned)
+ring_err_prefix	例外：%1$s	Error: %1$s
+ring_photo_ok	已拍照 %1$s	Photo captured: %1$s
+ring_photo_fail	拍照失敗：%1$s	Photo failed: %1$s
+ring_video_start	開始錄影	Recording started
+ring_video_fail	錄影失敗：%1$s	Recording failed: %1$s
+ring_video_saved	已存影片 %1$s	Video saved: %1$s
+ring_stop_fail	停止失敗：%1$s	Stop failed: %1$s
+ring_status_read_fail	讀取狀態失敗	Failed to read status
+ring_silent_on	靜音開啟	Silent capture on
+ring_silent_on_pending	靜音開啟（待 root）	Silent capture on (waiting for root)
+ring_silent_off	靜音關閉	Silent capture off
+ring_silent_fail	靜音設定失敗：%1$s	Silent mode failed: %1$s
+ring_display_switched	顯示切換為 %1$s	Display switched to %1$s
+ring_display_fail	顯示設定失敗：%1$s	Display setting failed: %1$s
+ring_on	ON	ON
+ring_off	OFF	OFF
+sec_appearance	外觀	Appearance
+light_mode_label	淺色模式	Light mode
+light_mode_hint	關閉＝深色品牌主題（深藍底）；開啟＝白底淺色	Off = dark brand theme; On = light theme
+ring_camera_not_ready	相機未就緒（請在眼鏡上開啟 App）	Camera not ready (open the app on the glasses)
+ring_status_no_device	找不到輸入裝置（%1$s）	No input device found (%1$s)
+ring_status_start_failed	getevent 啟動失敗	Failed to start getevent
+ring_status_stopped	已停止	Stopped
+ring_display_none	全部隱藏	All hidden
+ghost_skip_lpe	已偵測到常駐 root daemon，跳過 LPE	Persistent root daemon detected; skipping LPE
+ghost_prepare_payload	準備 payload	Preparing payload
+ghost_done	完成	Done
+ghost_failed	失敗：%1$s	Failed: %1$s
+ghost_bridge_dir_missing	bridge 目錄不存在或不可寫：%1$s（請先跑 deploy/root_bridge.sh）	Bridge directory missing or not writable: %1$s (run deploy/root_bridge.sh first)
+ghost_bridge_sent	已送出指令，等待 helper 跑 exploit（可能數分鐘）	Command sent; waiting for the helper to run the exploit (may take minutes)
+ghost_bridge_timeout	bridge 逾時（helper 是否常駐？見 %1$s）	Bridge timed out (is the helper running? see %1$s)
+ghost_bridge_report	bridge 回報：%1$s	Bridge reported: %1$s
+ghost_attempt	跑 exploit 第 %1$s 次嘗試	Exploit attempt %1$s
+ghost_helper_started	helper 已開始處理	Helper started processing
+ghost_ready_seen	exploit 已達 ready 標記	Exploit reached the ready marker
+ghost_payload_replaced	置換 payload	Replacing payload
+ghost_wait_payload_root	等待 payload 以 root 執行完成	Waiting for the payload to finish as root
+ghost_binary_missing	binary 不存在或不可執行：%1$s	Binary missing or not executable: %1$s
+ghost_exploit_started	啟動 exploit	Starting exploit
+ghost_exploit_start_failed	無法啟動 exploit（見 %1$s）	Cannot start the exploit (see %1$s)
+ghost_wait_ready	等待 ready 標記	Waiting for the ready marker
+ghost_ready_timeout	ready 標記逾時：%1$s	Ready marker timed out: %1$s
+ghost_ready_timeout_retry	ready 標記逾時	Ready marker timed out
+ghost_payload_write_failed	無法寫入 %1$s（App 對 /data/local/tmp 的寫入權限？）	Cannot write %1$s (app write permission for /data/local/tmp?)
+ghost_wait_payload	等待 payload 完成	Waiting for the payload to finish
+ghost_payload_timeout	done 標記逾時。payload log=%1$s	Done marker timed out. payload log=%1$s
+ghost_exploit_output	exploit: %1$s	exploit: %1$s
+ghost_shizuku_not_running	Shizuku server 未執行（每 boot 需一次：deploy/start_shizuku.sh）	Shizuku server is not running (needed once per boot: deploy/start_shizuku.sh)
+ghost_shizuku_unauthorized	Shizuku 未授權（已送出授權請求）	Shizuku not authorized (permission request sent)
+ghost_shizuku_bind_failed	Shizuku UserService 綁定失敗	Failed to bind the Shizuku UserService
+ghost_shizuku_root_run_shell	Shizuku server 為 root 啟動，使用 run_shell 降權跑 exploit	Shizuku server runs as root; using run_shell to drop privileges for the exploit
+ghost_shizuku_no_run_shell	Shizuku server 為 root 啟動且無 run_shell 可降權；請改以 adb/shell 啟動 server	Shizuku server runs as root with no run_shell to drop privileges; start the server via adb/shell instead
+ghost_shizuku_bad_identity	Shizuku 執行身份異常：%1$s	Unexpected Shizuku identity: %1$s
+ghost_shizuku_unavailable	Shizuku 不可用（%1$s）→ 回退 bridge helper	Shizuku unavailable (%1$s) → falling back to the bridge helper
+ghost_attempt_shizuku	跑 exploit 第 %1$s 次嘗試（Shizuku/shell 身份）	Exploit attempt %1$s (Shizuku/shell identity)
+ghost_kernel_panic	kernel panic：裝置已重啟（正常失敗，需重試）	Kernel panic: device rebooted (expected failure, retry needed)
+ghost_process_died	exploit 行程提前結束（可能被 OOM 殺）	Exploit process exited early (possibly killed by OOM)
+ghost_process_died_retry	exploit 行程提前結束（可能被 OOM 殺），重試	Exploit process exited early (possibly killed by OOM); retrying
+ghost_retry_after	%1$s，重試	%1$s; retrying
+ghost_attempts_exhausted	exploit 嘗試皆未成功（見 %1$s）	All exploit attempts failed (see %1$s)
+ghost_fallback_failed	fallback 失敗：%1$s	Fallback failed: %1$s
+root_state_ok	root：可用	root: available
+root_state_rearming	root：失效，自動重建中…	root: lost, re-arming…
+root_state_rearmed	root：已自動重建	root: re-armed automatically
+root_state_lost	root：已失效，需重新武裝	root: lost, re-arm needed
+root_state_cooldown	root：已失效（冷卻中，稍後自動重試）	root: lost (cooling down, retrying later)
+root_state_unknown	root：未知	root: unknown
+root_hint_run_scripts	請執行：%1$s	Run: %1$s
+root_hint_engine	可透過 %1$s 觸發	Can be triggered via %1$s
+root_metrics_fmt	上次 %1$d 秒（%2$s）· 成功 %3$d/%4$d	Last %1$d s (%2$s) · success %3$d/%4$d
+root_keeper_fmt	看守 %1$d 次 · 自動重建 %2$d 次	%1$d checks · %2$d auto re-arms
+sec_root_status	root 狀態	root status
+ghost_engine_selected	使用引擎：%1$s	Using engine: %1$s
+root_help_body	沒有 root 時：靜音拍攝、隱私燈抑制、WiFi 媒體傳輸、眼鏡端戒指控制都會失效。\n眼鏡端需以 adb 先武裝觸發管線：deploy/root_bridge.sh（或 deploy/start_shizuku.sh）	Without root: silent capture, privacy-LED suppression, WiFi media transfer and glasses-side ring control stop working.\nArm the trigger pipeline over adb first: deploy/root_bridge.sh (or deploy/start_shizuku.sh)
+ring_err_busy_recording	錄影中，無法拍照	Recording in progress — cannot take a photo
+ring_err_busy	操作太頻繁，請稍候	Too many requests — please wait
+ring_err_record_timeout	錄影啟動逾時，已切回拍照	Recording start timed out — switched back to photo mode
+ring_pick_title	選擇戒指裝置	Choose ring device
+ring_pick_scan	掃描新裝置…	Scan for a new device…
+ring_pick_scanning	掃描中…	Scanning…
+ring_pick_empty	找不到戒指裝置（請先用手機藍牙設定配對，或靠近後重新掃描）	No ring device found (pair it in the phone Bluetooth settings first, or move closer and scan again)
+ring_pick_selected	已選擇：%1$s	Selected: %1$s
+ring_pick_bonded	✓ 已配對 %1$s	✓ Paired %1$s
+ring_pick_fail	✗ 配對失敗：%1$s	✗ Pairing failed: %1$s

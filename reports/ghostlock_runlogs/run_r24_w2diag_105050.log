@@ -1,0 +1,213 @@
+=== W2 diag run start 10:50:50 uptime=405 ===
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=9151 uid=2000 euid=2000 gid=2000
+[*] [T+405818ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd675e2ac0c slide=0x000000166c200000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd675eca100 slide=0x000000166c200000
+[+] KASLR: slide=0x000000166c200000 base=0xffffffd674200000 (2 anchors)
+[*] FOPS install attempt 1/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=144 fail=306
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	1043
+[*]   collision[1]: 00000053f1b2c000 (t=2003, ratio=400)
+[*]   collision[2]: 00000053f24e1da8 (t=9474, ratio=1894)
+[*]   collision[3]: 00000053f2523fb8 (t=1948, ratio=389)
+[*] kernelsnitch: top times: 9474 2003 1948 20 20 20 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1604ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 2/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=141 fail=309
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	1046
+[*]   collision[1]: 00000053f1a92b30 (t=9508, ratio=1901)
+[*]   collision[2]: 00000053f1be35b8 (t=1827, ratio=365)
+[*]   collision[3]: 00000053f1e5f998 (t=1834, ratio=366)
+[*] kernelsnitch: top times: 9508 1834 1827 20 20 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1194ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 3/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=144 fail=306
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	1043
+[*]   collision[1]: 00000053f1be75d8 (t=1988, ratio=397)
+[*]   collision[2]: 00000053f1c679d8 (t=9322, ratio=1864)
+[*]   collision[3]: 00000053f1dfe690 (t=1986, ratio=397)
+[*] kernelsnitch: top times: 9322 1988 1986 19 19 19 19 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1172ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 4/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=134 fail=316
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	1053
+[*]   collision[1]: 00000053f1bd9568 (t=1841, ratio=368)
+[*]   collision[2]: 00000053f1ca0ba0 (t=1857, ratio=371)
+[*]   collision[3]: 00000053f1e7ea90 (t=1844, ratio=368)
+[*] kernelsnitch: top times: 1857 1844 1841 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1149ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 5/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=137 fail=313
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	1050
+[*]   collision[1]: 00000053f19862d0 (t=2242, ratio=448)
+[*]   collision[2]: 00000053f1b3b078 (t=9410, ratio=1882)
+[*]   collision[3]: 00000053f1ba23b0 (t=1854, ratio=370)
+[*] kernelsnitch: top times: 9410 2242 1854 19 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1096ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 6/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=124 fail=326
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	1063
+[*]   collision[1]: 00000053f1e73a38 (t=9533, ratio=1906)
+[*]   collision[2]: 00000053f20ffe98 (t=9514, ratio=1902)
+[*]   collision[3]: 00000053f241c780 (t=2047, ratio=409)
+[*] kernelsnitch: top times: 9533 9514 2047 20 20 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1592ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[!] FOPS install failed after 6 attempts
+=== W2 diag run end 10:51:05 ===

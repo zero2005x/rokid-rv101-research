@@ -1,0 +1,734 @@
+# GateServiced — LOAD_TA success & the EXEC_CMD path (LIVE device)
+**Device:** Rokid RV101 `<DEVICE_SERIAL>` (product `glasses`) · **Date:** 2026-09-13 · **Firmware:** `1.22.009-20260710-150201`
+**Service:** `GateServiced` pid **1792** (uid 0, SELinux `u:r:tee:s0`), listening `0.0.0.0:8341`
+**Root transport:** `deploy/run_root.sh` equivalent — `printf '<cmd>' | nc -U /data/local/tmp/root_daemon.sock` → `uid=0(root) context=u:r:kernel:s0`
+**Instrument:** device-internal loopback TCP client, semantics re-validated by a live control immediately before the load (`UNLOAD_TA` → 17 B reply).
+**Wire format:** `[cmd_id LE32][payload]` — reply bytes only on success; error ⇒ **ZERO bytes** + connection held open (logcat carries the error code).
+**Follow-up to:** `reports/gateserviced_probe_2026-09-13.txt`, `reports/FACTS.md` §5.2 (S10: "成功 EXEC_CMD 路徑仍未演練").
+
+---
+
+## TA inventory
+
+Directories checked **as root**: `/vendor/firmware_mnt/image/` ✅ exists · `/firmware/image` ❌ absent · `/vendor/firmware/` ✅ exists (no QSEE TAs) · `/system/etc/firmware/` ❌ absent.
+Full listings: appendix A; device-wide `find` for `*.mbn`/`*.mdt`: appendix A.4.
+
+### Single-file QSEE applet ELFs (elf64 AArch64 `DYN`) — these are what the apploader can load
+| name | size (B) | path | category / why usable |
+|---|---:|---|---|
+| **`smcinvoke_gate_ta64.mbn`** | **399300** | `/vendor/firmware_mnt/image/` | **SMCInvoke Gate TA** — implements `CSMCIGate_open` / `CSMCIGate_gateSharedMemory` / `CSMCIGate_gateExecCmd` + Rokid `dtx_*` applet extensions. **This is GateServiced's own intended TA** (binary calls `ISMCIGate_sharedMemoryExample`, `dtxGetAppletInfo`). Not DRM/keymaster/biometric → **selected** |
+| `smplap64.mbn` | 1962072 | `/vendor/firmware_mnt/image/` | QTI **biometric** sample TA (`bio_get_auth_result`, `bio_set_auth_result`, `g_fp_result_1`, `g_iris_result_1`, `[biometric-serializer]`, `/data/misc/qsee/sampleapp/*`) → **excluded (biometric)** |
+| `widevine.mbn` | 229464 | `/vendor/firmware_mnt/image/` | Widevine DRM TA (`decrypt_subsample`, `ip_init`, `IIPProtector_*`) → **excluded (DRM)** |
+| `sp_license.mbn` | 36952 | `/vendor/firmware_mnt/image/` | not nameable as an applet (licence blob) → **excluded (cannot name it)** |
+| `evass.mbn` | 2245224 | `/vendor/firmware_mnt/image/` | elf32 `ARM` (0x5E) — ADSP image, **not** a QSEE applet |
+| `vpu20_4v.mbn` | 2077288 | `/vendor/firmware_mnt/image/` | elf32 `ARM` — VPU firmware, not a QSEE applet |
+
+### Split `mdt + b00..bNN` applets (no single-file image; segments absent from any one file ⇒ not loadable as-is)
+| name | total size (B) | path |
+|---|---:|---|
+| `featenabler` | 82181 | `/vendor/firmware_mnt/image/featenabler.mdt + .b00-.b08` |
+| `loadalgota64` | 83218 | `/vendor/firmware_mnt/image/loadalgota64.mdt + .b00-.b08` |
+| `mldapta` | 104249 | `/vendor/firmware_mnt/image/mldapta.mdt + .b00-.b08` |
+| `soter64` | 77933 | `/vendor/firmware_mnt/image/soter64.mdt + .b00-.b08` (Tencent Soter → biometric/payment adjacent, excluded) |
+| `hdcp1` | 53732 | `/vendor/firmware_mnt/image/hdcp1.mdt + .b00-.b08` (HDCP = DRM) |
+| `hdcp2p2` | 159420 | `/vendor/firmware_mnt/image/hdcp2p2.mdt + .b00-.b08` (HDCP = DRM) |
+| `hdcpsrm` | 39508 | `/vendor/firmware_mnt/image/hdcpsrm.mdt + .b00-.b08` (HDCP = DRM) |
+| `adsp` / `cdsp` | 11605883 / 3916580 | `/vendor/firmware_mnt/image/*.mdt + .bNN` (DSP firmware, not TAs) |
+
+**`qseeproxydaemon.mbn` does not exist anywhere on the device** (re-confirmed; and `dmesg` still shows init failing to start `qseeproxydaemon`). `keymaster64.mbn` / `gatekeeper.mbn` are **not present** on this build.
+
+---
+
+## Load attempts
+
+Exactly **one** LOAD_TA candidate was needed — no retries (task allowed ≤3).
+
+| # | candidate / cmd | request (hex, ≤64 B) | raw reply (hex, ≤64 B) | logcat verdict |
+|---|---|---|---|---|
+| C1 | *control* `UNLOAD_TA` | `04000100` | `756e6c6f61642074612073756363656564` (17 B = `"unload ta succeed"`) | instrument + service live; `run_unload_ta succeeded.` |
+| **L1** | **`LOAD_TA` `/vendor/firmware_mnt/image/smcinvoke_gate_ta64.mbn`** | `03000100` + `2f76656e646f722f6669726d776172655f6d6e742f696d6167652f736d63696e766f6b655f676174655f746136342e6d626e00` | **`6c6f61642074612073756363656564`** (15 B = **`"load ta succeed"`**) | `load ta called` → `succeeded int Getting the application object.` → `run_exec_cmd_ta cmd_id=10002, input_len=4, output_len=1024` → **`run_shared_memory_example succeeded`** → **`ta version = 25.05.06.01`** → `Send: load ta succeed, send_len:15` |
+| E1 | *benign* `EXEC_CMD` `0x00010001` + 4×`00` | `0100010000000000` | *(ZERO bytes)* | `run_exec_cmd_ta cmd_id = 10001, input_len = 4, output_len = 20480` → `run_shared_memory_example succeeded` → `Returned data had a length of zero!` → `ret:300e`. **TA was reached and executed; this cmd id simply produces no payload** |
+| **E2** | `EXEC_CMD` `0x00010002` + 4×`00` (the TA's own applet-info cmd — the same one the service issues during load) | `0200010000000000` | **`32352e30352e30362e3031`** (11 B = **`"25.05.06.01"`**) | `run_exec_cmd_ta cmd_id = 10002 … output_len = 20480` → `run_shared_memory_example succeeded` → `Send: 25.05.06.01, send_len:11` — **successful EXEC_CMD** |
+| U1 | `UNLOAD_TA` (cleanup) | `04000100` | `756e6c6f61642074612073756363656564` (17 B = `"unload ta succeed"`) | `run_unload_ta succeeded.` |
+| V1 | *baseline check* `EXEC_CMD` `0x00010001` + 4×`00` | `0100010000000000` | *(ZERO bytes)* | `TA is not already loaded.` → `ret:300c` ⇒ **state exactly back to pre-test baseline** |
+
+---
+
+## EXEC_CMD result
+
+With a real TA loaded, the EXEC branch is fully exercised and **returns the TA's raw output bytes verbatim, without any framing, status word, or error channel**:
+
+- `0x00010001` (+4 B payload) → TA dispatch OK, **0-byte payload** → server sends **0 bytes**, logcat `ret:300e`.
+- `0x00010002` (+4 B payload, applet-info) → **`32 35 2e 30 35 2e 30 36 2e 30 31` = `"25.05.06.01"`, 11 bytes** on the wire.
+
+So on the wire, *"success"* is signalled by bytes arriving at all; the length is entirely TA-determined (the service's 20480-byte output buffer is truncated to the TA-reported length). An empty TA answer is indistinguishable on the wire from a dispatch error — hence logcat remains the only channel that separates "TA returned nothing" (`300e`) from "no TA loaded" (`300c`).
+
+---
+
+## Adjudication
+
+**Yes — the "successful EXEC_CMD path" is now exercised on the live device**, and it required a real signed TA loaded first, exactly as predicted.
+
+1. **`LOAD_TA` can succeed** (`"load ta succeed"`, 15 B). The previous "LOAD_TA never succeeds / no TA can be loaded" conclusion (§5.2 S8, S10) was an artifact of the *only* files tested being non-TA inputs (missing file, `/system/bin/sh`). A genuine single-file signed QSEE applet ELF from `/vendor/firmware_mnt/image/` loads on the first attempt.
+2. **The missing `qseeproxydaemon` is a red herring** for this path: init *still* cannot start it (`dmesg`), yet the load succeeded. Failure code `300a` was about the *TA image format*, not about a missing QSEE listener.
+3. **The intended TA is `smcinvoke_gate_ta64.mbn`** — GateServiced is an SMCInvoke-gate client (`ISMCIGate_*`), and its `run_load_ta` internally drives the TA's applet-info command `0x10002` and parses `ta version` (`25.05.06.01`). Loading it is the service's designed behaviour, not an out-of-band abuse.
+4. **What a successful EXEC_CMD returns:** the TA's raw output, byte-for-byte (`"25.05.06.01"`, 11 B). `0x00010002` is the applet-info query; `0x00010001` is accepted and dispatched but yields no data. Error paths still send nothing and are visible only in logcat (`300c` = no TA loaded, `300e` = TA returned 0 bytes).
+5. **Single-TA semantics confirmed:** the loaded flag is service-global and persists across client connections (`cmd_dispatch, times = 88` on the load connection, then EXEC succeeded from a *different* connection); `UNLOAD_TA` clears it and restores `300c`.
+
+---
+
+## Device state after
+
+| check | result |
+|---|---|
+| `getprop sys.boot_completed` | `1` |
+| `ps -A \| grep GateServiced` | `root 1792 1 …` — **same pid**, never restarted |
+| `uptime` | `up 49 min` — **no reboot** (boot was ~13:54, tests 14:42–14:43) |
+| listener | `0.0.0.0:8341 LISTEN` (plus only `TIME_WAIT` remnants of our client sockets) |
+| `getenforce` | `Permissive` (pre-existing; **not** changed by this work) |
+| root daemon | socket present, still `uid=0(root)` |
+| `/vendor/bin/GateServiced` | sha256 `ecf72a60303aed8ecf7a21f99136572a1949862f7aeb1ee9ffbecbfb09e9fe75` — **unchanged** |
+| mounts | `/vendor`, `/system`, `/system_ext`, `/vendor_dlkm` all `ro` — nothing remounted |
+| protocol baseline | restored: `EXEC_CMD` → `TA is not already loaded.` / `300c` |
+
+---
+
+## Residual risk
+
+- **TA lifecycle:** loaded once, then explicitly unloaded; `dmesg` shows the smcinvoke server released cleanly (`server id : 23 state to defunct`) with **no panic, TZ fault, or watchdog line**.
+- **Nothing persisted:** no `/data/misc/qsee` and no `/data/vendor/qsee` were created; the TA's `dtx_sfs_*`/crypto commands were never invoked (only the read-only applet-info query).
+- **Files:** the staged TA copies (`/data/local/tmp/ta_*.mbn`, 2.6 MB of vendor TA blobs) were **deleted**. Untouched pre-existing artifacts left in place: `/data/local/tmp/GateServiced.root` (parent agent's pull), `.greq`/`.gresp` (harness scratch).
+- **Not probed (deliberately out of scope):** the TA's mutating commands (`base_ta_func_write/delete`, `dtx_sfs_*`, `dtx_rsa_key_generate_path`, `dtx_get_heap_usage`, …) and the `dispatch_antdtx` command space. **These are the real attack surface** — a local client that can `LOAD_TA` this TA and then reach its crypto/file commands.
+- **Standing finding (unchanged, now stronger):** `GateServiced:8341` is an **unauthenticated local root TEE loader** — any local app that can reach `127.0.0.1:8341` can load a named TA image from any path GateServiced can read and then issue EXEC commands to it. This work only proved the benign form of that path.
+
+---
+
+# Appendix A — raw transcript
+
+## A.1 Full listing: `/vendor/firmware_mnt/image/` (as root)
+```
+$ ls -la /vendor/firmware_mnt/image/   # full listing
+### [1] /vendor/firmware_mnt/image/ ls -la /vendor/firmware_mnt/image/
+total 24048
+dr-xr-x--- 3 system system   16384 2011-07-05 17:30 .
+dr-xr-x--- 4 system system   16384 1970-01-01 08:00 ..
+-r--r----- 1 system system    1108 2026-01-22 20:54 adsp.b00
+-r--r----- 1 system system    6804 2026-01-22 20:54 adsp.b01
+-r--r----- 1 system system 2449668 2026-01-23 04:54 adsp.b02
+-r--r----- 1 system system   27380 2026-01-22 20:54 adsp.b03
+-r--r----- 1 system system   34640 2026-01-22 20:54 adsp.b04
+-r--r----- 1 system system   94208 2026-01-22 20:54 adsp.b05
+-r--r----- 1 system system     228 2026-01-22 20:54 adsp.b06
+-r--r----- 1 system system    4116 2026-01-22 20:54 adsp.b07
+-r--r----- 1 system system 2274484 2026-01-22 20:54 adsp.b08
+-r--r----- 1 system system  185744 2026-01-22 20:54 adsp.b09
+-r--r----- 1 system system    2456 2026-01-22 20:54 adsp.b10
+-r--r----- 1 system system     336 2026-01-22 20:54 adsp.b11
+-r--r----- 1 system system     220 2026-01-22 20:54 adsp.b12
+-r--r----- 1 system system  115104 2026-01-22 20:54 adsp.b13
+-r--r----- 1 system system   76636 2026-01-22 20:54 adsp.b14
+-r--r----- 1 system system   65536 2026-01-22 20:54 adsp.b15
+-r--r----- 1 system system 1585636 2026-01-22 20:54 adsp.b16
+-r--r----- 1 system system   45060 2026-01-22 20:54 adsp.b17
+-r--r----- 1 system system     384 2026-01-22 20:54 adsp.b18
+-r--r----- 1 system system     135 2026-01-22 20:54 adsp.b19
+-r--r----- 1 system system   16384 2026-01-22 20:54 adsp.b20
+-r--r----- 1 system system 3432084 2026-01-22 20:54 adsp.b21
+-r--r----- 1 system system  204808 2026-01-22 20:54 adsp.b22
+-r--r----- 1 system system      20 2026-01-22 20:54 adsp.b23
+-r--r----- 1 system system   11044 2026-01-22 20:54 adsp.b24
+-r--r----- 1 system system    3648 2026-01-22 20:54 adsp.b25
+-r--r----- 1 system system    8552 2026-01-22 20:54 adsp.b26
+-r--r----- 1 system system    2000 2026-01-22 20:54 adsp.b27
+-r--r----- 1 system system   86688 2026-01-22 20:54 adsp.b28
+-r--r----- 1 system system  711604 2026-01-22 20:54 adsp.b29
+-r--r----- 1 system system  147388 2026-01-22 20:54 adsp.b30
+-r--r----- 1 system system    5336 2026-01-22 20:54 adsp.b32
+-r--r----- 1 system system    6444 2026-01-22 20:54 adsp.mdt
+-r--r----- 1 system system     513 2026-01-22 20:45 adspr.jsn
+-r--r----- 1 system system     515 2026-01-22 20:45 adsps.jsn
+-r--r----- 1 system system     703 2026-01-22 20:45 adspua.jsn
+-r--r----- 1 system system     468 2026-01-22 20:54 cdsp.b00
+-r--r----- 1 system system    6676 2026-01-22 20:54 cdsp.b01
+-r--r----- 1 system system 1232905 2026-01-22 20:54 cdsp.b02
+-r--r----- 1 system system    1192 2026-01-22 20:54 cdsp.b03
+-r--r----- 1 system system 2352252 2026-01-22 20:54 cdsp.b04
+-r--r----- 1 system system  106504 2026-01-22 20:54 cdsp.b05
+-r--r----- 1 system system    4888 2026-01-22 20:54 cdsp.b06
+-r--r----- 1 system system  100835 2026-01-22 20:54 cdsp.b07
+-r--r----- 1 system system   84848 2026-01-22 20:54 cdsp.b08
+-r--r----- 1 system system    4504 2026-01-22 20:54 cdsp.b09
+-r--r----- 1 system system   12288 2026-01-22 20:54 cdsp.b10
+-r--r----- 1 system system    4376 2026-01-22 20:54 cdsp.b12
+-r--r----- 1 system system    4844 2026-01-22 20:54 cdsp.mdt
+-r--r----- 1 system system     513 2026-01-22 20:52 cdspr.jsn
+-r--r----- 1 system system 2245224 2024-11-28 05:29 evass.mbn
+-r--r----- 1 system system     568 2026-01-22 20:54 featenabler.b00
+-r--r----- 1 system system   47252 2026-01-22 20:54 featenabler.b01
+-r--r----- 1 system system     240 2026-01-22 20:54 featenabler.b02
+-r--r----- 1 system system     472 2026-01-22 20:54 featenabler.b03
+-r--r----- 1 system system     913 2026-01-22 20:54 featenabler.b04
+-r--r----- 1 system system     304 2026-01-22 20:54 featenabler.b05
+-r--r----- 1 system system    8928 2026-01-22 20:54 featenabler.b06
+-r--r----- 1 system system     472 2026-01-22 20:54 featenabler.b07
+-r--r----- 1 system system   11232 2026-01-22 20:54 featenabler.b08
+-r--r----- 1 system system   11800 2026-01-22 20:54 featenabler.mdt
+-r--r----- 1 system system     568 2026-01-22 20:54 hdcp1.b00
+-r--r----- 1 system system   29804 2026-01-22 20:54 hdcp1.b01
+-r--r----- 1 system system     192 2026-01-22 20:54 hdcp1.b02
+-r--r----- 1 system system     536 2026-01-22 20:54 hdcp1.b03
+-r--r----- 1 system system    5760 2026-01-22 20:54 hdcp1.b04
+-r--r----- 1 system system     304 2026-01-22 20:54 hdcp1.b05
+-r--r----- 1 system system    7096 2026-01-22 20:54 hdcp1.b06
+-r--r----- 1 system system     536 2026-01-22 20:54 hdcp1.b07
+-r--r----- 1 system system    4184 2026-01-22 20:54 hdcp1.b08
+-r--r----- 1 system system    4752 2026-01-22 20:54 hdcp1.mdt
+-r--r----- 1 system system     568 2026-01-22 20:54 hdcp2p2.b00
+-r--r----- 1 system system  119646 2026-01-22 20:54 hdcp2p2.b01
+-r--r----- 1 system system     225 2026-01-22 20:54 hdcp2p2.b02
+-r--r----- 1 system system    1776 2026-01-22 20:54 hdcp2p2.b03
+-r--r----- 1 system system    7672 2026-01-22 20:54 hdcp2p2.b04
+-r--r----- 1 system system     304 2026-01-22 20:54 hdcp2p2.b05
+-r--r----- 1 system system   18517 2026-01-22 20:54 hdcp2p2.b06
+-r--r----- 1 system system    1776 2026-01-22 20:54 hdcp2p2.b07
+-r--r----- 1 system system    4184 2026-01-22 20:54 hdcp2p2.b08
+-r--r----- 1 system system    4752 2026-01-22 20:54 hdcp2p2.mdt
+-r--r----- 1 system system     568 2026-01-22 20:54 hdcpsrm.b00
+-r--r----- 1 system system   22485 2026-01-22 20:54 hdcpsrm.b01
+-r--r----- 1 system system     203 2026-01-22 20:54 hdcpsrm.b02
+-r--r----- 1 system system     472 2026-01-22 20:54 hdcpsrm.b03
+-r--r----- 1 system system     904 2026-01-22 20:54 hdcpsrm.b04
+-r--r----- 1 system system     304 2026-01-22 20:54 hdcpsrm.b05
+-r--r----- 1 system system    5164 2026-01-22 20:54 hdcpsrm.b06
+-r--r----- 1 system system     472 2026-01-22 20:54 hdcpsrm.b07
+-r--r----- 1 system system    4184 2026-01-22 20:54 hdcpsrm.b08
+-r--r----- 1 system system    4752 2026-01-22 20:54 hdcpsrm.mdt
+dr-xr-x--- 2 system system   16384 2011-07-05 17:30 kiwi
+-r--r----- 1 system system     568 2026-01-22 20:54 loadalgota64.b00
+-r--r----- 1 system system   48380 2026-01-22 20:54 loadalgota64.b01
+-r--r----- 1 system system     206 2026-01-22 20:54 loadalgota64.b02
+-r--r----- 1 system system     424 2026-01-22 20:54 loadalgota64.b03
+-r--r----- 1 system system   19536 2026-01-22 20:54 loadalgota64.b04
+-r--r----- 1 system system     304 2026-01-22 20:54 loadalgota64.b05
+-r--r----- 1 system system    4440 2026-01-22 20:54 loadalgota64.b06
+-r--r----- 1 system system     424 2026-01-22 20:54 loadalgota64.b07
+-r--r----- 1 system system    4184 2026-01-22 20:54 loadalgota64.b08
+-r--r----- 1 system system    4752 2026-01-22 20:54 loadalgota64.mdt
+-r--r----- 1 system system     568 2026-01-22 20:54 mldapta.b00
+-r--r----- 1 system system   72446 2026-01-22 20:54 mldapta.b01
+-r--r----- 1 system system     196 2026-01-22 20:54 mldapta.b02
+-r--r----- 1 system system     712 2026-01-22 20:54 mldapta.b03
+-r--r----- 1 system system    5640 2026-01-22 20:54 mldapta.b04
+-r--r----- 1 system system     304 2026-01-22 20:54 mldapta.b05
+-r--r----- 1 system system   14735 2026-01-22 20:54 mldapta.b06
+-r--r----- 1 system system     712 2026-01-22 20:54 mldapta.b07
+-r--r----- 1 system system    4184 2026-01-22 20:54 mldapta.b08
+-r--r----- 1 system system    4752 2026-01-22 20:54 mldapta.mdt
+-r--r----- 1 system system  399300 2025-05-09 10:57 smcinvoke_gate_ta64.mbn
+-r--r----- 1 system system 1962072 2025-05-06 10:54 smplap64.mbn
+-r--r----- 1 system system     568 2026-01-22 20:54 soter64.b00
+-r--r----- 1 system system   56931 2026-01-22 20:54 soter64.b01
+-r--r----- 1 system system     203 2026-01-22 20:54 soter64.b02
+-r--r----- 1 system system    1048 2026-01-22 20:54 soter64.b03
+-r--r----- 1 system system    1736 2026-01-22 20:54 soter64.b04
+-r--r----- 1 system system     304 2026-01-22 20:54 soter64.b05
+-r--r----- 1 system system    7159 2026-01-22 20:54 soter64.b06
+-r--r----- 1 system system    1048 2026-01-22 20:54 soter64.b07
+-r--r----- 1 system system    4184 2026-01-22 20:54 soter64.b08
+-r--r----- 1 system system    4752 2026-01-22 20:54 soter64.mdt
+-r--r----- 1 system system   36952 2025-05-06 10:54 sp_license.mbn
+-r--r----- 1 system system 2077288 2024-11-28 05:28 vpu20_4v.mbn
+-r--r----- 1 system system  229464 2025-05-06 10:54 widevine.mbn
+```
+
+## A.2 `/firmware/image`, `/vendor/firmware/`, `/system/etc/firmware/`
+```
+### [2] /firmware/image
+ls -la /firmware/image
+ls: /firmware/image: No such file or directory
+
+### [3] ls -la /vendor/firmware/
+total 30972
+drwxr-xr-x  3 root shell    4096 2009-01-01 08:00 .
+drwxr-xr-x 17 root shell    4096 2009-01-01 08:00 ..
+-rw-r--r--  1 root root       90 2009-01-01 08:00 Android.mk
+-rw-r--r--  1 root root      724 2009-01-01 08:00 CAMERA_ICP.b00
+-rw-r--r--  1 root root      360 2009-01-01 08:00 CAMERA_ICP.b01
+-rw-r--r--  1 root root       20 2009-01-01 08:00 CAMERA_ICP.b02
+-rw-r--r--  1 root root       20 2009-01-01 08:00 CAMERA_ICP.b03
+-rw-r--r--  1 root root       20 2009-01-01 08:00 CAMERA_ICP.b04
+-rw-r--r--  1 root root       20 2009-01-01 08:00 CAMERA_ICP.b05
+-rw-r--r--  1 root root       24 2009-01-01 08:00 CAMERA_ICP.b06
+-rw-r--r--  1 root root       16 2009-01-01 08:00 CAMERA_ICP.b07
+-rw-r--r--  1 root root   866156 2009-01-01 08:00 CAMERA_ICP.b08
+-rw-r--r--  1 root root    25120 2009-01-01 08:00 CAMERA_ICP.b09
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b10
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b11
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b12
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b13
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b14
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b15
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b16
+-rw-r--r--  1 root root    13124 2009-01-01 08:00 CAMERA_ICP.b17
+-rw-r--r--  1 root root    32740 2009-01-01 08:00 CAMERA_ICP.b18
+-rw-r--r--  1 root root        0 2009-01-01 08:00 CAMERA_ICP.b19
+-rw-r--r--  1 root root     4760 2009-01-01 08:00 CAMERA_ICP.b20
+-rw-r--r--  1 root root  4933000 2009-01-01 08:00 CAMERA_ICP.elf
+-rw-r--r--  1 root root   946840 2009-01-01 08:00 CAMERA_ICP.mbn
+-rw-r--r--  1 root root     5484 2009-01-01 08:00 CAMERA_ICP.mdt
+-rw-r--r--  1 root root  4250328 2009-01-01 08:00 CAMERA_ICP_170.elf
+-rw-r--r--  1 root root  4348056 2009-01-01 08:00 CAMERA_ICP_480.elf
+-rw-r--r--  1 root root     2812 2009-01-01 08:00 CHANGELOG_3.0.4-release_far_202510251440.md
+-rw-r--r--  1 root root     2812 2009-01-01 08:00 CHANGELOG_3.0.4-release_nr_202510251445.md
+-rw-r--r--  1 root root     3067 2009-01-01 08:00 CHANGELOG_3.3.0-release_near_zh_202510251433.md
+-rw-r--r--  1 root root     3113 2009-01-01 08:00 CHANGELOG_5.1.0-release_near_en_202510251451.md
+-rw-r--r--  1 root root     3399 2009-01-01 08:00 CHANGELOG_5.1.2-release_202511262111.md
+-rw-r--r--  1 root root     4097 2009-01-01 08:00 CHANGELOG_5.1.8-release_near_zh_202605211015.md
+-rw-r--r--  1 root root     4557 2009-01-01 08:00 CHANGELOG_ROKID_KWS_MOTOR_20260703.md
+-rw-r--r--  1 root root      148 2009-01-01 08:00 a620_zap.b00
+-rw-r--r--  1 root root     1676 2009-01-01 08:00 a620_zap.b01
+-rw-r--r--  1 root root     3896 2009-01-01 08:00 a620_zap.b02
+-rw-r--r--  1 root root     5772 2009-01-01 08:00 a620_zap.elf
+-rw-r--r--  1 root root    12088 2009-01-01 08:00 a620_zap.mbn
+-rw-r--r--  1 root root     4044 2009-01-01 08:00 a620_zap.mdt
+-rw-r--r--  1 root root    54712 2009-01-01 08:00 a621_gmu.bin
+-rw-r--r--  1 root root    31964 2009-01-01 08:00 a650_sqe.fw
+-rw-r--r--  1 root root    76500 2009-01-01 08:00 a740v3_sqe.fw
+-rw-r--r--  1 root root      148 2009-01-01 08:00 a740v3_zap.b00
+-rw-r--r--  1 root root     1072 2009-01-01 08:00 a740v3_zap.b01
+-rw-r--r--  1 root root     3896 2009-01-01 08:00 a740v3_zap.b02
+-rw-r--r--  1 root root     5168 2009-01-01 08:00 a740v3_zap.elf
+-rw-r--r--  1 root root    12088 2009-01-01 08:00 a740v3_zap.mbn
+-rw-r--r--  1 root root     4044 2009-01-01 08:00 a740v3_zap.mdt
+-rw-r--r--  1 root root      304 2009-01-01 08:00 evass.b01
+-rw-r--r--  1 root root       24 2009-01-01 08:00 evass.b02
+-rw-r--r--  1 root root       24 2009-01-01 08:00 evass.b03
+-rw-r--r--  1 root root       20 2009-01-01 08:00 evass.b04
+-rw-r--r--  1 root root       20 2009-01-01 08:00 evass.b05
+-rw-r--r--  1 root root       24 2009-01-01 08:00 evass.b06
+-rw-r--r--  1 root root       16 2009-01-01 08:00 evass.b07
+-rw-r--r--  1 root root  1140588 2009-01-01 08:00 evass.b08
+-rw-r--r--  1 root root    43484 2009-01-01 08:00 evass.b09
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b10
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b11
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b12
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b13
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b14
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b15
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b16
+-rw-r--r--  1 root root        0 2009-01-01 08:00 evass.b17
+-rw-r--r--  1 root root     4096 2009-01-01 08:00 evass.b18
+-rw-r--r--  1 root root     4712 2009-01-01 08:00 evass.b19
+-rw-r--r--  1 root root  2245224 2009-01-01 08:00 evass.mbn
+-rw-r--r--  1 root root     5404 2009-01-01 08:00 evass.mdt
+-rw-r--r--  1 root root     3216 2009-01-01 08:00 filler_keywords_en.bin
+-rw-r--r--  1 root root     3952 2009-01-01 08:00 filler_keywords_zh.bin
+-rw-r--r--  1 root root    67240 2009-01-01 08:00 gmu_gen70200.bin
+-rw-r--r--  1 root root    99824 2009-01-01 08:00 mlp_en.bin
+-rw-r--r--  1 root root   130052 2009-01-01 08:00 mlp_zh.bin
+-rw-r--r--  1 root root    17324 2009-01-01 08:00 rt600_sbl.bin
+-rw-r--r--  1 root root  1365792 2009-01-01 08:00 sdk20-app-release-dvt-far-en.bin
+-rw-r--r--  1 root root      379 2009-01-01 08:00 sdk20-app-release-dvt-far-en.bin.version.h
+-rw-r--r--  1 root root  1366368 2009-01-01 08:00 sdk20-app-release-dvt-far-zh.bin
+-rw-r--r--  1 root root      379 2009-01-01 08:00 sdk20-app-release-dvt-far-zh.bin.version.h
+-rw-r--r--  1 root root  1622436 2009-01-01 08:00 sdk20-app-release-dvt-motor-en.bin
+-rw-r--r--  1 root root      381 2009-01-01 08:00 sdk20-app-release-dvt-motor-en.bin.version.h
+-rw-r--r--  1 root root  1623172 2009-01-01 08:00 sdk20-app-release-dvt-motor-zh.bin
+-rw-r--r--  1 root root      381 2009-01-01 08:00 sdk20-app-release-dvt-motor-zh.bin.version.h
+-rw-r--r--  1 root root  1441416 2009-01-01 08:00 sdk20-app-release-dvt-near-en.bin
+-rw-r--r--  1 root root      379 2009-01-01 08:00 sdk20-app-release-dvt-near-en.bin.version.h
+-rw-r--r--  1 root root  1588476 2009-01-01 08:00 sdk20-app-release-dvt-near-zh.bin
+-rw-r--r--  1 root root      379 2009-01-01 08:00 sdk20-app-release-dvt-near-zh.bin.version.h
+-rw-r--r--  1 root root  1338144 2009-01-01 08:00 sdk20-app-release-dvt-nr-en.bin
+-rw-r--r--  1 root root      379 2009-01-01 08:00 sdk20-app-release-dvt-nr-en.bin.version.h
+-rw-r--r--  1 root root  1338720 2009-01-01 08:00 sdk20-app-release-dvt-nr-zh.bin
+-rw-r--r--  1 root root      379 2009-01-01 08:00 sdk20-app-release-dvt-nr-zh.bin.version.h
+-rw-r--r--  1 root root  1340712 2009-01-01 08:00 sdk20-app-release-evt1-nr-zh.bin
+-rw-r--r--  1 root root  1368392 2009-01-01 08:00 sdk20-app-release-evt2-far-zh.bin
+-rw-r--r--  1 root root  1368392 2009-01-01 08:00 sdk20-app-release-evt2-near-zh.bin
+-rw-r--r--  1 root root  1340744 2009-01-01 08:00 sdk20-app-release-evt2-nr-zh.bin
+-rw-r--r--  1 root root      298 2009-01-01 08:00 vfw-product.mk
+-rw-r--r--  1 root root  2077288 2009-01-01 08:00 vpu20_4v.mbn
+-rw-r--r--  1 root root  2071200 2009-01-01 08:00 vpu20_4v_unsigned.mbn
+drwxr-xr-x  3 root shell    4096 2009-01-01 08:00 wlan
+lrw-r--r--  1 root root       34 2009-01-01 08:00 wlanmdsp.otaupdate -> /data/vendor/firmware/wlanmdsp.mbn
+
+### [4] ls -la /system/etc/firmware/
+ls: /system/etc/firmware/: No such file or directory
+
+ls -la /system/etc/firmware/
+ls: /system/etc/firmware/: No such file or directory
+```
+
+## A.3 Candidate ELF identification (first 32 bytes, as root) + service SELinux domain
+```
+### [5] kiwi subdir
+total 22448
+dr-xr-x--- 2 system system   16384 2011-07-05 17:30 .
+dr-xr-x--- 3 system system   16384 2011-07-05 17:30 ..
+-r--r----- 1 system system 1158272 2024-10-08 16:32 Data.msc
+-r--r----- 1 system system 1581865 2025-05-06 10:54 Data20.msc
+-r--r----- 1 system system 7458880 2024-10-08 16:32 amss.bin
+-r--r----- 1 system system 6275136 2025-05-06 18:54 amss20.bin
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e01
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e02
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e03
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e04
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e07
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e08
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e09
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e0a
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e0b
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e0c
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e0d
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e0e
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e0f
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e10
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e11
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e12
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e13
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e14
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e15
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e16
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e17
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e18
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e19
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e1a
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e1b
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e1c
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e1d
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e1e
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e1f
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e20
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e21
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e22
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e23
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e24
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e25
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e26
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e27
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e28
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e29
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e2a
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e2b
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e2c
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e2d
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e2e
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e2f
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e30
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e31
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e32
+-r--r----- 1 system system   88792 2025-05-06 10:54 bdwlan.e33
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e34
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e35
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e36
+-r--r----- 1 system system    6612 2024-10-08 16:32 bdwlan.e36.xz
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e37
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e39
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e3a
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e3b
+-r--r----- 1 system system    6636 2024-10-08 16:32 bdwlan.e3b.xz
+-r--r----- 1 system system   88792 2024-10-08 16:32 bdwlan.e3c
+-r--r----- 1 system system   88792 2024-10-09 00:32 bdwlan.elf
+-r--r----- 1 system system    6164 2024-10-08 16:32 bdwlan.elf.xz
+-r--r----- 1 system system  299660 2024-10-08 16:32 phy_ucode.elf
+-r--r----- 1 system system  299660 2025-05-06 10:54 phy_ucode20.elf
+-r--r----- 1 system system    4742 2024-10-08 16:32 qdss_trace_config_v1.cfg
+-r--r----- 1 system system    4913 2024-10-09 00:32 qdss_trace_config_v2.cfg
+-r--r----- 1 system system   24278 2024-10-09 00:32 regdb.bin
+
+### [6] ELF magic of single-file .mbn candidates (first 32 bytes)
+-- smplap64.mbn
+00000000: 7f45 4c46 0201 0100 0000 0000 0000 0000  .ELF............
+00000010: 0300 b700 0100 0000 0000 0000 0000 0000  ................
+-- smcinvoke_gate_ta64.mbn
+00000000: 7f45 4c46 0201 0100 0000 0000 0000 0000  .ELF............
+00000010: 0300 b700 0100 0000 0000 0000 0000 0000  ................
+-- widevine.mbn
+00000000: 7f45 4c46 0201 0100 0000 0000 0000 0000  .ELF............
+00000010: 0300 b700 0100 0000 0000 0000 0000 0000  ................
+-- sp_license.mbn
+00000000: 7f45 4c46 0201 0100 0000 0000 0000 0000  .ELF............
+00000010: 0300 b700 0100 0000 0000 0000 0000 0000  ................
+-- evass.mbn
+00000000: 7f45 4c46 0101 0100 0000 0000 0000 0000  .ELF............
+00000010: 0200 5e00 0100 0000 0000 500f 3400 0000  ..^.......P.4...
+-- vpu20_4v.mbn
+00000000: 7f45 4c46 0101 0100 0000 0000 0000 0000  .ELF............
+00000010: 0200 5e00 0100 0000 0000 500f 3400 0000  ..^.......P.4...
+
+### [7] GateServiced selinux context + proc
+u:r:tee:s0
+```
+
+## A.4 Device-wide TA search + `/vendor` binaries of interest
+```
+### [11] all .mbn / TA-like files outside firmware_mnt (root find)
+/vendor/firmware/CAMERA_ICP.mbn
+/vendor/firmware/CAMERA_ICP.mdt
+/vendor/firmware/a620_zap.mbn
+/vendor/firmware/a620_zap.mdt
+/vendor/firmware/a740v3_zap.mbn
+/vendor/firmware/a740v3_zap.mdt
+/vendor/firmware/evass.mbn
+/vendor/firmware/evass.mdt
+/vendor/firmware/vpu20_4v.mbn
+/vendor/firmware/vpu20_4v_unsigned.mbn
+
+### [12] anything named *dtx* or *gate* on device
+-rwxr-x---  1 root   root     20304 2009-01-01 08:00 GateServiced
+-rwxr-xr-x  1 root   shell    41088 2009-01-01 08:00 qseecom_sample_client
+-rwxr-xr-x  1 root   shell    32904 2009-01-01 08:00 qseecomd
+-rw-r--r--  1 root root    102504 2009-01-01 08:00 android.hardware.gatekeeper@1.0.so
+-rw-r--r--  1 root root     36160 2009-01-01 08:00 libQSEEComAPI.so
+-rw-r--r--  1 root root    165456 2009-01-01 08:00 libqseed3.so
+-rw-r--r--  1 root root     35848 2009-01-01 08:00 libtzdrmgenprov.so
+-rw-r--r--  1 root root    149552 2009-01-01 08:00 vendor.qti.hardware.qseecom@1.0.so
+
+### [13] GateServiced service name in init / rc
+```
+
+## A.5 Pre-state and logcat
+```
+### [8] logcat -d | grep -iE 'load|ta|gate'  (tail 60)
+09-13 14:20:44.808   774   813 I PAL: PayloadBuilder: payloadPcmCnvConfig: 1583: mediaFmtHdr data_format:1 fmt_id:9001000 payload_size:18 channels:2
+09-13 14:20:44.808   774   813 I PAL: PayloadBuilder: payloadPcmCnvConfig: 1608: interleaved:3 bit_width:16 bits_per_sample:16 q_factor:15
+09-13 14:20:44.808   774   813 I PAL: PayloadBuilder: payloadPcmCnvConfig: 1614: customPayload address 0xb400007ec2bc6690K and size 48
+09-13 14:20:44.808   774   813 I PAL: Device: updateCustomPayload: 313: customPayloadSize = 248
+09-13 14:20:44.809   774   813 I btaudio_offload_sink: audio_sink_session_setup_complete
+09-13 14:20:44.810  1417  1649 D bt_btif : btif_av_state_started_handler: event: BTIF_AV_SINK_OFFLOAD_SINK_LATENCY_EVT flags: 0  index = 0, reconfig_event: 0, codec_cfg_change: 0
+09-13 14:20:44.810   774   813 I btaudio_offload_qti_2_1: audio_update_sink_latency_qti: Sink Latency = 180
+09-13 14:20:44.861   774   813 I PAL: PayloadBuilder: payloadMFCConfig: 414: header params 
+09-13 14:20:44.861   774   813 I PAL: PayloadBuilder:  IID:40a9 param_id:8001024 error_code:0 param_size:12
+09-13 14:20:44.861   774   813 I PAL: PayloadBuilder: payloadMFCConfig: 438: sample_rate:48000 bit_width:16 num_channels:2 Miid:16553
+09-13 14:20:44.861   774   813 I PAL: PayloadBuilder: payloadMFCConfig: 440: customPayload address 0xb400007ec2be9000K and size 32
+09-13 14:20:44.861   774   813 I PAL: Session: updateCustomPayload: 361: customPayloadSize = 32
+09-13 14:20:44.875   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2647: enter 
+09-13 14:20:44.875   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2679: volume sent:1.000000 
+09-13 14:20:44.875   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2682: volume sent:1.000000  voldB=8192 
+09-13 14:20:44.875   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2911: exit status- 0
+09-13 14:20:44.884   774   813 I PAL: StreamPCM: setVolume: 755: Volume payload mask:3 vol:0.400000
+09-13 14:20:44.884   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2647: enter 
+09-13 14:20:44.884   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2679: volume sent:0.400000 
+09-13 14:20:44.884   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2682: volume sent:0.400000  voldB=3276 
+09-13 14:20:44.884   774   813 I PAL: PayloadBuilder: populateCalKeyVector: 2911: exit status- 0
+09-13 14:20:48.305   774   813 I btaudio_offload_sink: audio_sink_stop_capture
+09-13 14:20:48.305   774   813 I btaudio_offload_qti_2_1: audio_stream_stop_qti
+09-13 14:20:48.305   774   813 W btaudio_offload_qti_2_1: handle_hidl_request: suspending audio stream
+09-13 14:20:48.305   774   813 W btaudio_offload_qti_2_1: wait_for_stack_response: conditional wait: ack_recvd = 0
+09-13 14:20:48.305  1417  1649 D bt_btif : btif_av_state_started_handler: event: BTIF_AV_SINK_OFFLOAD_STOP_CFM_EVT flags: 2  index = 0, reconfig_event: 0, codec_cfg_change: 0
+09-13 14:20:48.305  1417  2337 D bt_btif : bta_av_ssm_execute(): AV Sevent(0x41)=0x1230( API_SINK_OFFLOAD_STOP_REQ) state=3(OPEN)
+09-13 14:20:48.306  1417  1649 D bt_btif : btif_av_state_started_handler: event: BTA_AV_SINK_OFFLOAD_STOP_RSP_EVT flags: 2  index = 0, reconfig_event: 0, codec_cfg_change: 0
+09-13 14:20:48.307   774  1176 I BTAudioProviderStub_2_1: streamSuspended - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH, status=SUCCESS
+09-13 14:20:48.307   774  1176 I BTAudioProviderSession_2_1: ReportControlStatus - status=SUCCESS for SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH, bluetooth_audio=0x0200 suspended
+09-13 14:20:48.307   774  1176 I btaudio_offload_qti_2_1: stack_resp_cb: status = 0
+09-13 14:20:48.308   774   813 I btaudio_offload_qti_2_1: wait_for_stack_response:ret = 0(Success)
+09-13 14:20:48.308   774   813 W btaudio_offload_qti_2_1: wait_for_stack_response: conditional wait done : ack_recvd = 1
+09-13 14:20:48.308   774   813 I btaudio_offload_qti_2_1: handle_hidl_request: ack status = A2DP_CTRL_ACK_SUCCESS
+09-13 14:20:48.308   774   813 D btaudio_offload_qti_2_1: audio_stream_stop_qti: success
+09-13 14:20:48.309   774  1176 I BTAudioProviderStub_2_1: endSession - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH
+09-13 14:20:48.310   774  1176 I BTAudioProviderSession_2_1: ReportSessionStatus - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH notify to bluetooth_audio=0x0200
+09-13 14:20:48.310   774  1176 I btaudio_offload_qti_2_1: session_resp_cb
+09-13 14:20:48.310   774  1176 I btaudio_offload_qti_2_1: session_resp_cb: session ready  = 1
+09-13 14:20:48.310   774  1176 I btaudio_offload_qti_2_1: session_resp_cb:  end session session ready  = 0
+09-13 14:20:48.310   774  1176 D btaudio_offload_qti_2_1: session_resp_cb: state = AUDIO_A2DP_STATE_STANDBY
+09-13 14:20:48.312  1417  1649 W bt_stack: [WARNING:a2dp_encoding.cc(2565)] init:Session type OFFLOAD
+09-13 14:20:48.318   774  1176 I BTAudioProvidersFactory_2_1: getProviderCapabilities_2_1 - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH supports 7 codecs
+09-13 14:20:48.318  1417  1649 I bt_stack: [INFO:client_interface.cc(373)] fetch_audio_provider: BluetoothAudioHal SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH has 7 AudioCapabilities
+09-13 14:20:48.319   774  1176 I BTAudioProvidersFactory_2_1: openProvider_2_1 - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH
+09-13 14:20:48.320   774  1176 W BTAudioProviderSessionCodecsDB_2_1: IsOffloadAacConfigurationValid: Variable bit rate:128
+09-13 14:20:48.320   774  1176 W BTAudioProviderSessionCodecsDB_2_1: IsOffloadAacConfigurationValid: Default variable bit rate:128
+09-13 14:20:48.321   774  1176 I BTAudioProviderStub_2_1: startSession_2_1 - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH, AudioConfiguration=[{.pcmConfig = {.sampleRate = RATE_48000, .channelMode = UNKNOWN, .bitsPerSample = 0xe2}, .codecConfig = {.codecType = AAC, .encodedAudioBitrate = 320000, .peerMtu = 989, .isScmstEnabled = 0, .isScramblingEnabled = 0, .config = {.sbcConfig = {.sampleRate = RATE_32000, .channelMode = JOINT_STEREO, .blockLength = 0, .numSubbands = 0, .allocMethod = 0, .bitsPerSample = BITS_24, .minBitpool = 128, .maxBitpool = 1}, .aacConfig = {.objectType = MPEG2_LC, .sampleRate = RATE_44100, .channelMode = STEREO, .variableBitRateEnabled = ENABLED, .bitsPerSample = BITS_16, .frameControlEnabled = 0}, .ldacConfig = {.sampleRate = RATE_32000, .channelMode = STEREO, .qualityIndex = QUALITY_HIGH, .bitsPerSample = BITS_UNKNOWN}, .aptxConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .bitsPerSample = BITS_UNKNOWN}, .aptxAdaptiveConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .bitsPerSample = BITS_24, .aptxMode = UNKNOWN, .sinkBuffering = {.minSinkBuff_LL = 0, .maxSinkBuff_LL = 0, .minSinkBuff_HQ = 0, .maxSinkBuff_HQ = 0, .minSinkBuff_TWS = 0, .maxSinkBuff_TWS = 0}, .ttp = {.TTP_LL_low = 0, .TTP_LL_high = 0, .TTP_HQ_low = 0, .TTP_HQ_high = 0, .TTP_TWS_low = 0, .TTP_TWS_high = 0}, .inputMode = STEREO, .inputFadeDuration = 0, .aptxAdaptiveConfigStream = [25]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, .aptxTwsConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .syncMode = 0}, .baCeltConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .frameSize = 0, .complexity = 32770, .predictionMode = 1, .vbrFlag = 0}, .lc3Config = {.txConfig = {.sampleRate = RATE_32000, .channelMode = STEREO, .octetsPerFrame = 0, .frameDuration = 32770, .bitrate = 0, .bitsPerSample = BITS_UNKNOWN, .numBlocks = 0}, .rxConfig = {.sampleRate = RATE_UNKNOWN, .channelMode = UNKNOWN, .octetsPerFrame = 0, .frameDuration = 0, .bitrate = 0, .bitsPerSample = BITS_UNKNOWN, .numBlocks = 0}, .rxConfigSet = 0, .rxLatency = 0, .decoderOuputChannels = 0, .mode = 0, .codecSpecific = [16]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, .defaultQlevel = 0, .NumStreamIDGroup = 0, .streamMap = [48]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}}}}]
+09-13 14:20:48.321   774  1176 I BTAudioProviderSession_2_1: OnSessionStarted - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH, AudioConfiguration={.pcmConfig = {.sampleRate = RATE_48000, .channelMode = UNKNOWN, .bitsPerSample = 0xe2}, .codecConfig = {.codecType = AAC, .encodedAudioBitrate = 320000, .peerMtu = 989, .isScmstEnabled = 0, .isScramblingEnabled = 0, .config = {.sbcConfig = {.sampleRate = RATE_32000, .channelMode = JOINT_STEREO, .blockLength = 0, .numSubbands = 0, .allocMethod = 0, .bitsPerSample = BITS_24, .minBitpool = 128, .maxBitpool = 1}, .aacConfig = {.objectType = MPEG2_LC, .sampleRate = RATE_44100, .channelMode = STEREO, .variableBitRateEnabled = ENABLED, .bitsPerSample = BITS_16, .frameControlEnabled = 0}, .ldacConfig = {.sampleRate = RATE_32000, .channelMode = STEREO, .qualityIndex = QUALITY_HIGH, .bitsPerSample = BITS_UNKNOWN}, .aptxConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .bitsPerSample = BITS_UNKNOWN}, .aptxAdaptiveConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .bitsPerSample = BITS_24, .aptxMode = UNKNOWN, .sinkBuffering = {.minSinkBuff_LL = 0, .maxSinkBuff_LL = 0, .minSinkBuff_HQ = 0, .maxSinkBuff_HQ = 0, .minSinkBuff_TWS = 0, .maxSinkBuff_TWS = 0}, .ttp = {.TTP_LL_low = 0, .TTP_LL_high = 0, .TTP_HQ_low = 0, .TTP_HQ_high = 0, .TTP_TWS_low = 0, .TTP_TWS_high = 0}, .inputMode = STEREO, .inputFadeDuration = 0, .aptxAdaptiveConfigStream = [25]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}, .aptxTwsConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .syncMode = 0}, .baCeltConfig = {.sampleRate = RATE_32000, .channelMode = MONO, .frameSize = 0, .complexity = 32770, .predictionMode = 1, .vbrFlag = 0}, .lc3Config = {.txConfig = {.sampleRate = RATE_32000, .channelMode = STEREO, .octetsPerFrame = 0, .frameDuration = 32770, .bitrate = 0, .bitsPerSample = BITS_UNKNOWN, .numBlocks = 0}, .rxConfig = {.sampleRate = RATE_UNKNOWN, .channelMode = UNKNOWN, .octetsPerFrame = 0, .frameDuration = 0, .bitrate = 0, .bitsPerSample = BITS_UNKNOWN, .numBlocks = 0}, .rxConfigSet = 0, .rxLatency = 0, .decoderOuputChannels = 0, .mode = 0, .codecSpecific = [16]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, .defaultQlevel = 0, .NumStreamIDGroup = 0, .streamMap = [48]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}}}}
+09-13 14:20:48.322   774  1176 I BTAudioProviderSession_2_1: ReportSessionStatus - SessionType=A2DP_HARDWARE_OFFLOAD_DATAPATH notify to bluetooth_audio=0x0200
+09-13 14:20:48.322   774  1176 I btaudio_offload_qti_2_1: session_resp_cb
+09-13 14:20:48.322   774  1176 I btaudio_offload_qti_2_1: session_resp_cb: session ready  = 0
+09-13 14:20:48.322   774  1176 D btaudio_offload_qti_2_1: session_resp_cb: state = AUDIO_A2DP_STATE_STANDBY
+09-13 14:20:57.197  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:getprop sys.boot_completed; ps -A | grep -i GateServiced; netstat -tlnp 2>/dev/null | grep 8341
+09-13 14:22:05.291  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:ls -la /vendor/bin/GateServiced 2>/dev/null || ls -la /system/bin/GateServiced 2>/dev/null; echo '--- owner/context ---'; ps -A -o USER,PID,ARGS 2>/dev/null | grep -i gateserviced | head -2
+09-13 14:22:43.736  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:printf 'boot_completed=%s\n' $(getprop sys.boot_completed); printf 'gateserviced=%s\n' $(ps -A | grep -c GateServiced); printf 'root=%s\n' "$(echo id | timeout 4 nc -U /data/local/tmp/root_daemon.sock 2>/dev/null | head -1)"; printf 'keepalive_oom=%s\n' $(cat /proc/$(cat /data/local/tmp/root_daemon.pid 2>/dev/null)/oom_score_adj 2>/dev/null)
+09-13 14:39:51.924  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:printf 'cp /vendor/bin/GateServiced /data/local/tmp/GateServiced.root\nchmod 644 /data/local/tmp/GateServiced.root\n' | timeout 10 nc -U /data/local/tmp/root_daemon.sock
+09-13 14:39:55.355  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:ls -la /data/local/tmp/root_daemon.sock; ls -la /data/local/tmp/GateServiced.root
+09-13 14:39:59.043  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:printf 'sha256sum /vendor/bin/GateServiced /data/local/tmp/GateServiced.root\n' | timeout 10 nc -U /data/local/tmp/root_daemon.sock
+09-13 14:40:32.453  1704  1704 I adbd    : RKD-- daemon_service_to_fd : shell,v2,raw:logcat -d 2>/dev/null | grep -iE 'load|GateServiced|GATE CA' | tail -60
+
+### [9] pre-state: boot, pid, uptime, selinux
+1
+1.22.009-20260710-150201
+system         605     1 2238216   4024 0                   0 S android.hardware.gatekeeper@1.0-service-qti
+system         976     1 2200956   4604 0                   0 S gatekeeperd
+root          1792     1 2184376   3468 0                   0 S GateServiced
+ 14:40:35 up 46 min,  0 users,  load average: 2.79, 2.97, 4.82
+Permissive
+```
+
+## A.6 Probe transcript — control, load, exec, unload, cleanup
+```
+date: Sun Sep 13 14:42:10 CST 2026
+--- [C1_control_UNLOAD_TA]
+    request  : 04000100
+    reply    : 756e6c6f61642074612073756363656564
+    ascii    : 'unload ta succeed'
+    size     : 17 bytes
+    TCP mid  : HELD-OPEN (ESTABLISHED)
+    logcat   :
+               --------- beginning of main
+               09-13 14:42:11.061  1792  4625 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+               09-13 14:42:11.061  1792  4625 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10004, rsv_len:4"
+               09-13 14:42:11.061  1792  4625 E GateServiced: [GATE CA][INFO][cmd_dispatch][38]:"unload ta called"
+               09-13 14:42:11.061  1792  4625 E GateServiced: [GATE CA][INFO][run_unload_ta][223]:"run_unload_ta succeeded."
+               09-13 14:42:11.062  1792  4625 E GateServiced: [GATE CA][INFO][handle_client][63]:"cmd_id = 10004, cmd_dispatch, times = 1"
+               09-13 14:42:11.062  1792  4625 E GateServiced: [GATE CA][INFO][handle_client][64]:"Send: unload ta succeed, send_len:17"
+               09-13 14:42:11.062  1792  4625 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+               09-13 14:42:16.069  1792  4625 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+
+post: pid = 1792
+
+candidate : /vendor/firmware_mnt/image/smcinvoke_gate_ta64.mbn
+path len  : 50 bytes (+NUL = 51 <=128 OK )
+request   : 030001002f76656e646f722f6669726d776172655f6d6e742f696d6167652f736d63696e766f6b655f676174655f746136342e6d626e00  total 55 bytes
+--- [L1_LOAD_TA_smcinvoke_gate_ta64]
+    request  : 030001002f76656e646f722f6669726d776172655f6d6e742f696d6167652f736d63696e766f6b655f676174655f746136342e6d626e00
+    reply    : 6c6f61642074612073756363656564
+    ascii    : 'load ta succeed'
+    size     : 15 bytes
+    TCP mid  : HELD-OPEN (ESTABLISHED)
+    logcat   :
+               --------- beginning of main
+               09-13 14:42:22.674  1792  4840 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+               09-13 14:42:22.675  1792  4840 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10003, rsv_len:55"
+               09-13 14:42:22.675  1792  4840 E GateServiced: [GATE CA][INFO][cmd_dispatch][26]:"load ta called"
+               09-13 14:42:22.719  1792  4840 E GateServiced: [GATE CA][INFO][run_load_ta][211]:"succeeded int Getting the application object."
+               09-13 14:42:22.719  1792  4840 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 10002, input_len = 4, output_len = 1024"
+               09-13 14:42:22.762  1792  4840 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][256]:"run_shared_memory_example succeeded"
+               09-13 14:42:22.763  1792  4840 E GateServiced: [GATE CA][INFO][get_ta_version][168]:"ta version = 25.05.06.01"
+               09-13 14:42:22.763  1792  4840 E GateServiced: [GATE CA][INFO][handle_client][63]:"cmd_id = 10003, cmd_dispatch, times = 88"
+               09-13 14:42:22.763  1792  4840 E GateServiced: [GATE CA][INFO][handle_client][64]:"Send: load ta succeed, send_len:15"
+               09-13 14:42:22.764  1792  4840 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+               09-13 14:42:27.772  1792  4840 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+
+pid after : 1792
+boot      : 1
+
+EXEC_CMD request: 0100010000000000 ( 8 bytes )
+--- [E1_EXEC_CMD_0x00010001]
+    request  : 0100010000000000
+    reply    : (ZERO BYTES)
+    size     : 0 bytes
+    TCP mid  : HELD-OPEN (ESTABLISHED)
+    logcat   :
+               --------- beginning of main
+               09-13 14:42:40.878  1792  5184 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+               09-13 14:42:40.879  1792  5184 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10001, rsv_len:8"
+               09-13 14:42:40.879  1792  5184 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 10001, input_len = 4, output_len = 20480"
+               09-13 14:42:40.911  1792  5184 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][256]:"run_shared_memory_example succeeded"
+               09-13 14:42:40.911  1792  5184 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][260]:"Returned data had a length of zero!"
+               09-13 14:42:40.911  1792  5184 E GateServiced: [GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300e"
+               09-13 14:42:40.911  1792  5184 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+               09-13 14:42:45.885  1792  5184 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+
+pid after : 1792
+boot      : 1
+
+EXEC_CMD request: 0200010000000000
+--- [E2_EXEC_CMD_0x00010002_appletinfo]
+    request  : 0200010000000000
+    reply    : 32352e30352e30362e3031
+    ascii    : '25.05.06.01'
+    size     : 11 bytes
+    TCP mid  : HELD-OPEN (ESTABLISHED)
+    logcat   :
+               --------- beginning of main
+               09-13 14:42:58.964  1792  5521 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+               09-13 14:42:58.964  1792  5521 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10002, rsv_len:8"
+               09-13 14:42:58.964  1792  5521 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 10002, input_len = 4, output_len = 20480"
+               09-13 14:42:59.010  1792  5521 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][256]:"run_shared_memory_example succeeded"
+               09-13 14:42:59.010  1792  5521 E GateServiced: [GATE CA][INFO][handle_client][63]:"cmd_id = 10002, cmd_dispatch, times = 46"
+               09-13 14:42:59.010  1792  5521 E GateServiced: [GATE CA][INFO][handle_client][64]:"Send: 25.05.06.01, send_len:11"
+               09-13 14:42:59.011  1792  5521 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+               09-13 14:43:04.018  1792  5521 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+
+    hexdump  : 32 35 2e 30 35 2e 30 36 2e 30 31
+pid after : 1792
+boot      : 1
+
+--- [U1_UNLOAD_TA_cleanup]
+    request  : 04000100
+    reply    : 756e6c6f61642074612073756363656564
+    ascii    : 'unload ta succeed'
+    size     : 17 bytes
+    TCP mid  : HELD-OPEN (ESTABLISHED)
+    logcat   :
+               --------- beginning of main
+               09-13 14:43:15.044  1792  5825 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+               09-13 14:43:15.044  1792  5825 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10004, rsv_len:4"
+               09-13 14:43:15.044  1792  5825 E GateServiced: [GATE CA][INFO][cmd_dispatch][38]:"unload ta called"
+               09-13 14:43:15.057  1792  5825 E GateServiced: [GATE CA][INFO][run_unload_ta][223]:"run_unload_ta succeeded."
+               09-13 14:43:15.058  1792  5825 E GateServiced: [GATE CA][INFO][handle_client][63]:"cmd_id = 10004, cmd_dispatch, times = 14"
+               09-13 14:43:15.058  1792  5825 E GateServiced: [GATE CA][INFO][handle_client][64]:"Send: unload ta succeed, send_len:17"
+               09-13 14:43:15.058  1792  5825 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:4"
+               09-13 14:43:20.064  1792  5825 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+
+--- [V1_verify_baseline_restored]
+    request  : 0100010000000000
+    reply    : (ZERO BYTES)
+    size     : 0 bytes
+    TCP mid  : HELD-OPEN (ESTABLISHED)
+    logcat   :
+               --------- beginning of main
+               09-13 14:43:22.291  1792  5972 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+               09-13 14:43:22.292  1792  5972 E GateServiced: [GATE CA][INFO][handle_client][53]:"Received, cmd_id: 10001, rsv_len:8"
+               09-13 14:43:22.292  1792  5972 E GateServiced: [GATE CA][INFO][run_exec_cmd_ta][231]:"cmd_id = 10001, input_len = 4, output_len = 20480"
+               09-13 14:43:22.292  1792  5972 E GateServiced: [GATE CA][ERRO][run_exec_cmd_ta][234]:"TA is not already loaded."
+               09-13 14:43:22.292  1792  5972 E GateServiced: [GATE CA][ERRO][handle_client][59]:"cmd_dispatch failed, ret:300c"
+               09-13 14:43:22.292  1792  5972 E GateServiced: [GATE CA][INFO][handle_client][39]:"wait for client data, client_fd:5"
+               09-13 14:43:27.299  1792  5972 E GateServiced: [GATE CA][INFO][handle_client][44]:"客户端断开连接"
+
+=== after-state ===
+boot_completed : 1
+ps             : root          1792     1 2184376   3460 0                   0 S GateServiced
+uptime         : 14:43:29 up 49 min,  0 users,  load average: 2.71, 2.76, 4.42
+getenforce     : Permissive
+listener       : tcp        0      0 0.0.0.0:8341            0.0.0.0:*               LISTEN      -
+tcp        0      0 127.0.0.1:50450         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:48582         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:41958         127.0.0.1:8341          TIME_WAIT   -
+tcp        0      0 127.0.0.1:33132         127.0.0.1:8341          TIME_WAIT   -
+root_daemon    : uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+srwxrwxrwx 1 root root 0 2026-09-13 13:59 /data/local/tmp/root_daemon.sock
+
+=== cleanup staged TA copies in /data/local/tmp ===
+-rw-rw-rw-  1 shell shell               8 2026-09-13 14:43 .greq
+-rw-rw-rw-  1 shell shell               0 2026-09-13 14:43 .gresp
+-rw-r--r--  1 root  root            20304 2026-09-13 14:39 GateServiced.root
+
+=== residual: qsee data dirs (any new files from the load?) ===
+ls: /data/misc/qsee: No such file or directory
+ls: /data/vendor/qsee: No such file or directory
+
+=== residual: TZ/QSEE kernel messages around the load (dmesg tail) ===
+[    9.134193] init: Could not start service 'qseeproxydaemon' as part of class 'late_start': Cannot find '/system/vendor/bin/qseeproxydaemon': No such file or directory
+[ 1567.070984] smcinvoke: process_accept_req: Setting pid:13512, server id : 21 state to defunct
+[ 1567.071677] smcinvoke: process_accept_req: Setting pid:13511, server id : 21 state to defunct
+[ 1567.072606] smcinvoke: process_accept_req: Setting pid:13510, server id : 21 state to defunct
+[ 1567.073026] smcinvoke: process_accept_req: Setting pid:13509, server id : 21 state to defunct
+[ 1577.614967] smcinvoke: process_accept_req: Setting pid:13718, server id : 22 state to defunct
+[ 1577.615333] smcinvoke: process_accept_req: Setting pid:13717, server id : 22 state to defunct
+[ 1577.615747] smcinvoke: process_accept_req: Setting pid:13716, server id : 22 state to defunct
+[ 1577.616357] smcinvoke: process_accept_req: Setting pid:13715, server id : 22 state to defunct
+[ 2970.595699] smcinvoke: process_accept_req: Setting pid:4844, server id : 23 state to defunct
+[ 2970.597161] smcinvoke: process_accept_req: Setting pid:4843, server id : 23 state to defunct
+[ 2970.597590] smcinvoke: process_accept_req: Setting pid:4842, server id : 23 state to defunct
+[ 2970.598037] smcinvoke: process_accept_req: Setting pid:4841, server id : 23 state to defunct
+
+=== final state ===
+1
+root          1792     1 2184376   3460 0                   0 S GateServiced
+-rwxr-x--- 1 root root 20304 2009-01-01 08:00 /vendor/bin/GateServiced
+hash of vendor GateServiced (unchanged?) : ecf72a60303aed8ecf7a21f99136572a1949862f7aeb1ee9ffbecbfb09e9fe75  /vendor/bin/GateServiced
+mounts (nothing remounted)               : /dev/block/dm-13 on /system_ext type ext4 (ro,seclabel,relatime,discard)
+/dev/block/dm-15 on /vendor type ext4 (ro,seclabel,relatime,discard)
+/dev/block/dm-16 on /vendor_dlkm type ext4 (ro,seclabel,relatime,discard)
+/dev/block/mmcblk0p51 on /mnt/vendor/persist type ext4 (rw,seclabel,nosuid,nodev,noatime)
+/dev/block/mmcblk0p34 on /vendor/firmware_mnt type vfat (ro,context=u:object_r:firmware_file:s0,relatime,uid=1000,gid=1000,fmask=0337,dmask=0227,codepage=437,iocharset=iso8859-1,shortname=lower,errors=remount-ro)
+```

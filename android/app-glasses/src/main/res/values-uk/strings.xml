@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Rokid Capture</string>
+    <string name="dash_title">Rokid Capture</string>
+    <string name="dash_collapsed">Rokid Capture</string>
+    <string name="dash_hint_collapse">Торкніть, щоб згорнути</string>
+    <string name="dash_row_conn">Підключення</string>
+    <string name="dash_row_root">Root</string>
+    <string name="dash_row_camera">Камера</string>
+    <string name="dash_row_storage">Сховище</string>
+    <string name="dash_row_led">Індикатор</string>
+    <string name="dash_v_none">Не підключено</string>
+    <string name="dash_v_bt">Bluetooth</string>
+    <string name="dash_v_wifi">Wi-Fi</string>
+    <string name="dash_v_bt_wifi">Bluetooth + Wi-Fi</string>
+    <string name="dash_v_root_yes">Отримано</string>
+    <string name="dash_v_root_no">Немає</string>
+    <string name="dash_v_on">Увімк</string>
+    <string name="dash_v_off">Вимк</string>
+    <string name="dash_v_cam_ready">Готово</string>
+    <string name="dash_v_cam_rec">Запис</string>
+    <string name="dash_v_cam_off">Не готово</string>
+    <string name="dash_v_storage">%1$s вільно</string>
+    <string name="dash_v_root_fmt">%1$s · ghost %2$s</string>
+    <string name="dash_v_led_fmt">Білий %1$s</string>
+</resources>

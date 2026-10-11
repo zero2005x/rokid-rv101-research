@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Rokid Capture</string>
+    <string name="dash_title">Rokid Capture</string>
+    <string name="dash_collapsed">Rokid Capture</string>
+    <string name="dash_hint_collapse">แตะเพื่อย่อ</string>
+    <string name="dash_row_conn">การเชื่อมต่อ</string>
+    <string name="dash_row_root">Root</string>
+    <string name="dash_row_camera">กล้อง</string>
+    <string name="dash_row_storage">พื้นที่เก็บข้อมูล</string>
+    <string name="dash_row_led">ไฟแสดงสถานะ</string>
+    <string name="dash_v_none">ไม่ได้เชื่อมต่อ</string>
+    <string name="dash_v_bt">บลูทูธ</string>
+    <string name="dash_v_wifi">Wi-Fi</string>
+    <string name="dash_v_bt_wifi">บลูทูธ + Wi-Fi</string>
+    <string name="dash_v_root_yes">ได้รับแล้ว</string>
+    <string name="dash_v_root_no">ยังไม่ได้</string>
+    <string name="dash_v_on">เปิด</string>
+    <string name="dash_v_off">ปิด</string>
+    <string name="dash_v_cam_ready">พร้อม</string>
+    <string name="dash_v_cam_rec">กำลังบันทึก</string>
+    <string name="dash_v_cam_off">ยังไม่พร้อม</string>
+    <string name="dash_v_storage">ว่าง %1$s</string>
+    <string name="dash_v_root_fmt">%1$s · ghost %2$s</string>
+    <string name="dash_v_led_fmt">ไฟขาว %1$s</string>
+</resources>

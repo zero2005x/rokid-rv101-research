@@ -1,0 +1,27 @@
+=== GHOSTLOCK RUNLOG ===
+tag=w2 version=v960 ts=161110
+--- host time ---
+Sat Aug 22 04:11:10 PM CST 2026
+--- uptime before ---
+--- loadavg before ---
+--- nr_threads (field 4 total) ---
+--- meminfo head ---
+--- getenforce before ---
+--- device binary sha1 ---
+--- local binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /mnt/c/Users/<USER>/Documents/codebase/rokid_root/source_code/ghostlock_rv101/build/ghostlock_rv101
+--- environment ---
+--- command ---
+GL_PURGE_CNT=0\ GL_TAIL_KILLS=16\ GL_DUMMY_KILLS=0\ W2_ATTEMPTS=1\ /data/local/tmp/ghostlock_rv101 
+=== RUN OUTPUT ===
+adb.exe: device '<DEVICE_SERIAL>' not found
+=== RUN DONE (pipe rc=1) ===
+--- host time ---
+Sat Aug 22 04:11:11 PM CST 2026
+--- adb device state ---
+error: device '<DEVICE_SERIAL>' not found
+--- uptime after ---
+adb.exe: device '<DEVICE_SERIAL>' not found
+--- getenforce after ---
+adb.exe: device '<DEVICE_SERIAL>' not found
+--- log file: /mnt/c/Users/<USER>/Documents/codebase/rokid_root/reports/ghostlock_runlogs/run_w2_v960_161110.log ---

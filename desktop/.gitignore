@@ -1,0 +1,13 @@
+# 建置產物
+*.o
+*.res
+*.obj
+zero_light_desktop.exe
+zero_light_desktop32.exe
+
+# 執行期設定（每位使用者不同）
+settings.ini
+
+# Python
+__pycache__/
+*.pyc

@@ -1,0 +1,28 @@
+0xffffffc0087750f0: ret      
+0xffffffc0087750f4: mov      x0, xzr
+0xffffffc0087750f8: autiasp  
+0xffffffc0087750fc: ret      
+0xffffffc008775100: paciasp  
+0xffffffc008775104: ldr      x8, [x0]
+0xffffffc008775108: cbz      x8, #0xffffffc008775120
+0xffffffc00877510c: mov      x0, x8
+0xffffffc008775110: ldr      x8, [x8, #8]
+0xffffffc008775114: cbnz     x8, #0xffffffc00877510c
+0xffffffc008775118: autiasp  
+0xffffffc00877511c: ret      
+0xffffffc008775120: mov      x0, xzr
+0xffffffc008775124: autiasp  
+0xffffffc008775128: ret      
+0xffffffc00877512c: paciasp  
+0xffffffc008775130: ldr      x10, [x0]
+0xffffffc008775134: cmp      x10, x0
+0xffffffc008775138: b.ne     #0xffffffc008775148
+0xffffffc00877513c: mov      x0, xzr
+0xffffffc008775140: autiasp  
+0xffffffc008775144: ret      
+0xffffffc008775148: ldr      x9, [x0, #8]
+0xffffffc00877514c: mov      x8, x0
+0xffffffc008775150: cbz      x9, #0xffffffc008775164
+0xffffffc008775154: mov      x0, x9
+0xffffffc008775158: ldr      x9, [x9, #0x10]
+0xffffffc00877515c: cbnz     x9, #0xffffffc008775154

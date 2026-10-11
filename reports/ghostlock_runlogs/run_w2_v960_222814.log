@@ -1,0 +1,50 @@
+=== GHOSTLOCK RUNLOG ===
+tag=w2 version=v960 ts=222814
+--- host time ---
+Sun Aug 23 10:28:14 PM CST 2026
+--- uptime before ---
+ 22:28:15 up 0 min,  0 users,  load average: 2.60, 0.61, 0.20
+--- loadavg before ---
+2.60 0.61 0.20 1/1247 2826
+--- nr_threads (field 4 total) ---
+running/total=2/1247
+--- meminfo head ---
+MemTotal:        1816600 kB
+MemFree:          212480 kB
+MemAvailable:     873500 kB
+Buffers:            4980 kB
+--- getenforce before ---
+Enforcing
+--- device binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /data/local/tmp/ghostlock_rv101
+--- local binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /mnt/c/Users/<USER>/Documents/codebase/rokid_root/source_code/ghostlock_rv101/build/ghostlock_rv101
+--- environment ---
+--- environment (command-prefix) ---
+  GL_PURGE_CNT=0
+  GL_TAIL_KILLS=16
+  GL_DUMMY_KILLS=0
+  W2_ATTEMPTS=1
+--- command ---
+GL_PURGE_CNT=0\ GL_TAIL_KILLS=16\ GL_DUMMY_KILLS=0\ W2_ATTEMPTS=1\ /data/local/tmp/ghostlock_rv101 
+=== RUN OUTPUT ===
+[+] ghostlock_rv101 v9.60 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=2839 uid=2000 euid=2000 gid=2000
+[*] [T+27267ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd39342ac0c slide=0x0000001389800000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd3934ca100 slide=0x0000001389800000
+[+] KASLR: slide=0x0000001389800000 base=0xffffffd391800000 (2 anchors)
+[*] FOPS install attempt 1/3
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 000000551df00a60 (t=7956, ratio=1591)
+[*]   collision[2]: 000000551df42c70 (t=7977, ratio=1595)
+[*]   collision[3]: 000000551e2ac7c0 (t=9443, ratio=1888)
+[*] kernelsnitch: top times: 9443 7977 7956 7 7 7 7 7
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10191 mm=FOUND
+[*] kernelsnitch: elapsed 1681ms mm=ffffff8028eff0c0
+[*] leaked mm=ffffff8028eff0c0 slab base=ffffff8028efc000

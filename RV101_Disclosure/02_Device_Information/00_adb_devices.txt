@@ -1,0 +1,4 @@
+List of devices attached
+<DEVICE_SERIAL>       device product:glasses model:RG_glasses device:glasses transport_id:1
+adb-<PHONE_SERIAL>-j0B9jt._adb-tls-connect._tcp device product:pissarropro_global model:21091116UG device:pissarropro transport_id:2
+

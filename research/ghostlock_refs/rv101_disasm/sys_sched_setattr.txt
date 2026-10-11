@@ -1,0 +1,13 @@
+0xffffffc00819a484: paciasp  
+0xffffffc00819a488: str      x30, [x18], #8
+0xffffffc00819a48c: stp      x29, x30, [sp, #-0x10]!
+0xffffffc00819a490: mov      x29, sp
+0xffffffc00819a494: ldr      w8, [x0]
+0xffffffc00819a498: ldr      x1, [x0, #8]
+0xffffffc00819a49c: ldr      w2, [x0, #0x10]
+0xffffffc00819a4a0: mov      w0, w8
+0xffffffc00819a4a4: bl       #0xffffffc00819ff80
+0xffffffc00819a4a8: ldp      x29, x30, [sp], #0x10
+0xffffffc00819a4ac: ldr      x30, [x18, #-8]!
+0xffffffc00819a4b0: autiasp  
+0xffffffc00819a4b4: ret      

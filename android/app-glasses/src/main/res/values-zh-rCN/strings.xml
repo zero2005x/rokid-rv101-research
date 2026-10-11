@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Rokid Capture</string>
+    <string name="dash_title">Rokid Capture</string>
+    <string name="dash_collapsed">Rokid Capture</string>
+    <string name="dash_hint_collapse">点按收起</string>
+    <string name="dash_row_conn">连接</string>
+    <string name="dash_row_root">Root</string>
+    <string name="dash_row_camera">相机</string>
+    <string name="dash_row_storage">存储</string>
+    <string name="dash_row_led">指示灯</string>
+    <string name="dash_v_none">未连接</string>
+    <string name="dash_v_bt">蓝牙</string>
+    <string name="dash_v_wifi">WiFi</string>
+    <string name="dash_v_bt_wifi">蓝牙 + WiFi</string>
+    <string name="dash_v_root_yes">已取得</string>
+    <string name="dash_v_root_no">未取得</string>
+    <string name="dash_v_on">开</string>
+    <string name="dash_v_off">关</string>
+    <string name="dash_v_cam_ready">就绪</string>
+    <string name="dash_v_cam_rec">录像中</string>
+    <string name="dash_v_cam_off">未就绪</string>
+    <string name="dash_v_storage">%1$s 可用</string>
+    <string name="dash_v_root_fmt">%1$s · ghost %2$s</string>
+    <string name="dash_v_led_fmt">白灯 %1$s</string>
+</resources>

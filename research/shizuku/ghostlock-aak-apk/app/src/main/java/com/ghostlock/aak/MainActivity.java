@@ -1,0 +1,229 @@
+package com.ghostlock.aak;
+
+import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
+import rikka.shizuku.Shizuku;
+
+public class MainActivity extends Activity {
+
+    private static final int REQ_SHIZUKU = 1001;
+    private static final int REQ_PICK_SO = 1002;
+
+    private TextView logView;
+    private Button btnPermission;
+    private Button btnPick;
+    private Button btnRun;
+    private Button btnCopyLog;
+    private Uri selectedSoUri;
+
+    private final Shizuku.OnRequestPermissionResultListener REQUEST_PERMISSION_RESULT_LISTENER =
+            this::onRequestPermissionsResult;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        logView = findViewById(R.id.logView);
+        btnPermission = findViewById(R.id.btnPermission);
+        btnPick = findViewById(R.id.btnPick);
+        btnRun = findViewById(R.id.btnRun);
+        btnCopyLog = findViewById(R.id.btnCopyLog);
+
+        btnPermission.setOnClickListener(v -> requestShizukuPermission());
+        btnCopyLog.setOnClickListener(v -> copyLog());
+        btnPick.setOnClickListener(v -> pickSoFile());
+        btnRun.setOnClickListener(v -> runExploit());
+
+        Shizuku.addRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
+        refreshState();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Shizuku.removeRequestPermissionResultListener(REQUEST_PERMISSION_RESULT_LISTENER);
+    }
+
+    private void refreshState() {
+        boolean hasPerm = false;
+        if (Shizuku.pingBinder()) {
+            if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                hasPerm = true;
+            }
+        } else {
+            log("Shizuku 服务未运行 - 请先启动 Shizuku");
+        }
+        btnPermission.setEnabled(!hasPerm);
+        btnPick.setEnabled(hasPerm);
+        btnRun.setEnabled(hasPerm && selectedSoUri != null);
+    }
+
+    private void requestShizukuPermission() {
+        if (Shizuku.isPreV11()) {
+            log("Shizuku 版本过旧（低于 v11），不支持");
+            return;
+        }
+        if (!Shizuku.pingBinder()) {
+            log("Shizuku 服务未运行 - 请先启动 Shizuku");
+            refreshState();
+            return;
+        }
+        if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+            log("Shizuku 权限已授权");
+            refreshState();
+            return;
+        }
+        if (Shizuku.shouldShowRequestPermissionRationale()) {
+            log("之前被拒绝，重新请求中");
+        } else {
+            log("正在请求 Shizuku 权限...");
+        }
+        Shizuku.requestPermission(REQ_SHIZUKU);
+    }
+
+    private void onRequestPermissionsResult(int requestCode, int grantResult) {
+        if (grantResult == PackageManager.PERMISSION_GRANTED) {
+            log("Shizuku 权限已授权 (uid=" + Shizuku.getUid() + ")");
+        } else {
+            log("Shizuku 权限被拒绝");
+        }
+        refreshState();
+    }
+
+    private void pickSoFile() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        startActivityForResult(intent, REQ_PICK_SO);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_PICK_SO && resultCode == RESULT_OK && data != null) {
+            selectedSoUri = data.getData();
+            log("已选择: " + selectedSoUri.getPath());
+            refreshState();
+        }
+    }
+
+    private void log(String msg) {
+        logView.append(msg + "\n");
+    }
+
+    private void copyLog() {
+        String text = logView.getText().toString();
+        if (text.isEmpty()) {
+            Toast.makeText(this, "日志为空", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        clipboard.setPrimaryClip(ClipData.newPlainText("GhostLock Log", text));
+        Toast.makeText(this, "日志已复制到剪贴板", Toast.LENGTH_SHORT).show();
+    }
+
+    private void runExploit() {
+        if (selectedSoUri == null) {
+            log("未选择 .so 文件");
+            return;
+        }
+        if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
+            log("Shizuku 权限未授权");
+            return;
+        }
+        try {
+            byte[] soBytes = readSelectedFile();
+            if (soBytes == null) {
+                log("读取文件失败");
+                return;
+            }
+            log("已读取: " + soBytes.length + " 字节");
+            String dst = "/data/local/tmp/preload.so";
+            // 先检查文件状态,再执行 LD_PRELOAD
+            String cmd = "ls -l " + dst + " && md5sum " + dst
+                    + " && echo '--- LD_PRELOAD ---' && LD_PRELOAD=" + dst
+                    + " /system/bin/sh -c 'echo exploit_triggered'";
+            log("正在运行: " + cmd);
+            runExploitInService(dst, soBytes, cmd);
+        } catch (Exception e) {
+            log("错误: " + e.getMessage());
+        }
+    }
+
+    private byte[] readSelectedFile() throws Exception {
+        InputStream is = getContentResolver().openInputStream(selectedSoUri);
+        if (is == null) return null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = is.read(buf)) != -1) bos.write(buf, 0, n);
+        is.close();
+        return bos.toByteArray();
+    }
+
+    private void runExploitInService(final String dst, final byte[] soBytes, final String cmd) {
+        ComponentName component = new ComponentName(getPackageName(), CommandService.class.getName());
+        Shizuku.UserServiceArgs args = new Shizuku.UserServiceArgs(component)
+                .daemon(false)
+                .processNameSuffix("ghostlock")
+                .version(1);
+        Shizuku.bindUserService(args, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder binder) {
+                log("UserService 已连接");
+                final ServiceConnection self = this;
+                new Thread(() -> {
+                    try {
+                        ICommandService service = ICommandService.Stub.asInterface(binder);
+                        boolean ok = service.writeFile(dst, soBytes);
+                        runOnUiThread(() -> log("写入 " + dst + (ok ? " 成功" : " 失败")));
+                        if (ok) {
+                            runOnUiThread(() -> log("正在运行 exploit（设备可能重启，请等待）..."));
+                            ICommandCallback callback = new ICommandCallback.Stub() {
+                                @Override
+                                public void onLine(String line) {
+                                    runOnUiThread(() -> log(line));
+                                }
+
+                                @Override
+                                public void onExit(int exitCode) {
+                                    runOnUiThread(() -> log("exit=" + exitCode));
+                                    runOnUiThread(() -> {
+                                        try {
+                                            Shizuku.unbindUserService(args, self, true);
+                                        } catch (Exception ignored) { }
+                                    });
+                                }
+                            };
+                            service.runCommandStream(cmd, callback);
+                        }
+                    } catch (Exception e) {
+                        runOnUiThread(() -> log("服务错误: " + e.getMessage()));
+                    }
+                }).start();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                log("UserService 已断开");
+            }
+        });
+    }
+
+}

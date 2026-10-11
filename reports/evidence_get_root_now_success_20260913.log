@@ -1,0 +1,33 @@
+[2026-09-13 09:14:36] ===== get_root_now 開始（serial=<DEVICE_SERIAL>）=====
+[2026-09-13 09:14:36] ===== BOOT ROUND 1/6 =====
+[2026-09-13 09:15:29] [boot] 裝置已上線，uptime=161s
+[2026-09-13 09:15:32] [helper] 不存在，執行 root_bridge.sh 重建並啟動
+[1/4] 檢查 ghostlock_rv101
+  [+] ghostlock_rv101 就緒
+[2/4] 建立 bridge 目錄並放寬權限（App 可讀寫，但仍碰不到 exploit）
+[2.5/4] 推送 root daemon（若已建置）
+  [+] root_daemon 已推送
+[3/4] 寫入 helper 常駐迴圈
+[4/4] 啟動 helper（背景常駐，先清舊實例）
+ 3358 sh /data/local/tmp/ghostlock_bridge_helper_desktop.sh
+ 9438 sh /data/local/tmp/ghostlock_bridge_helper.sh
+15416 sh -c ps -A -o PID,ARGS 2>/dev/null | grep ghostlock_bridge_helper
+15420 grep ghostlock_bridge_helper
+
+完成。眼鏡 App 會自動偵測 helper 心跳（ghostlock_bridge/helper.alive）並使用 bridge 引擎，無需重建 APK。
+helper log: /data/local/tmp/ghostlock_bridge_helper.log
+ 9438 sh /data/local/tmp/ghostlock_bridge_helper.sh
+[2026-09-13 09:15:39] --- trigger 1/2 (boot 1) ---
+[2026-09-13 09:15:40] [trigger] last.cmd 已寫入，等待 exploit...
+[2026-09-13 09:17:36] [wait] last.out = OK（payload 已以 root 執行完畢）
+[2026-09-13 09:17:36] [verify] last.done 內容：
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+__GHOSTLOCK_PAYLOAD_DONE__
+[2026-09-13 09:17:36] [verify] 經 root_daemon socket 執行 id/getenforce：
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+drwxrwxrwx 2 root root 3452 2026-09-09 21:32 /data/root_proof
+root         27328 root_daemon
+shell        27384 nc -U /data/local/tmp/root_daemon.sock
+root         27386 root_daemon
+[2026-09-13 09:17:36] ===== ROOT 已達成並驗證（boot 1, trigger 1）=====

@@ -1,0 +1,334 @@
+<resources>
+    <string name="app_name">Rokid Remote</string>
+    <string name="tab_remote">التحكم</string>
+    <string name="tab_albums">الألبومات</string>
+    <string name="tab_local">محلي</string>
+    <string name="conn_connected">متصل</string>
+    <string name="conn_disconnected">غير متصل</string>
+    <string name="conn_connecting">جارٍ الاتصال…</string>
+    <string name="btn_connect">اتصال</string>
+    <string name="transport_bt">النقل: بلوتوث</string>
+    <string name="transport_wifi">النقل: واي فاي %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">النقل: جارٍ الاتصال بالواي فاي…</string>
+    <string name="btn_wifi_on">تفعيل نقل الواي فاي</string>
+    <string name="btn_wifi_off">إيقاف نقل الواي فاي</string>
+    <string name="wifi_failed_manual">تعذّر الانضمام تلقائيًا إلى شبكة “%1$s” (كلمة المرور %2$s). انضم يدويًا من إعدادات الواي فاي ثم أعد المحاولة.</string>
+    <string name="wifi_ap_not_ready">نقطة اتصال النظارة غير جاهزة: احصل على صلاحية root أولًا (أو أعد المحاولة لاحقًا).</string>
+    <string name="btn_disconnect">قطع الاتصال</string>
+    <string name="conn_card_title">اتصال النظارة</string>
+    <string name="conn_no_device">لم يتم اختيار نظارة</string>
+    <string name="conn_pick_title">اختر النظارة</string>
+    <string name="sec_capture">التقاط</string>
+    <string name="btn_photo">صورة</string>
+    <string name="btn_video_start">بدء تسجيل الفيديو</string>
+    <string name="btn_video_stop">إيقاف تسجيل الفيديو</string>
+    <string name="sec_led">مؤشر الخصوصية</string>
+    <string name="led_switch_label">المؤشر (أبيض)</string>
+    <string name="chip_white">أبيض</string>
+    <string name="chip_green">أخضر</string>
+    <string name="chip_blue">أزرق</string>
+    <string name="chip_red">أحمر</string>
+    <string name="sec_advanced">متقدم (root/ghostlock)</string>
+    <string name="btn_advanced_show">توسيع</string>
+    <string name="btn_advanced_hide">طي</string>
+    <string name="ghost_switch_label">وضع التخفي ghostlock (إطفاء ضوء الخصوصية أثناء التصوير)</string>
+    <string name="root_auto_label">الحصول على root تلقائيًا عند التشغيل (AUTO)</string>
+    <string name="btn_acquire_root">الحصول على root الآن</string>
+    <string name="btn_device_info">معلومات الجهاز</string>
+    <string name="sec_display">شاشة النظارة</string>
+    <string name="chip_disp_conn">الاتصال</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">الكاميرا</string>
+    <string name="chip_disp_storage">التخزين</string>
+    <string name="chip_disp_led">المؤشر</string>
+    <string name="btn_disp_all">إظهار الكل</string>
+    <string name="btn_disp_none">إخفاء الكل</string>
+    <string name="sec_log">سجل النشاط</string>
+    <string name="btn_clear_log">مسح</string>
+    <string name="toolbar_albums">الألبومات</string>
+    <string name="content_desc_add">إضافة ألبوم</string>
+    <string name="content_desc_refresh">تحديث</string>
+    <string name="empty_albums">لا توجد ألبومات بعد\nاضغط ＋ أسفل اليمين لإنشاء أول ألبوم</string>
+    <string name="albums_not_connected">غير متصل بالنظارة\nاتصل عبر البلوتوث من تبويب “التحكم” أولًا</string>
+    <string name="albums_load_failed">فشل تحميل الألبومات</string>
+    <string name="action_retry">إعادة المحاولة</string>
+    <string name="album_item_count">%1$d عناصر</string>
+    <string name="menu_view">عرض</string>
+    <string name="menu_rename">إعادة تسمية</string>
+    <string name="menu_delete">حذف</string>
+    <string name="dialog_new_album">ألبوم جديد</string>
+    <string name="dialog_rename_album">إعادة تسمية الألبوم</string>
+    <string name="hint_album_name">اسم الألبوم</string>
+    <string name="action_create">إنشاء</string>
+    <string name="action_ok">موافق</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_delete">حذف</string>
+    <string name="confirm_delete_album">حذف الألبوم “%1$s” وكل محتوياته؟\n(تُحذف النسخ الأصلية من النظارة فقط، وتبقى النسخ المحلية.)</string>
+    <string name="msg_album_created">تم إنشاء الألبوم</string>
+    <string name="msg_album_renamed">تمت إعادة تسمية الألبوم</string>
+    <string name="msg_album_deleted">تم حذف الألبوم</string>
+    <string name="sel_count">تم اختيار %1$d عناصر</string>
+    <string name="action_select_all">تحديد الكل</string>
+    <string name="action_download">تنزيل</string>
+    <string name="empty_media">هذا الألبوم لا يحتوي على وسائط</string>
+    <string name="media_load_failed">فشل تحميل الوسائط</string>
+    <string name="confirm_delete_media">حذف “%1$s” من النظارة؟\n(يُحذف الأصل فقط، وتبقى نسختك المحلية.)</string>
+    <string name="batch_deleting">جارٍ الحذف %1$d/%2$d</string>
+    <string name="batch_downloading">جارٍ التنزيل %1$d/%2$d</string>
+    <string name="msg_deleted">تم الحذف</string>
+    <string name="viewer_delete_remote">حذف الأصل من النظارة</string>
+    <string name="viewer_downloading">جارٍ تنزيل الأصل (نقل بلوتوث، يُرجى الانتظار)…</string>
+    <string name="viewer_play">تشغيل الفيديو</string>
+    <string name="toolbar_local">محلي</string>
+    <string name="empty_local">لم يتم تنزيل أي شيء بعد\nافتح ألبومًا في “الألبومات” لتنزيل الصور/الفيديو</string>
+    <string name="local_dir_prefix">تم التنزيل محليًا</string>
+    <string name="album_unnamed">ألبوم بدون اسم</string>
+    <string name="log_dialog_title">السجل (كامل)</string>
+    <string name="dialog_close">إغلاق</string>
+    <string name="log_longpress_hint">اضغط مطولًا لعرض السجل كاملًا</string>
+    <string name="silent_switch_label">تصوير صامت (كتم صوت الغالق/التسجيل)</string>
+    <string name="btn_language">اللغة: %1$s</string>
+    <string name="lang_dialog_title">اختر اللغة</string>
+    <string name="lang_system">حسب النظام</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">تم قطع الاتصال</string>
+    <string name="log_wifi_off">تم تعطيل النقل عبر واي فاي، وتستخدم الوسائط بلوتوث بدلًا منه</string>
+    <string name="log_wifi_enabling">يجري تمكين النقل عبر واي فاي… (عند أول استخدام، أكِّد الانضمام إلى "%1$s" في نافذة النظام)</string>
+    <string name="log_wifi_enabled">✓ تم تمكين النقل عبر واي فاي (%1$s:%2$d)</string>
+    <string name="log_wifi_failed">✗ النقل عبر واي فاي: %1$s</string>
+    <string name="err_unknown">خطأ غير معروف</string>
+    <string name="toast_not_connected">النظارة غير متصلة</string>
+    <string name="log_capturing">يجري التقاط صورة…</string>
+    <string name="log_photo_ok">✓ تم التقاط الصورة: %1$s</string>
+    <string name="log_photo_fail">✗ فشل التقاط الصورة: %1$s</string>
+    <string name="log_recording">● يجري التسجيل</string>
+    <string name="log_record_fail">✗ فشل التسجيل: %1$s</string>
+    <string name="log_video_saved">✓ تم حفظ الفيديو: %1$s</string>
+    <string name="log_stop_fail">✗ فشل الإيقاف: %1$s</string>
+    <string name="log_ghost_fail">فشل ضبط ghostlock: %1$s</string>
+    <string name="log_root_mode_fail">فشل ضبط وضع root: %1$s</string>
+    <string name="silent_applied">✓ تم تشغيل الالتقاط الصامت (أصوات الغالق والتسجيل مكتومة)</string>
+    <string name="silent_pending">⚠ تم ضبط الوضع الصامت لكنه لم يُطبَّق بعد (يتطلب root)</string>
+    <string name="silent_disabled">✓ تم إيقاف الالتقاط الصامت (أُعيدت الأصوات)</string>
+    <string name="log_silent_fail">✗ فشل الوضع الصامت: %1$s</string>
+    <string name="log_led_enabling">يجري تشغيل مؤشر الخصوصية…</string>
+    <string name="log_led_disabling">يجري إيقاف مؤشر الخصوصية…</string>
+    <string name="log_led_on_ok">✓ المؤشر: مضيء</string>
+    <string name="log_led_off_ok">✓ المؤشر: مطفأ</string>
+    <string name="log_led_fail">✗ فشل ضبط المؤشر: %1$s</string>
+    <string name="log_root_acquiring">يجري الحصول على root… (قد يستغرق بضع دقائق)</string>
+    <string name="log_root_ready">✓ root جاهز</string>
+    <string name="log_root_failed">✗ فشل الحصول على root</string>
+    <string name="log_root_fail">✗ فشل root: %1$s</string>
+    <string name="log_querying">يجري الاستعلام عن معلومات الجهاز…</string>
+    <string name="log_query_fail">✗ فشل الاستعلام: %1$s</string>
+    <string name="log_progress">[التقدم] %1$s</string>
+    <string name="log_display_ok">✓ تم تحديث شاشة النظارة</string>
+    <string name="log_display_fail">✗ فشل ضبط الشاشة: %1$s</string>
+    <string name="led_name">مؤشر %1$s</string>
+    <string name="log_led_switch">%1$s %2$s…</string>
+    <string name="log_led_done">✓ %1$s: %2$s</string>
+    <string name="log_led_switch_fail">✗ فشل %1$s: %2$s</string>
+    <string name="state_on">مضيء</string>
+    <string name="state_off">مطفأ</string>
+    <string name="state_enabled">مفعّل</string>
+    <string name="state_disabled">معطّل</string>
+    <string name="status_summary">الألبومات %1$d · الوسائط %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ تم تغيير اللغة: %1$s</string>
+    <string name="toast_bt_disabled">يُرجى تشغيل بلوتوث أولًا</string>
+    <string name="toast_no_paired_device">لا يوجد جهاز بلوتوث مقترن. اقترن النظارة أولًا من إعدادات بلوتوث في النظام.</string>
+    <string name="toast_connect_failed">فشل الاتصال: %1$s</string>
+    <string name="toast_no_local_media">لا توجد ملفات محلية في هذا الألبوم</string>
+    <string name="confirm_delete_local_files">حذف %1$d من الملفات المحلية؟ (لا تتأثر النسخ الأصلية في النظارة)</string>
+    <string name="batch_downloading_file">يجري التنزيل %1$d/%2$d: %3$s</string>
+    <string name="toast_delete_done">اكتمل الحذف: نجح %1$d</string>
+    <string name="toast_delete_done_fail">اكتمل الحذف: نجح %1$d وفشل %2$d</string>
+    <string name="toast_download_done">اكتمل التنزيل: نجح %1$d</string>
+    <string name="toast_download_done_fail">اكتمل التنزيل: نجح %1$d وفشل %2$d</string>
+    <string name="dialog_download_note">\nسيتم تنزيل الملفات الأصلية من النظارة (النقل عبر بلوتوث بطيء).</string>
+    <string name="err_local_file_missing">الملف المحلي غير موجود</string>
+    <string name="toast_delete_fail">فشل الحذف: %1$s</string>
+    <string name="err_download_fail">فشل التنزيل: %1$s</string>
+    <string name="toast_opening">يجري فتح %1$s…</string>
+    <string name="toast_create_fail">فشل الإنشاء: %1$s</string>
+    <string name="toast_rename_fail">فشل إعادة التسمية: %1$s</string>
+    <string name="local_album_delete">حذف الألبوم المحلي</string>
+    <string name="local_album_delete_msg">حذف "%1$s" (%2$s) من الهاتف؟\nلا تتأثر النسخ الأصلية في النظارة.</string>
+    <string name="toast_local_album_deleted">تم حذف الألبوم المحلي</string>
+    <string name="media_type_video">فيديو</string>
+    <string name="media_type_photo">صورة</string>
+    <string name="wifi_ap_timeout">انتهت مهلة نقطة اتصال واي فاي في النظارة، يُرجى المحاولة لاحقًا</string>
+    <string name="wifi_tcp_failed">فشل اتصال TCP: %1$s</string>
+    <string name="sec_ring">التحكم بالخاتم</string>
+    <string name="ring_switch_label">تمكين التحكم بإيماءات الخاتم</string>
+    <string name="ring_hint">نقرة = صورة · نقرتان = فيديو · ضغط مطوّل = صامت · تمرير = تبديل العرض</string>
+    <string name="ring_status_idle">لا توجد إيماءات بعد</string>
+    <string name="ring_status_fmt">الإيماءات: %1$d · الأخيرة: %2$s</string>
+    <string name="ring_learn_btn">تعلّم الإيماءة</string>
+    <string name="ring_learn_hint">اضغط زرًا على الخاتم…</string>
+    <string name="ring_learn_result">تم استلام رمز المفتاح %1$s</string>
+    <string name="ring_map_title">اختر إجراءً لهذا الرمز</string>
+    <string name="ring_action_photo">صورة</string>
+    <string name="ring_action_video">بدء/إيقاف الفيديو</string>
+    <string name="ring_action_silent">تبديل الالتقاط الصامت</string>
+    <string name="ring_action_display_next">معلومات العرض (التالي)</string>
+    <string name="ring_action_display_prev">معلومات العرض (السابق)</string>
+    <string name="ring_action_none">بلا إجراء</string>
+    <string name="ring_map_saved">تم ربط %1$s → %2$s</string>
+    <string name="ring_map_cleared">تم مسح ربط المفاتيح المخصص</string>
+    <string name="ring_pair_btn">إقران الخاتم</string>
+    <string name="ring_glasses_switch">التحكم بالخاتم (النظارة)</string>
+    <string name="ring_glasses_status">النظارة: %1$s</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="log_expand">تكبير</string>
+    <string name="sec_connection">الاتصال</string>
+    <string name="sec_capture_root">التقاط والأذونات</string>
+    <string name="sec_led_settings">مؤشر الخصوصية</string>
+    <string name="sec_language">اللغة</string>
+    <string name="wifi_switch_hint">تُفضّل الوسائط والتحكم استخدام Wi-Fi، ويُستخدم بلوتوث كخيار احتياطي فقط</string>
+    <string name="led_colors_hint">اختر الألوان المراد تشغيلها</string>
+    <string name="ring_a_label">إيماءات الهاتف (الخاتم مقترن بالهاتف)</string>
+    <string name="ring_a_hint">يجب أن يكون التطبيق في المقدمة (يدعم نقرات الفأرة ومفاتيح الوسائط)</string>
+    <string name="ring_b_label">إيماءات النظارة (الخاتم/لوحة اللمس مقترن بالنظارة)</string>
+    <string name="ring_b_hint">النظارة تقرأ evdev بصلاحية root؛ تعمل في الخلفية</string>
+    <string name="state_running">قيد التشغيل</string>
+    <string name="state_stopped">متوقف</string>
+    <string name="ring_phone_prefix">الهاتف: %1$s</string>
+    <string name="log_app_started">التطبيق جاهز</string>
+    <string name="action_search">بحث في الألبومات</string>
+    <string name="action_sort">ترتيب</string>
+    <string name="sort_name">الاسم</string>
+    <string name="sort_count">عدد العناصر</string>
+    <string name="sort_newest">الأحدث</string>
+    <string name="local_summary">%1$d ألبومات · %2$d عنصرًا · %3$s مستخدم</string>
+    <string name="selected_albums">تم تحديد %1$d</string>
+    <string name="toast_local_albums_deleted">تم حذف %1$d من الألبومات المحلية</string>
+    <string name="confirm_delete_local_albums">حذف %1$d من الألبومات من الهاتف؟\n(لا تتأثر النسخ الأصلية في النظارة)</string>
+    <string name="ring_state_enabled">مفعّل</string>
+    <string name="ring_state_disabled">معطّل</string>
+    <string name="ring_learn_waiting">في انتظار ضغط مفتاح…</string>
+    <string name="ring_map_set">تم ربط %1$s → %2$s</string>
+    <string name="ring_map_cleared_short">تم مسح ربط المفاتيح المخصص</string>
+    <string name="ring_no_action">%1$s → (لم يتم تعيين إجراء)</string>
+    <string name="ring_err_prefix">خطأ: %1$s</string>
+    <string name="ring_photo_ok">تم التقاط الصورة: %1$s</string>
+    <string name="ring_photo_fail">فشل التقاط الصورة: %1$s</string>
+    <string name="ring_video_start">بدأ التسجيل</string>
+    <string name="ring_video_fail">فشل التسجيل: %1$s</string>
+    <string name="ring_video_saved">تم حفظ الفيديو: %1$s</string>
+    <string name="ring_stop_fail">فشل الإيقاف: %1$s</string>
+    <string name="ring_status_read_fail">فشل قراءة الحالة</string>
+    <string name="ring_silent_on">الالتقاط الصامت مفعّل</string>
+    <string name="ring_silent_on_pending">الالتقاط الصامت مفعّل (بانتظار root)</string>
+    <string name="ring_silent_off">الالتقاط الصامت متوقف</string>
+    <string name="ring_silent_fail">فشل الوضع الصامت: %1$s</string>
+    <string name="ring_display_switched">تم تبديل الشاشة إلى %1$s</string>
+    <string name="ring_display_fail">فشل ضبط الشاشة: %1$s</string>
+    <string name="ring_on">مضيء</string>
+    <string name="ring_off">مطفأ</string>
+    <string name="sec_appearance">المظهر</string>
+    <string name="light_mode_label">الوضع الفاتح</string>
+    <string name="light_mode_hint">إيقاف = مظهر داكن؛ تشغيل = مظهر فاتح</string>
+    <string name="ring_camera_not_ready">الكاميرا غير جاهزة (افتح التطبيق على النظارة)</string>
+    <string name="ring_status_no_device">لم يتم العثور على جهاز إدخال (%1$s)</string>
+    <string name="ring_status_start_failed">فشل تشغيل getevent</string>
+    <string name="ring_status_stopped">متوقف</string>
+    <string name="ring_display_none">إخفاء الكل</string>
+    <string name="ghost_skip_lpe">تم اكتشاف root daemon دائم؛ تخطي LPE</string>
+    <string name="ghost_prepare_payload">جارٍ تجهيز payload</string>
+    <string name="ghost_done">تم</string>
+    <string name="ghost_failed">خطأ: %1$s</string>
+    <string name="ghost_bridge_dir_missing">دليل bridge غير موجود أو غير قابل للكتابة: %1$s (شغّل deploy/root_bridge.sh أولاً)</string>
+    <string name="ghost_bridge_sent">تم إرسال الأمر؛ في انتظار تشغيل helper لـ exploit (قد يستغرق دقائق)</string>
+    <string name="ghost_bridge_timeout">انتهت مهلة bridge (هل helper قيد التشغيل؟ انظر %1$s)</string>
+    <string name="ghost_bridge_report">تقرير bridge: %1$s</string>
+    <string name="ghost_attempt">محاولة exploit رقم %1$s</string>
+    <string name="ghost_helper_started">بدأ helper المعالجة</string>
+    <string name="ghost_ready_seen">وصل exploit إلى علامة ready</string>
+    <string name="ghost_payload_replaced">استبدال payload</string>
+    <string name="ghost_wait_payload_root">في انتظار انتهاء payload بصلاحيات root</string>
+    <string name="ghost_binary_missing">binary غير موجود أو غير قابل للتنفيذ: %1$s</string>
+    <string name="ghost_exploit_started">بدء exploit</string>
+    <string name="ghost_exploit_start_failed">تعذّر بدء exploit (انظر %1$s)</string>
+    <string name="ghost_wait_ready">في انتظار علامة ready</string>
+    <string name="ghost_ready_timeout">انتهت مهلة علامة ready: %1$s</string>
+    <string name="ghost_ready_timeout_retry">انتهت مهلة علامة ready</string>
+    <string name="ghost_payload_write_failed">تعذّرت كتابة %1$s (هل يملك التطبيق إذن الكتابة في /data/local/tmp؟)</string>
+    <string name="ghost_wait_payload">في انتظار انتهاء payload</string>
+    <string name="ghost_payload_timeout">انتهت مهلة علامة done. payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit: %1$s</string>
+    <string name="ghost_shizuku_not_running">Shizuku server لا يعمل (يلزم مرة لكل boot: deploy/start_shizuku.sh)</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku غير مصرّح (تم إرسال طلب الإذن)</string>
+    <string name="ghost_shizuku_bind_failed">فشل ربط Shizuku UserService</string>
+    <string name="ghost_shizuku_root_run_shell">Shizuku server يعمل بصلاحيات root؛ نستخدم run_shell لخفض الصلاحيات قبل exploit</string>
+    <string name="ghost_shizuku_no_run_shell">Shizuku server يعمل بصلاحيات root ولا يوجد run_shell لخفض الصلاحيات؛ شغّل server عبر adb/shell بدلاً من ذلك</string>
+    <string name="ghost_shizuku_bad_identity">هوية Shizuku غير متوقعة: %1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku غير متاح (%1$s) → الرجوع إلى bridge helper</string>
+    <string name="ghost_attempt_shizuku">محاولة exploit رقم %1$s (هوية Shizuku/shell)</string>
+    <string name="ghost_kernel_panic">kernel panic: أُعيد تشغيل الجهاز (فشل متوقع، يلزم إعادة المحاولة)</string>
+    <string name="ghost_process_died">انتهت عملية exploit مبكراً (قد تكون قُتلت بسبب OOM)</string>
+    <string name="ghost_process_died_retry">انتهت عملية exploit مبكراً (قد تكون قُتلت بسبب OOM)؛ إعادة المحاولة</string>
+    <string name="ghost_retry_after">%1$s؛ إعادة المحاولة</string>
+    <string name="ghost_attempts_exhausted">فشلت كل محاولات exploit (انظر %1$s)</string>
+    <string name="ghost_fallback_failed">فشل fallback: %1$s</string>
+    <string name="root_state_ok">root: متاح</string>
+    <string name="root_state_rearming">root: فُقد، إعادة التهيئة…</string>
+    <string name="root_state_rearmed">root: أُعيدت تهيئته تلقائيًا</string>
+    <string name="root_state_lost">root: فُقد، يلزم إعادة التهيئة</string>
+    <string name="root_state_cooldown">root: فُقد (تهدئة، ستُعاد المحاولة لاحقًا)</string>
+    <string name="root_state_unknown">root: غير معروف</string>
+    <string name="root_hint_run_scripts">شغّل: %1$s</string>
+    <string name="root_hint_engine">يمكن التشغيل عبر %1$s</string>
+    <string name="root_metrics_fmt">آخر %1$d ث (%2$s) · نجاح %3$d/%4$d</string>
+    <string name="root_keeper_fmt">%1$d فحوص · %2$d إعادة تهيئة تلقائية</string>
+    <string name="sec_root_status">الحالة root</string>
+    <string name="ghost_engine_selected">المحرك المستخدم: %1$s</string>
+    <string name="root_help_body">بدون root: التقاط الصامت، وكتم مؤشر الخصوصية، ونقل الوسائط عبر واي فاي، والتحكم بالخاتم على النظارة لن تعمل.\nجهّز المشغّل عبر adb أولاً: deploy/root_bridge.sh (أو deploy/start_shizuku.sh)</string>
+    <string name="ring_err_busy_recording">التسجيل جارٍ — لا يمكن التقاط صورة</string>
+    <string name="ring_err_busy">طلبات كثيرة جدًا — يُرجى الانتظار</string>
+    <string name="ring_err_record_timeout">انتهت مهلة بدء التسجيل — تم الرجوع إلى وضع التصوير</string>
+    <string name="ring_pick_title">اختر جهاز الخاتم</string>
+    <string name="ring_pick_scan">البحث عن جهاز جديد…</string>
+    <string name="ring_pick_scanning">جارٍ البحث…</string>
+    <string name="ring_pick_empty">لم يتم العثور على جهاز الخاتم (اقترنه أولًا من إعدادات الهاتف، أو اقترب وأعد البحث)</string>
+    <string name="ring_pick_selected">تم الاختيار: %1$s</string>
+    <string name="ring_pick_bonded">✓ تم الاقتران %1$s</string>
+    <string name="ring_pick_fail">✗ فشل الاقتران: %1$s</string>
+</resources>

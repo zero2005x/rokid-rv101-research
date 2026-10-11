@@ -1,0 +1,103 @@
+=== LED TEST START (Mon Aug 24 19:59:21 CST 2026) ===
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+
+########## STEP 1: CONFIRM CURRENT LED STATE ##########
+--- /sys/class/leds/white/ ---
+total 0
+drwxr-xr-x 3 root   root      0 1970-06-05 11:12 .
+drwxr-xr-x 6 root   root      0 1970-06-05 11:12 ..
+-rw-r----- 1 system system 4096 2026-08-24 19:57 breathe
+-rw-r----- 1 system system 4096 2026-08-24 19:57 brightness
+lrwxrwxrwx 1 root   root      0 2026-08-24 19:59 device -> ../../../1-0030
+-rw-r----- 1 system system 4096 2026-08-24 19:57 led_current
+-r--r--r-- 1 root   root   4096 2026-08-24 19:59 max_brightness
+-r--r--r-- 1 root   root   4096 2026-08-24 19:59 max_current
+drwxr-xr-x 2 root   root      0 2026-08-24 19:59 power
+lrwxrwxrwx 1 root   root      0 2026-08-24 19:59 subsystem -> ../../../../../../../../class/leds
+-rw-r----- 1 system system    0 1970-06-05 11:12 trigger
+-rw-r--r-- 1 root   root   4096 2026-08-24 19:59 uevent
+--- max_brightness ---
+255
+--- max_current ---
+255
+--- brightness ---
+0
+--- led_current ---
+2
+--- vendor.rkd.camera.led.enable ---
+1
+--- vendor.rkd.camera.session_open ---
+
+--- dumpsys lights_ctrl mCurrentEvent ---
+  mCurrentEvent=null
+  mIsPowerOff=false
+  mIsBooted=true
+  DBG=false
+  Factory: com.rokid.server.light.EventFactoryV4@d8671eb
+  Event size =0
+--- service list (light) ---
+9	android.hardware.light.ILights/default: [android.hardware.light.ILights]
+90	lights: [android.hardware.lights.ILightsManager]
+91	lights_ctrl: [com.rokid.light.ILightsCtrl]
+ORIG_BRIGHT=[0] ORIG_CUR=[2] ORIG_SESSION=[] ORIG_LEDEN=[1]
+
+########## STEP 2: PATH A - sysfs direct write (DAC override) ##########
+--- write 0 to brightness ---
+write_rc=0
+--- write 0 to led_current ---
+write_rc=0
+--- brightness after ---
+0
+--- led_current after ---
+0
+
+########## STEP 3: PATH B - binder cancellation (IPC interception) ##########
+--- service call lights_ctrl 9 i32 2 i32 2014 ---
+Result: Parcel(00000000    '....')
+--- dumpsys lights_ctrl mCurrentEvent after cancel ---
+  mCurrentEvent=null
+  mIsPowerOff=false
+  mIsBooted=true
+  DBG=false
+  Factory: com.rokid.server.light.EventFactoryV4@d8671eb
+  Event size =0
+
+########## STEP 4: PATH C - property spoof (state forgery) ##########
+--- setprop session_open 0 ---
+rc=0
+--- getprop session_open after spoof ---
+0
+--- dmesg tail camera ---
+[  140.751942] init: processing action (vendor.rkd.camera.session_open=0) from (/vendor/etc/init/hw/init.rokid.rc:21)
+[  140.752619] camera closed!
+
+########## STEP 5: RESTORE & VERIFY ##########
+--- write 255 brightness ---
+rc=0
+--- write 255 led_current ---
+rc=0
+--- setprop session_open 1 ---
+rc=0
+--- service call lights_ctrl 8 i32 2 i32 2014 ---
+Result: Parcel(00000000    '....')
+--- final brightness ---
+255
+--- final led_current ---
+2
+--- dumpsys lights_ctrl mCurrentEvent final ---
+  mCurrentEvent=Event{mType=EVENT_TYPE_WARN(2), mId=EVENT_WARN_ID_CAMERA_OPEN(2014), mCallPid='20017', mTime='141014', mLightId=8, mState=TURN_ON, mPriority=8000, isRgb=false, mDuration=0, mColor=0x000000, mCurrent=0x020202}
+  mIsPowerOff=false
+  mIsBooted=true
+  DBG=false
+  Factory: com.rokid.server.light.EventFactoryV4@d8671eb
+  Event size =1
+
+########## SAFETY RESTORE TO EXACT ORIGINALS ##########
+--- after safety restore ---
+brightness=0
+led_current=2
+session_open=
+led.enable=1
+
+=== LED_TEST_DONE ===

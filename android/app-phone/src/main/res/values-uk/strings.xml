@@ -1,0 +1,334 @@
+<resources>
+    <string name="app_name">Rokid Remote</string>
+    <string name="tab_remote">Пульт</string>
+    <string name="tab_albums">Альбоми</string>
+    <string name="tab_local">Локально</string>
+    <string name="conn_connected">Підключено</string>
+    <string name="conn_disconnected">Не підключено</string>
+    <string name="conn_connecting">Підключення…</string>
+    <string name="btn_connect">Підключити</string>
+    <string name="transport_bt">Передача: Bluetooth</string>
+    <string name="transport_wifi">Передача: Wi-Fi %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">Передача: підключення до Wi-Fi…</string>
+    <string name="btn_wifi_on">Увімкнути передачу Wi-Fi</string>
+    <string name="btn_wifi_off">Вимкнути передачу Wi-Fi</string>
+    <string name="wifi_failed_manual">Не вдалося автоматично підключитися до Wi-Fi «%1$s» (пароль %2$s). Підключіться вручну в налаштуваннях Wi-Fi і повторіть.</string>
+    <string name="wifi_ap_not_ready">Точка доступу окулярів не готова: спочатку отримайте root (або повторіть пізніше).</string>
+    <string name="btn_disconnect">Відключити</string>
+    <string name="conn_card_title">Підключення окулярів</string>
+    <string name="conn_no_device">Окуляри не вибрано</string>
+    <string name="conn_pick_title">Вибір окулярів</string>
+    <string name="sec_capture">Зйомка</string>
+    <string name="btn_photo">Фото</string>
+    <string name="btn_video_start">Почати відео</string>
+    <string name="btn_video_stop">Зупинити відео</string>
+    <string name="sec_led">Індикатор приватності</string>
+    <string name="led_switch_label">Індикатор (білий)</string>
+    <string name="chip_white">Білий</string>
+    <string name="chip_green">Зелений</string>
+    <string name="chip_blue">Синій</string>
+    <string name="chip_red">Червоний</string>
+    <string name="sec_advanced">Додатково (root/ghostlock)</string>
+    <string name="btn_advanced_show">Розгорнути</string>
+    <string name="btn_advanced_hide">Згорнути</string>
+    <string name="ghost_switch_label">прихований режим ghostlock (гасить індикатор під час зйомки)</string>
+    <string name="root_auto_label">Автоотримання root під час запуску (AUTO)</string>
+    <string name="btn_acquire_root">Отримати root зараз</string>
+    <string name="btn_device_info">Відомості про пристрій</string>
+    <string name="sec_display">Екран окулярів</string>
+    <string name="chip_disp_conn">Підключення</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">Камера</string>
+    <string name="chip_disp_storage">Сховище</string>
+    <string name="chip_disp_led">Індикатор</string>
+    <string name="btn_disp_all">Показати все</string>
+    <string name="btn_disp_none">Сховати все</string>
+    <string name="sec_log">Журнал дій</string>
+    <string name="btn_clear_log">Очистити</string>
+    <string name="toolbar_albums">Альбоми</string>
+    <string name="content_desc_add">Додати альбом</string>
+    <string name="content_desc_refresh">Оновити</string>
+    <string name="empty_albums">Альбомів поки немає\nНатисніть ＋ внизу праворуч, щоб створити перший</string>
+    <string name="albums_not_connected">Не підключено до окулярів\nСпочатку підключіться через Bluetooth на вкладці «Пульт»</string>
+    <string name="albums_load_failed">Не вдалося завантажити альбоми</string>
+    <string name="action_retry">Повторити</string>
+    <string name="album_item_count">Елементів: %1$d</string>
+    <string name="menu_view">Перегляд</string>
+    <string name="menu_rename">Перейменувати</string>
+    <string name="menu_delete">Видалити</string>
+    <string name="dialog_new_album">Новий альбом</string>
+    <string name="dialog_rename_album">Перейменувати альбом</string>
+    <string name="hint_album_name">Назва альбому</string>
+    <string name="action_create">Створити</string>
+    <string name="action_ok">ОК</string>
+    <string name="action_cancel">Скасувати</string>
+    <string name="action_delete">Видалити</string>
+    <string name="confirm_delete_album">Видалити альбом «%1$s» з усім вмістом?\n(Видаляються лише оригінали на окулярах; локальні копії залишаються.)</string>
+    <string name="msg_album_created">Альбом створено</string>
+    <string name="msg_album_renamed">Альбом перейменовано</string>
+    <string name="msg_album_deleted">Альбом видалено</string>
+    <string name="sel_count">Вибрано: %1$d</string>
+    <string name="action_select_all">Вибрати все</string>
+    <string name="action_download">Завантажити</string>
+    <string name="empty_media">У цьому альбомі немає медіа</string>
+    <string name="media_load_failed">Не вдалося завантажити медіа</string>
+    <string name="confirm_delete_media">Видалити «%1$s» на окулярах?\n(Видаляється лише оригінал; локальна копія збережеться.)</string>
+    <string name="batch_deleting">Видалення %1$d/%2$d</string>
+    <string name="batch_downloading">Завантаження %1$d/%2$d</string>
+    <string name="msg_deleted">Видалено</string>
+    <string name="viewer_delete_remote">Видалити оригінал на окулярах</string>
+    <string name="viewer_downloading">Завантаження оригіналу (передача Bluetooth, зачекайте)…</string>
+    <string name="viewer_play">Відтворити відео</string>
+    <string name="toolbar_local">Локально</string>
+    <string name="empty_local">Поки нічого не завантажено\nВідкрийте альбом у вкладці «Альбоми», щоб завантажити фото/відео</string>
+    <string name="local_dir_prefix">Завантажено локально</string>
+    <string name="album_unnamed">Альбом без назви</string>
+    <string name="log_dialog_title">Журнал (повний)</string>
+    <string name="dialog_close">Закрити</string>
+    <string name="log_longpress_hint">Натисніть і утримуйте, щоб переглянути весь журнал</string>
+    <string name="silent_switch_label">Тиха зйомка (без звуку затвора/запису)</string>
+    <string name="btn_language">Мова: %1$s</string>
+    <string name="lang_dialog_title">Вибір мови</string>
+    <string name="lang_system">Як у системі</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">Від\'єднано</string>
+    <string name="log_wifi_off">Передавання через Wi-Fi вимкнено, медіа переходить на Bluetooth</string>
+    <string name="log_wifi_enabling">Увімкнення передавання через Wi-Fi… (під час першого використання підтвердьте приєднання до «%1$s» у системному вікні)</string>
+    <string name="log_wifi_enabled">✓ Передавання через Wi-Fi увімкнено (%1$s:%2$d)</string>
+    <string name="log_wifi_failed">✗ Передавання через Wi-Fi: %1$s</string>
+    <string name="err_unknown">Невідома помилка</string>
+    <string name="toast_not_connected">Окуляри не підключено</string>
+    <string name="log_capturing">Фотографування…</string>
+    <string name="log_photo_ok">✓ Фото зроблено: %1$s</string>
+    <string name="log_photo_fail">✗ Помилка фото: %1$s</string>
+    <string name="log_recording">● Запис</string>
+    <string name="log_record_fail">✗ Помилка запису: %1$s</string>
+    <string name="log_video_saved">✓ Відео збережено: %1$s</string>
+    <string name="log_stop_fail">✗ Не вдалося зупинити: %1$s</string>
+    <string name="log_ghost_fail">Не вдалося налаштувати ghostlock: %1$s</string>
+    <string name="log_root_mode_fail">Не вдалося налаштувати режим root: %1$s</string>
+    <string name="silent_applied">✓ Тиха зйомка увімкнено (звуки затвора й запису вимкнено)</string>
+    <string name="silent_pending">⚠ Тихий режим задано, але ще не застосовано (потрібен root)</string>
+    <string name="silent_disabled">✓ Тиха зйомка вимкнено (звуки відновлено)</string>
+    <string name="log_silent_fail">✗ Помилка тихого режиму: %1$s</string>
+    <string name="log_led_enabling">Увімкнення індикатора приватності…</string>
+    <string name="log_led_disabling">Вимкнення індикатора приватності…</string>
+    <string name="log_led_on_ok">✓ Індикатор: увімк.</string>
+    <string name="log_led_off_ok">✓ Індикатор: вимк.</string>
+    <string name="log_led_fail">✗ Помилка налаштування індикатора: %1$s</string>
+    <string name="log_root_acquiring">Отримання root… (може тривати кілька хвилин)</string>
+    <string name="log_root_ready">✓ root готово</string>
+    <string name="log_root_failed">✗ Не вдалося отримати root</string>
+    <string name="log_root_fail">✗ Помилка root: %1$s</string>
+    <string name="log_querying">Запит даних пристрою…</string>
+    <string name="log_query_fail">✗ Помилка запиту: %1$s</string>
+    <string name="log_progress">[Поступ] %1$s</string>
+    <string name="log_display_ok">✓ Екран окулярів оновлено</string>
+    <string name="log_display_fail">✗ Помилка налаштування екрана: %1$s</string>
+    <string name="led_name">Світлодіод %1$s</string>
+    <string name="log_led_switch">%1$s %2$s…</string>
+    <string name="log_led_done">✓ %1$s: %2$s</string>
+    <string name="log_led_switch_fail">✗ %1$s: помилка %2$s</string>
+    <string name="state_on">увімк.</string>
+    <string name="state_off">вимк.</string>
+    <string name="state_enabled">увімк.</string>
+    <string name="state_disabled">вимк.</string>
+    <string name="status_summary">Альбоми %1$d · Медіа %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ Мову змінено: %1$s</string>
+    <string name="toast_bt_disabled">Спершу увімкніть Bluetooth</string>
+    <string name="toast_no_paired_device">Немає спарених пристроїв Bluetooth. Спершу спаруйте окуляри в системних налаштуваннях Bluetooth.</string>
+    <string name="toast_connect_failed">Помилка підключення: %1$s</string>
+    <string name="toast_no_local_media">У цьому альбомі немає локальних файлів</string>
+    <string name="confirm_delete_local_files">Видалити локальні файли (%1$d шт.)? (оригінали в окулярах не змінюються)</string>
+    <string name="batch_downloading_file">Завантаження %1$d/%2$d: %3$s</string>
+    <string name="toast_delete_done">Видалення завершено: успішно %1$d</string>
+    <string name="toast_delete_done_fail">Видалення завершено: успішно %1$d, невдач %2$d</string>
+    <string name="toast_download_done">Завантаження завершено: успішно %1$d</string>
+    <string name="toast_download_done_fail">Завантаження завершено: успішно %1$d, невдач %2$d</string>
+    <string name="dialog_download_note">\nОригінали буде завантажено з окулярів (передавання через Bluetooth повільне).</string>
+    <string name="err_local_file_missing">Локальний файл не знайдено</string>
+    <string name="toast_delete_fail">Помилка видалення: %1$s</string>
+    <string name="err_download_fail">Помилка завантаження: %1$s</string>
+    <string name="toast_opening">Відкриття %1$s…</string>
+    <string name="toast_create_fail">Помилка створення: %1$s</string>
+    <string name="toast_rename_fail">Помилка перейменування: %1$s</string>
+    <string name="local_album_delete">Видалити локальний альбом</string>
+    <string name="local_album_delete_msg">Видалити «%1$s» (%2$s) з телефона?\nОригінали в окулярах не змінюються.</string>
+    <string name="toast_local_album_deleted">Локальний альбом видалено</string>
+    <string name="media_type_video">Відео</string>
+    <string name="media_type_photo">Фото</string>
+    <string name="wifi_ap_timeout">Час очікування точки доступу Wi-Fi окулярів минув, повторіть пізніше</string>
+    <string name="wifi_tcp_failed">Помилка з\'єднання TCP: %1$s</string>
+    <string name="sec_ring">Керування каблучкою</string>
+    <string name="ring_switch_label">Увімкнути керування жестами каблучки</string>
+    <string name="ring_hint">Дотик = фото · Подвійний дотик = відео · Довге натискання = без звуку · Прокрутка = зміна екрана</string>
+    <string name="ring_status_idle">Жестів ще немає</string>
+    <string name="ring_status_fmt">Жестів: %1$d · останній: %2$s</string>
+    <string name="ring_learn_btn">Навчання жесту</string>
+    <string name="ring_learn_hint">Натисніть кнопку на каблучці…</string>
+    <string name="ring_learn_result">Отримано код клавіші %1$s</string>
+    <string name="ring_map_title">Виберіть дію для цього коду</string>
+    <string name="ring_action_photo">Фото</string>
+    <string name="ring_action_video">Почати/зупинити відео</string>
+    <string name="ring_action_silent">Перемкнути тиху зйомку</string>
+    <string name="ring_action_display_next">Інформація (наступна)</string>
+    <string name="ring_action_display_prev">Інформація (попередня)</string>
+    <string name="ring_action_none">Без дії</string>
+    <string name="ring_map_saved">%1$s → %2$s призначено</string>
+    <string name="ring_map_cleared">Користувацькі прив\'язки видалено</string>
+    <string name="ring_pair_btn">Спарувати каблучку</string>
+    <string name="ring_glasses_switch">Керування каблучкою (окуляри)</string>
+    <string name="ring_glasses_status">Окуляри: %1$s</string>
+    <string name="nav_settings">Налаштування</string>
+    <string name="log_expand">Збільшити</string>
+    <string name="sec_connection">Підключення</string>
+    <string name="sec_capture_root">Зйомка та дозволи</string>
+    <string name="sec_led_settings">Індикатор приватності</string>
+    <string name="sec_language">Мова</string>
+    <string name="wifi_switch_hint">Медіа та керування надають перевагу Wi-Fi; Bluetooth — лише як резерв</string>
+    <string name="led_colors_hint">Виберіть кольори для ввімкнення</string>
+    <string name="ring_a_label">Жести на телефоні (каблучку спаровано з телефоном)</string>
+    <string name="ring_a_hint">Застосунок має бути на передньому плані (підтримуються кліки миші та медіаклавіші)</string>
+    <string name="ring_b_label">Жести на окулярах (каблучку/тачпад спаровано з окулярами)</string>
+    <string name="ring_b_hint">Окуляри читають evdev від root; працює у фоні</string>
+    <string name="state_running">працює</string>
+    <string name="state_stopped">зупинено</string>
+    <string name="ring_phone_prefix">Телефон: %1$s</string>
+    <string name="log_app_started">Застосунок готовий</string>
+    <string name="action_search">Пошук альбомів</string>
+    <string name="action_sort">Сортування</string>
+    <string name="sort_name">Назва</string>
+    <string name="sort_count">Кількість</string>
+    <string name="sort_newest">Спочатку нові</string>
+    <string name="local_summary">Альбомів: %1$d · елементів: %2$d · зайнято %3$s</string>
+    <string name="selected_albums">Вибрано: %1$d</string>
+    <string name="toast_local_albums_deleted">Видалено локальних альбомів: %1$d</string>
+    <string name="confirm_delete_local_albums">Видалити %1$d альбом(ів) з телефона?\n(оригінали в окулярах не змінюються)</string>
+    <string name="ring_state_enabled">Увімкнено</string>
+    <string name="ring_state_disabled">Вимкнено</string>
+    <string name="ring_learn_waiting">Очікування натискання клавіші…</string>
+    <string name="ring_map_set">Призначено %1$s → %2$s</string>
+    <string name="ring_map_cleared_short">Користувацькі прив\'язки клавіш видалено</string>
+    <string name="ring_no_action">%1$s → (дію не призначено)</string>
+    <string name="ring_err_prefix">Помилка: %1$s</string>
+    <string name="ring_photo_ok">Фото знято: %1$s</string>
+    <string name="ring_photo_fail">Помилка фото: %1$s</string>
+    <string name="ring_video_start">Запис розпочато</string>
+    <string name="ring_video_fail">Помилка запису: %1$s</string>
+    <string name="ring_video_saved">Відео збережено: %1$s</string>
+    <string name="ring_stop_fail">Помилка зупинки: %1$s</string>
+    <string name="ring_status_read_fail">Не вдалося прочитати стан</string>
+    <string name="ring_silent_on">Тиха зйомка увімкнено</string>
+    <string name="ring_silent_on_pending">Тиха зйомка увімкнено (очікування root)</string>
+    <string name="ring_silent_off">Тиха зйомка вимкнено</string>
+    <string name="ring_silent_fail">Помилка тихого режиму: %1$s</string>
+    <string name="ring_display_switched">Екран перемкнено на %1$s</string>
+    <string name="ring_display_fail">Помилка налаштування екрана: %1$s</string>
+    <string name="ring_on">увімк.</string>
+    <string name="ring_off">вимк.</string>
+    <string name="sec_appearance">Вигляд</string>
+    <string name="light_mode_label">Світла тема</string>
+    <string name="light_mode_hint">Вимк. — темна тема; увімк. — світла</string>
+    <string name="ring_camera_not_ready">Камера не готова (відкрийте застосунок на окулярах)</string>
+    <string name="ring_status_no_device">Пристрій введення не знайдено (%1$s)</string>
+    <string name="ring_status_start_failed">Не вдалося запустити getevent</string>
+    <string name="ring_status_stopped">Зупинено</string>
+    <string name="ring_display_none">Приховати все</string>
+    <string name="ghost_skip_lpe">Виявлено постійний root daemon; пропуск LPE</string>
+    <string name="ghost_prepare_payload">Підготовка payload</string>
+    <string name="ghost_done">Готово</string>
+    <string name="ghost_failed">Помилка: %1$s</string>
+    <string name="ghost_bridge_dir_missing">Каталог bridge відсутній або недоступний для запису: %1$s (спершу запустіть deploy/root_bridge.sh)</string>
+    <string name="ghost_bridge_sent">Команду надіслано; очікування запуску exploit через helper (може тривати кілька хвилин)</string>
+    <string name="ghost_bridge_timeout">Тайм-аут bridge (чи запущено helper? див. %1$s)</string>
+    <string name="ghost_bridge_report">Звіт bridge: %1$s</string>
+    <string name="ghost_attempt">Спроба exploit %1$s</string>
+    <string name="ghost_helper_started">helper почав обробку</string>
+    <string name="ghost_ready_seen">exploit досяг маркера ready</string>
+    <string name="ghost_payload_replaced">Заміна payload</string>
+    <string name="ghost_wait_payload_root">Очікування завершення payload з правами root</string>
+    <string name="ghost_binary_missing">binary відсутній або не виконується: %1$s</string>
+    <string name="ghost_exploit_started">Запуск exploit</string>
+    <string name="ghost_exploit_start_failed">Не вдалося запустити exploit (див. %1$s)</string>
+    <string name="ghost_wait_ready">Очікування маркера ready</string>
+    <string name="ghost_ready_timeout">Тайм-аут маркера ready: %1$s</string>
+    <string name="ghost_ready_timeout_retry">Тайм-аут маркера ready</string>
+    <string name="ghost_payload_write_failed">Не вдалося записати %1$s (чи має застосунок право запису до /data/local/tmp?)</string>
+    <string name="ghost_wait_payload">Очікування завершення payload</string>
+    <string name="ghost_payload_timeout">Тайм-аут маркера done. payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit: %1$s</string>
+    <string name="ghost_shizuku_not_running">Shizuku server не запущено (потрібен раз за boot: deploy/start_shizuku.sh)</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku не авторизовано (запит дозволу надіслано)</string>
+    <string name="ghost_shizuku_bind_failed">Не вдалося прив\'язати Shizuku UserService</string>
+    <string name="ghost_shizuku_root_run_shell">Shizuku server запущено як root; використовуємо run_shell для зниження прав перед exploit</string>
+    <string name="ghost_shizuku_no_run_shell">Shizuku server запущено як root, а run_shell для зниження прав недоступний; запустіть server через adb/shell</string>
+    <string name="ghost_shizuku_bad_identity">Неочікувана ідентичність Shizuku: %1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku недоступний (%1$s) → відкат до bridge helper</string>
+    <string name="ghost_attempt_shizuku">Спроба exploit %1$s (ідентичність Shizuku/shell)</string>
+    <string name="ghost_kernel_panic">kernel panic: пристрій перезавантажився (звичайний збій, потрібна повторна спроба)</string>
+    <string name="ghost_process_died">Процес exploit завершився достроково (можливо, вбито через OOM)</string>
+    <string name="ghost_process_died_retry">Процес exploit завершився достроково (можливо, вбито через OOM); повтор</string>
+    <string name="ghost_retry_after">%1$s; повтор</string>
+    <string name="ghost_attempts_exhausted">Усі спроби exploit не вдалися (див. %1$s)</string>
+    <string name="ghost_fallback_failed">Помилка fallback: %1$s</string>
+    <string name="root_state_ok">root: доступний</string>
+    <string name="root_state_rearming">root: втрачено, відновлення…</string>
+    <string name="root_state_rearmed">root: відновлено автоматично</string>
+    <string name="root_state_lost">root: втрачено, потрібне відновлення</string>
+    <string name="root_state_cooldown">root: втрачено (очікування, повтор пізніше)</string>
+    <string name="root_state_unknown">root: невідомо</string>
+    <string name="root_hint_run_scripts">Запустіть: %1$s</string>
+    <string name="root_hint_engine">Можна запустити через %1$s</string>
+    <string name="root_metrics_fmt">Останній %1$d с (%2$s) · успіх %3$d/%4$d</string>
+    <string name="root_keeper_fmt">%1$d перевірок · %2$d автовідновлень</string>
+    <string name="sec_root_status">Стан root</string>
+    <string name="ghost_engine_selected">Використовується рушій: %1$s</string>
+    <string name="root_help_body">Без root не працюють: тиха зйомка, придушення індикатора, передача медіа через Wi-Fi і керування каблучкою на окулярах.\nСпершу підготуйте тригер через adb: deploy/root_bridge.sh (або deploy/start_shizuku.sh)</string>
+    <string name="ring_err_busy_recording">Триває запис — зробити фото неможливо</string>
+    <string name="ring_err_busy">Забагато запитів — зачекайте</string>
+    <string name="ring_err_record_timeout">Час запуску запису вичерпано — повернуто режим фото</string>
+    <string name="ring_pick_title">Вибір пристрою-кільця</string>
+    <string name="ring_pick_scan">Знайти новий пристрій…</string>
+    <string name="ring_pick_scanning">Пошук…</string>
+    <string name="ring_pick_empty">Пристрій-кільце не знайдено (спершу спаруйте його в налаштуваннях телефона або піднесіть ближче й повторіть пошук)</string>
+    <string name="ring_pick_selected">Вибрано: %1$s</string>
+    <string name="ring_pick_bonded">✓ Спаровано %1$s</string>
+    <string name="ring_pick_fail">✗ Не вдалося спарувати: %1$s</string>
+</resources>

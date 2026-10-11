@@ -1,0 +1,20 @@
+# Build artifacts
+build/
+
+# Firmware and large binaries
+firmware/
+boot/
+verify/
+ghidra_project/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+*.stackdump
+
+# Debug
+*.stackdump

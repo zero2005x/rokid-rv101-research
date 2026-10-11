@@ -1,0 +1,7 @@
+Linux localhost 5.10.209-perf-gd908d71a0404-ab1.22.009-20260710-150201 #1 SMP PREEMPT Tue Jun 16 11:26:45 UTC 2026 aarch64
+Linux version 5.10.209-perf-gd908d71a0404-ab1.22.009-20260710-150201 (build-user@build-host) (Android (7284624, based on r416183b) clang version 12.0.5 (https://android.googlesource.com/toolchain/llvm-project c935d99d7cf2016289302412d708641d52d2f7ee), LLD 12.0.5 (/buildbot/src/android/llvm-toolchain/out/llvm-project/lld c935d99d7cf2016289302412d708641d52d2f7ee)) #1 SMP PREEMPT Tue Jun 16 11:26:45 UTC 2026
+osrelease=5.10.209-perf-gd908d71a0404-ab1.22.009-20260710-150201
+randomize_va_space=2
+cmdline:
+cat: /proc/cmdline: Permission denied
+__collector_last_exit=1

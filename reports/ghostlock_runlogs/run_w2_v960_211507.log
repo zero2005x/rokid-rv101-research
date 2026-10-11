@@ -1,0 +1,63 @@
+=== GHOSTLOCK RUNLOG ===
+tag=w2 version=v960 ts=211507
+--- host time ---
+Mon Aug 31 09:15:07 PM CST 2026
+--- uptime before ---
+ 21:15:07 up 15 min,  0 users,  load average: 0.16, 0.22, 0.18
+--- loadavg before ---
+0.16 0.22 0.18 1/1251 3257
+--- nr_threads (field 4 total) ---
+running/total=1/1251
+--- meminfo head ---
+MemTotal:        1816600 kB
+MemFree:          149668 kB
+MemAvailable:     852152 kB
+Buffers:            5256 kB
+--- getenforce before ---
+Enforcing
+--- device binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /data/local/tmp/ghostlock_rv101
+--- local binary sha1 ---
+4eeb98171ed21113130d5f2676a0bd283c8f56c7  /mnt/c/Users/<USER>/Documents/codebase/rokid_root/source_code/ghostlock_rv101/build/ghostlock_rv101
+--- environment ---
+--- environment (command-prefix) ---
+  GL_PURGE_CNT=0
+  GL_TAIL_KILLS=16
+  GL_DUMMY_KILLS=0
+  W2_ATTEMPTS=1
+--- command ---
+GL_PURGE_CNT=0\ GL_TAIL_KILLS=16\ GL_DUMMY_KILLS=0\ W2_ATTEMPTS=1\ /data/local/tmp/ghostlock_rv101 
+=== RUN OUTPUT ===
+[+] ghostlock_rv101 v9.60 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3268 uid=2000 euid=2000 gid=2000
+[*] [T+921558ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd864e2ac0c slide=0x000000185b200000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd864eca100 slide=0x000000185b200000
+[+] KASLR: slide=0x000000185b200000 base=0xffffffd863200000 (2 anchors)
+[*] FOPS install attempt 1/3
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000064e9fa92d0 (t=9394, ratio=1878)
+[*]   collision[2]: 00000064ea19f280 (t=8968, ratio=1793)
+[*]   collision[3]: 00000064eb3fc568 (t=9328, ratio=1865)
+[*] kernelsnitch: top times: 9394 9328 8968 20 20 20 20 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11760 mm=FOUND
+[*] kernelsnitch: elapsed 2493ms mm=ffffff8072bca1c0
+[*] leaked mm=ffffff8072bca1c0 slab base=ffffff8072bc8000
+[*] v9.14 settle[settle]: 42 rounds, o2=1283 objs=809 (quiet=20)
+[*] v9.10 gate: mm slabs 86 -> 85 objs 809 -> 701 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 0 -> 2183 across full sequence (gate window 86 -> 2183, first-send=1)
+=== RUN DONE (pipe rc=255) ===
+--- host time ---
+Mon Aug 31 09:15:34 PM CST 2026
+--- adb device state ---
+error: device '<DEVICE_SERIAL>' not found
+--- uptime after ---
+adb.exe: device '<DEVICE_SERIAL>' not found
+--- getenforce after ---
+adb.exe: device '<DEVICE_SERIAL>' not found
+--- log file: /mnt/c/Users/<USER>/Documents/codebase/rokid_root/reports/ghostlock_runlogs/run_w2_v960_211507.log ---

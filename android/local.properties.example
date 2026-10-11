@@ -1,0 +1,7 @@
+# Android SDK 位置 — 複製本檔為 local.properties 並改成你機器上的實際路徑。
+# local.properties 為機器專屬設定，不納入版控。
+#
+# 範例：
+#   Linux/macOS:  sdk.dir=/home/you/Android/Sdk
+#   Windows:      sdk.dir=C\:\\Users\\you\\AppData\\Local\\Android\\Sdk
+sdk.dir=/path/to/android-sdk

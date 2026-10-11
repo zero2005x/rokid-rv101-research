@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 單色版（themed icon / 壓印用；以單一顏色上色即可） -->
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <path d="M22,48 Q20,44 26,39 M86,48 Q88,44 82,39" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M46,50 Q54,44 62,50" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"/>
+  <path fill-rule="evenodd" fill="#000"
+        d="M28,46 H40 A6,6 0 0 1 46,52 V60 A6,6 0 0 1 40,66 H28 A6,6 0 0 1 22,60 V52 A6,6 0 0 1 28,46 Z
+           M30,48.5 H38 A3.5,3.5 0 0 1 41.5,52 V60 A3.5,3.5 0 0 1 38,63.5 H30 A3.5,3.5 0 0 1 26.5,60 V52 A3.5,3.5 0 0 1 30,48.5 Z"/>
+  <path fill-rule="evenodd" fill="#000"
+        d="M68,46 H80 A6,6 0 0 1 86,52 V60 A6,6 0 0 1 80,66 H68 A6,6 0 0 1 62,60 V52 A6,6 0 0 1 68,46 Z
+           M70,48.5 H78 A3.5,3.5 0 0 1 81.5,52 V60 A3.5,3.5 0 0 1 78,63.5 H70 A3.5,3.5 0 0 1 66.5,60 V52 A3.5,3.5 0 0 1 70,48.5 Z"/>
+  <path fill-rule="evenodd" fill="#000"
+        d="M34,48.5 A7.5,7.5 0 1 0 34,63.5 A7.5,7.5 0 1 0 34,48.5 Z
+           M34,51.5 A4.5,4.5 0 1 0 34,60.5 A4.5,4.5 0 1 0 34,51.5 Z"/>
+  <circle cx="74" cy="56" r="2" fill="#000"/>
+  <path d="M66.5,49 L81.5,63" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+</svg>

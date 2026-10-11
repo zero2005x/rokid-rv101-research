@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Rokid Capture</string>
+    <string name="dash_title">Rokid Capture</string>
+    <string name="dash_collapsed">Rokid Capture</string>
+    <string name="dash_hint_collapse">탭하여 접기</string>
+    <string name="dash_row_conn">연결</string>
+    <string name="dash_row_root">Root</string>
+    <string name="dash_row_camera">카메라</string>
+    <string name="dash_row_storage">저장 공간</string>
+    <string name="dash_row_led">표시등</string>
+    <string name="dash_v_none">연결 안 됨</string>
+    <string name="dash_v_bt">블루투스</string>
+    <string name="dash_v_wifi">Wi-Fi</string>
+    <string name="dash_v_bt_wifi">블루투스 + Wi-Fi</string>
+    <string name="dash_v_root_yes">획득함</string>
+    <string name="dash_v_root_no">없음</string>
+    <string name="dash_v_on">켜짐</string>
+    <string name="dash_v_off">꺼짐</string>
+    <string name="dash_v_cam_ready">준비됨</string>
+    <string name="dash_v_cam_rec">녹화 중</string>
+    <string name="dash_v_cam_off">준비 안 됨</string>
+    <string name="dash_v_storage">%1$s 여유</string>
+    <string name="dash_v_root_fmt">%1$s · ghost %2$s</string>
+    <string name="dash_v_led_fmt">흰색 %1$s</string>
+</resources>

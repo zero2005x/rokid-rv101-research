@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  品牌色系 — **淺色模式**（2026-09-12）：白底＋青色 primary（加深以確保對比）＋琥珀 accent。
+  深色模式見 values-night/colors.xml（深藍底）。
+-->
+<resources>
+    <color name="primary">#0E7490</color>
+    <color name="primary_dark">#155E75</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="secondary">#B45309</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="bg">#F4F6F9</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#556070</color>
+    <color name="outline">#DCE3EA</color>
+    <color name="danger">#DC2626</color>
+    <color name="success">#15803D</color>
+    <color name="scrim">#66000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="surface">#F4F6F9</color>
+    <color name="on_surface">#0F172A</color>
+    <color name="surface_variant">#FFFFFF</color>
+    <color name="on_surface_variant">#556070</color>
+    <color name="secondary_container">#FEF3C7</color>
+    <color name="on_secondary_container">#78350F</color>
+    <color name="primary_container">#CFFAFE</color>
+    <color name="on_primary_container">#083344</color>
+
+    <!-- 封面遮罩上的文字（兩種模式都需白字） -->
+    <color name="on_scrim">#CCFFFFFF</color>
+    <!-- 媒體項目的選取底色 -->
+    <color name="accent_soft">#330E7490</color>
+</resources>

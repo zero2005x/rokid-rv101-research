@@ -1,0 +1,26 @@
+0xffffffc008774ad0: str      x0, [x1]
+0xffffffc008774ad4: autiasp  
+0xffffffc008774ad8: ret      
+0xffffffc008774adc: str      x0, [x9, #0x10]
+0xffffffc008774ae0: autiasp  
+0xffffffc008774ae4: ret      
+0xffffffc008774ae8: ldr      x10, [x0, #8]
+0xffffffc008774aec: str      x10, [x9, #0x10]
+0xffffffc008774af0: str      x9, [x0, #8]
+0xffffffc008774af4: cbz      x10, #0xffffffc008774b00
+0xffffffc008774af8: orr      x11, x9, #1
+0xffffffc008774afc: str      x11, [x10]
+0xffffffc008774b00: str      x0, [x9]
+0xffffffc008774b04: ldr      x10, [x0, #0x10]
+0xffffffc008774b08: str      x10, [x8, #8]
+0xffffffc008774b0c: str      x8, [x0, #0x10]
+0xffffffc008774b10: cbnz     x10, #0xffffffc008774a9c
+0xffffffc008774b14: b        #0xffffffc008774aa4
+0xffffffc008774b18: mov      x0, x8
+0xffffffc008774b1c: mov      w8, #1
+0xffffffc008774b20: str      x8, [x0]
+0xffffffc008774b24: autiasp  
+0xffffffc008774b28: ret      
+0xffffffc008774b2c: paciasp  
+0xffffffc008774b30: autiasp  
+0xffffffc008774b34: ret      

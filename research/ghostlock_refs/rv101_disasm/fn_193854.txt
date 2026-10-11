@@ -1,0 +1,64 @@
+0xffffffc008193800: tbz      w8, #0x1f, #0xffffffc0081937a4
+0xffffffc008193804: mov      w1, #3
+0xffffffc008193808: bl       #0xffffffc0086f5ab8
+0xffffffc00819380c: b        #0xffffffc0081937a4
+0xffffffc008193810: bti      j
+0xffffffc008193814: prfm     pstl1strm, [x0]
+0xffffffc008193818: ldxr     w8, [x0]
+0xffffffc00819381c: sub      w9, w8, w21
+0xffffffc008193820: stlxr    w10, w9, [x0]
+0xffffffc008193824: cbnz     w10, #0xffffffc008193818
+0xffffffc008193828: subs     w9, w8, #1
+0xffffffc00819382c: b.eq     #0xffffffc008193798
+0xffffffc008193830: b        #0xffffffc0081937fc
+0xffffffc008193834: ldp      x20, x19, [sp, #0x30]
+0xffffffc008193838: ldp      x22, x21, [sp, #0x20]
+0xffffffc00819383c: ldr      x23, [sp, #0x10]
+0xffffffc008193840: ldp      x29, x30, [sp], #0x40
+0xffffffc008193844: ldr      x30, [x18, #-8]!
+0xffffffc008193848: autiasp  
+0xffffffc00819384c: ret      
+0xffffffc008193850: brk      #0x800
+0xffffffc008193854: paciasp  
+0xffffffc008193858: str      x30, [x18], #8
+0xffffffc00819385c: stp      x29, x30, [sp, #-0x10]!
+0xffffffc008193860: mov      x29, sp
+0xffffffc008193864: mov      w1, #3
+0xffffffc008193868: mov      w2, wzr
+0xffffffc00819386c: bl       #0xffffffc008196188
+0xffffffc008193870: ldp      x29, x30, [sp], #0x10
+0xffffffc008193874: ldr      x30, [x18, #-8]!
+0xffffffc008193878: autiasp  
+0xffffffc00819387c: ret      
+0xffffffc008193880: paciasp  
+0xffffffc008193884: str      x30, [x18], #8
+0xffffffc008193888: stp      x29, x30, [sp, #-0x10]!
+0xffffffc00819388c: mov      x29, sp
+0xffffffc008193890: ldr      x8, [x0, #0xa30]
+0xffffffc008193894: ldr      x9, [x8]
+0xffffffc008193898: tbnz     w9, #1, #0xffffffc0081938e8
+0xffffffc00819389c: adrp     x10, #0xffffffc00a1a5000
+0xffffffc0081938a0: ldr      w0, [x0, #0xb08]
+0xffffffc0081938a4: mrs      x9, tpidr_el1
+0xffffffc0081938a8: add      x10, x10, #8
+0xffffffc0081938ac: ldr      w9, [x9, x10]
+0xffffffc0081938b0: cmp      w0, w9
+0xffffffc0081938b4: b.ne     #0xffffffc0081938d4
+0xffffffc0081938b8: b        #0xffffffc0081938f8
+0xffffffc0081938bc: b        #0xffffffc0081938f8
+0xffffffc0081938c0: mov      w9, #2
+0xffffffc0081938c4: stset    x9, [x8]
+0xffffffc0081938c8: mrs      x8, sp_el0
+0xffffffc0081938cc: str      wzr, [x8, #0x1c]
+0xffffffc0081938d0: b        #0xffffffc0081938e8
+0xffffffc0081938d4: b        #0xffffffc008193914
+0xffffffc0081938d8: b        #0xffffffc008193914
+0xffffffc0081938dc: mov      w9, #2
+0xffffffc0081938e0: stset    x9, [x8]
+0xffffffc0081938e4: bl       #0xffffffc0080d11a0
+0xffffffc0081938e8: ldp      x29, x30, [sp], #0x10
+0xffffffc0081938ec: ldr      x30, [x18, #-8]!
+0xffffffc0081938f0: autiasp  
+0xffffffc0081938f4: ret      
+0xffffffc0081938f8: bti      j
+0xffffffc0081938fc: prfm     pstl1strm, [x8]

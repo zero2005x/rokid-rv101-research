@@ -1,0 +1,334 @@
+<resources>
+    <string name="app_name">Rokid Remote</string>
+    <string name="tab_remote">リモコン</string>
+    <string name="tab_albums">アルバム</string>
+    <string name="tab_local">ローカル</string>
+    <string name="conn_connected">接続済み</string>
+    <string name="conn_disconnected">未接続</string>
+    <string name="conn_connecting">接続中…</string>
+    <string name="btn_connect">接続</string>
+    <string name="transport_bt">転送：Bluetooth</string>
+    <string name="transport_wifi">転送：Wi-Fi %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">転送：Wi-Fi 接続中…</string>
+    <string name="btn_wifi_on">Wi-Fi 転送を有効化</string>
+    <string name="btn_wifi_off">Wi-Fi 転送を無効化</string>
+    <string name="wifi_failed_manual">Wi-Fi「%1$s」（パスワード %2$s）に自動接続できません。システムの Wi-Fi 設定で手動接続してから再試行してください。</string>
+    <string name="wifi_ap_not_ready">メガネの Wi-Fi ホットスポットが未準備です：先に root を取得してください（または後で再試行）。</string>
+    <string name="btn_disconnect">切断</string>
+    <string name="conn_card_title">メガネ接続</string>
+    <string name="conn_no_device">メガネ未選択</string>
+    <string name="conn_pick_title">メガネを選択</string>
+    <string name="sec_capture">撮影</string>
+    <string name="btn_photo">写真</string>
+    <string name="btn_video_start">録画開始</string>
+    <string name="btn_video_stop">録画停止</string>
+    <string name="sec_led">プライバシーインジケーター</string>
+    <string name="led_switch_label">インジケーター（白ランプ）</string>
+    <string name="chip_white">白</string>
+    <string name="chip_green">緑</string>
+    <string name="chip_blue">青</string>
+    <string name="chip_red">赤</string>
+    <string name="sec_advanced">詳細（root／ghostlock）</string>
+    <string name="btn_advanced_show">展開</string>
+    <string name="btn_advanced_hide">折りたたむ</string>
+    <string name="ghost_switch_label">ghostlock ステルスモード（撮影中プライバシーライトを抑制）</string>
+    <string name="root_auto_label">起動時に root を自動取得（AUTO）</string>
+    <string name="btn_acquire_root">今すぐ root を取得</string>
+    <string name="btn_device_info">デバイス情報</string>
+    <string name="sec_display">メガネ表示</string>
+    <string name="chip_disp_conn">接続</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">カメラ</string>
+    <string name="chip_disp_storage">ストレージ</string>
+    <string name="chip_disp_led">インジケーター</string>
+    <string name="btn_disp_all">すべて表示</string>
+    <string name="btn_disp_none">すべて非表示</string>
+    <string name="sec_log">操作ログ</string>
+    <string name="btn_clear_log">クリア</string>
+    <string name="toolbar_albums">アルバム</string>
+    <string name="content_desc_add">アルバム追加</string>
+    <string name="content_desc_refresh">更新</string>
+    <string name="empty_albums">アルバムがありません\n右下の ＋ で作成してください</string>
+    <string name="albums_not_connected">メガネに未接続です\n先に「リモコン」タブで Bluetooth 接続してください</string>
+    <string name="albums_load_failed">アルバムの読み込みに失敗</string>
+    <string name="action_retry">再試行</string>
+    <string name="album_item_count">%1$d 件</string>
+    <string name="menu_view">表示</string>
+    <string name="menu_rename">名前を変更</string>
+    <string name="menu_delete">削除</string>
+    <string name="dialog_new_album">新しいアルバム</string>
+    <string name="dialog_rename_album">アルバム名を変更</string>
+    <string name="hint_album_name">アルバム名</string>
+    <string name="action_create">作成</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_delete">削除</string>
+    <string name="confirm_delete_album">アルバム「%1$s」とすべてのメディアを削除しますか？\n（メガネ側の元ファイルのみ削除、ローカルのコピーは残ります）</string>
+    <string name="msg_album_created">アルバムを作成しました</string>
+    <string name="msg_album_renamed">アルバム名を変更しました</string>
+    <string name="msg_album_deleted">アルバムを削除しました</string>
+    <string name="sel_count">%1$d 件選択中</string>
+    <string name="action_select_all">すべて選択</string>
+    <string name="action_download">ダウンロード</string>
+    <string name="empty_media">このアルバムにメディアはありません</string>
+    <string name="media_load_failed">メディアの読み込みに失敗</string>
+    <string name="confirm_delete_media">メガネ側の「%1$s」を削除しますか？\n（元ファイルのみ削除、ローカルのコピーは残ります）</string>
+    <string name="batch_deleting">削除中 %1$d/%2$d</string>
+    <string name="batch_downloading">ダウンロード中 %1$d/%2$d</string>
+    <string name="msg_deleted">削除しました</string>
+    <string name="viewer_delete_remote">メガネ側の元ファイルを削除</string>
+    <string name="viewer_downloading">元ファイルをダウンロード中（Bluetooth 転送、お待ちください）…</string>
+    <string name="viewer_play">動画を再生</string>
+    <string name="toolbar_local">ローカル</string>
+    <string name="empty_local">まだダウンロードしていません\n「アルバム」で写真／動画をダウンロードしてください</string>
+    <string name="local_dir_prefix">ローカルにダウンロード済み</string>
+    <string name="album_unnamed">名称未設定のアルバム</string>
+    <string name="log_dialog_title">操作ログ（全件）</string>
+    <string name="dialog_close">閉じる</string>
+    <string name="log_longpress_hint">長押しで全ログを表示</string>
+    <string name="silent_switch_label">サイレント撮影（シャッター／録画音を抑制）</string>
+    <string name="btn_language">言語：%1$s</string>
+    <string name="lang_dialog_title">言語を選択</string>
+    <string name="lang_system">システムに従う</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">接続が切断されました</string>
+    <string name="log_wifi_off">Wi-Fi 転送はオフ、メディアは Bluetooth に切り替わります</string>
+    <string name="log_wifi_enabling">Wi-Fi 転送を有効化中…（初回はシステムダイアログで「%1$s」への参加を確認してください）</string>
+    <string name="log_wifi_enabled">✓ Wi-Fi 転送が有効になりました（%1$s:%2$d）</string>
+    <string name="log_wifi_failed">✗ Wi-Fi 転送：%1$s</string>
+    <string name="err_unknown">不明なエラー</string>
+    <string name="toast_not_connected">メガネに未接続です</string>
+    <string name="log_capturing">撮影中…</string>
+    <string name="log_photo_ok">✓ 撮影しました %1$s</string>
+    <string name="log_photo_fail">✗ 撮影に失敗 %1$s</string>
+    <string name="log_recording">● 録画中</string>
+    <string name="log_record_fail">✗ 録画に失敗 %1$s</string>
+    <string name="log_video_saved">✓ 動画を保存しました %1$s</string>
+    <string name="log_stop_fail">✗ 停止に失敗 %1$s</string>
+    <string name="log_ghost_fail">ghostlock の設定に失敗 %1$s</string>
+    <string name="log_root_mode_fail">root モードの設定に失敗 %1$s</string>
+    <string name="silent_applied">✓ サイレント撮影オン（シャッター/録画音を抑制）</string>
+    <string name="silent_pending">⚠ サイレントを設定しましたが未適用です（root が必要）</string>
+    <string name="silent_disabled">✓ サイレント撮影オフ（通知音を復元）</string>
+    <string name="log_silent_fail">✗ サイレント設定に失敗 %1$s</string>
+    <string name="log_led_enabling">プライバシーインジケーターを点灯中…</string>
+    <string name="log_led_disabling">プライバシーインジケーターを消灯中…</string>
+    <string name="log_led_on_ok">✓ インジケーター：点灯</string>
+    <string name="log_led_off_ok">✓ インジケーター：消灯</string>
+    <string name="log_led_fail">✗ インジケーターの設定に失敗 %1$s</string>
+    <string name="log_root_acquiring">root を取得中（数分かかる場合があります）…</string>
+    <string name="log_root_ready">✓ root の準備完了</string>
+    <string name="log_root_failed">✗ root の取得に失敗</string>
+    <string name="log_root_fail">✗ root に失敗 %1$s</string>
+    <string name="log_querying">デバイス情報を取得中…</string>
+    <string name="log_query_fail">✗ 取得に失敗 %1$s</string>
+    <string name="log_progress">[進捗] %1$s</string>
+    <string name="log_display_ok">✓ メガネ表示を更新しました</string>
+    <string name="log_display_fail">✗ 表示設定に失敗 %1$s</string>
+    <string name="led_name">%1$sランプ</string>
+    <string name="log_led_switch">%1$s %2$s…</string>
+    <string name="log_led_done">✓ %1$s：%2$s</string>
+    <string name="log_led_switch_fail">✗ %1$s に失敗 %2$s</string>
+    <string name="state_on">点灯</string>
+    <string name="state_off">消灯</string>
+    <string name="state_enabled">オン</string>
+    <string name="state_disabled">オフ</string>
+    <string name="status_summary">アルバム %1$d · メディア %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ 言語を切り替えました：%1$s</string>
+    <string name="toast_bt_disabled">先に Bluetooth をオンにしてください</string>
+    <string name="toast_no_paired_device">ペアリング済みの Bluetooth 機器がありません。先にシステムの Bluetooth 設定でメガネをペアリングしてください</string>
+    <string name="toast_connect_failed">接続に失敗: %1$s</string>
+    <string name="toast_no_local_media">このアルバムのファイルが端末にありません</string>
+    <string name="confirm_delete_local_files">端末の %1$d 個のファイルを削除しますか？（メガネ側は影響を受けません）</string>
+    <string name="batch_downloading_file">ダウンロード中 %1$d/%2$d：%3$s</string>
+    <string name="toast_delete_done">削除完了：成功 %1$d</string>
+    <string name="toast_delete_done_fail">削除完了：成功 %1$d、失敗 %2$d</string>
+    <string name="toast_download_done">ダウンロード完了：成功 %1$d</string>
+    <string name="toast_download_done_fail">ダウンロード完了：成功 %1$d、失敗 %2$d</string>
+    <string name="dialog_download_note">\nメガネから元のファイルをダウンロードします（Bluetooth 転送は遅いです）。</string>
+    <string name="err_local_file_missing">端末にファイルがありません</string>
+    <string name="toast_delete_fail">削除に失敗 %1$s</string>
+    <string name="err_download_fail">ダウンロード失敗：%1$s</string>
+    <string name="toast_opening">%1$s を開いています…</string>
+    <string name="toast_create_fail">作成に失敗 %1$s</string>
+    <string name="toast_rename_fail">名前の変更に失敗 %1$s</string>
+    <string name="local_album_delete">端末のアルバムを削除</string>
+    <string name="local_album_delete_msg">スマートフォン上の「%1$s」（%2$s）を削除しますか？\nメガネ側の元ファイルは影響を受けません。</string>
+    <string name="toast_local_album_deleted">端末のアルバムを削除しました</string>
+    <string name="media_type_video">動画</string>
+    <string name="media_type_photo">写真</string>
+    <string name="wifi_ap_timeout">メガネ Wi-Fi アクセスポイントの起動がタイムアウトしました。後でもう一度お試しください</string>
+    <string name="wifi_tcp_failed">TCP 接続に失敗：%1$s</string>
+    <string name="sec_ring">リング操作</string>
+    <string name="ring_switch_label">リングのジェスチャー操作を有効化</string>
+    <string name="ring_hint">タップ＝撮影 · ダブルタップ＝録画 · 長押し＝サイレント · スクロール＝表示切替</string>
+    <string name="ring_status_idle">まだジェスチャーを受信していません</string>
+    <string name="ring_status_fmt">累計 %1$d 回 · 最近：%2$s</string>
+    <string name="ring_learn_btn">ジェスチャー学習</string>
+    <string name="ring_learn_hint">リングのボタンを押してください…</string>
+    <string name="ring_learn_result">キーコード %1$s を受信</string>
+    <string name="ring_map_title">このキーコードの動作を選択</string>
+    <string name="ring_action_photo">撮影</string>
+    <string name="ring_action_video">録画の開始／停止</string>
+    <string name="ring_action_silent">サイレント撮影の切替</string>
+    <string name="ring_action_display_next">表示情報（次へ）</string>
+    <string name="ring_action_display_prev">表示情報（前へ）</string>
+    <string name="ring_action_none">動作なし</string>
+    <string name="ring_map_saved">%1$s → %2$s に対応付けました</string>
+    <string name="ring_map_cleared">カスタムのキー割り当てを消去しました</string>
+    <string name="ring_pair_btn">リングをペアリング</string>
+    <string name="ring_glasses_switch">メガネ側リング操作</string>
+    <string name="ring_glasses_status">メガネ側：%1$s</string>
+    <string name="nav_settings">設定</string>
+    <string name="log_expand">拡大</string>
+    <string name="sec_connection">接続</string>
+    <string name="sec_capture_root">撮影と権限</string>
+    <string name="sec_led_settings">プライバシーインジケーター</string>
+    <string name="sec_language">言語</string>
+    <string name="wifi_switch_hint">メディアも操作も Wi-Fi を優先し、Bluetooth は予備としてのみ使用します</string>
+    <string name="led_colors_hint">有効にするランプ色を選択</string>
+    <string name="ring_a_label">スマホ側ジェスチャー（リングをスマホに接続）</string>
+    <string name="ring_a_hint">アプリが前面にある必要があります（マウスクリック/メディアキー対応）</string>
+    <string name="ring_b_label">メガネ側ジェスチャー（リング/タッチパッドをメガネに接続）</string>
+    <string name="ring_b_hint">メガネが root で evdev を直接読み取り、バックグラウンドでも動作</string>
+    <string name="state_running">実行中</string>
+    <string name="state_stopped">停止中</string>
+    <string name="ring_phone_prefix">スマホ側：%1$s</string>
+    <string name="log_app_started">アプリ準備完了</string>
+    <string name="action_search">アルバムを検索</string>
+    <string name="action_sort">並べ替え</string>
+    <string name="sort_name">名前</string>
+    <string name="sort_count">項目数</string>
+    <string name="sort_newest">新しい順</string>
+    <string name="local_summary">%1$d アルバム · %2$d 項目 · %3$s 使用</string>
+    <string name="selected_albums">%1$d 件選択</string>
+    <string name="toast_local_albums_deleted">端末のアルバムを %1$d 件削除しました</string>
+    <string name="confirm_delete_local_albums">スマホ上のアルバム %1$d 件を削除しますか？\n（メガネ側の元ファイルは影響を受けません）</string>
+    <string name="ring_state_enabled">有効</string>
+    <string name="ring_state_disabled">無効</string>
+    <string name="ring_learn_waiting">キー入力待ち…</string>
+    <string name="ring_map_set">%1$s → %2$s に対応付けました</string>
+    <string name="ring_map_cleared_short">カスタムのキー割り当てを消去しました</string>
+    <string name="ring_no_action">%1$s → （動作なし）</string>
+    <string name="ring_err_prefix">例外：%1$s</string>
+    <string name="ring_photo_ok">撮影しました %1$s</string>
+    <string name="ring_photo_fail">撮影に失敗：%1$s</string>
+    <string name="ring_video_start">録画を開始しました</string>
+    <string name="ring_video_fail">録画に失敗：%1$s</string>
+    <string name="ring_video_saved">動画を保存しました %1$s</string>
+    <string name="ring_stop_fail">停止に失敗：%1$s</string>
+    <string name="ring_status_read_fail">ステータスの読み取りに失敗</string>
+    <string name="ring_silent_on">サイレント撮影オン</string>
+    <string name="ring_silent_on_pending">サイレント撮影オン（root 待ち）</string>
+    <string name="ring_silent_off">サイレント撮影オフ</string>
+    <string name="ring_silent_fail">サイレント設定に失敗：%1$s</string>
+    <string name="ring_display_switched">表示を %1$s に切り替えました</string>
+    <string name="ring_display_fail">表示設定に失敗：%1$s</string>
+    <string name="ring_on">オン</string>
+    <string name="ring_off">オフ</string>
+    <string name="sec_appearance">外観</string>
+    <string name="light_mode_label">ライトモード</string>
+    <string name="light_mode_hint">オフ＝ダークテーマ（紺色）、オン＝明るいテーマ</string>
+    <string name="ring_camera_not_ready">カメラの準備ができていません（メガネでアプリを開いてください）</string>
+    <string name="ring_status_no_device">入力デバイスが見つかりません（%1$s）</string>
+    <string name="ring_status_start_failed">getevent の起動に失敗</string>
+    <string name="ring_status_stopped">停止しました</string>
+    <string name="ring_display_none">すべて非表示</string>
+    <string name="ghost_skip_lpe">常駐 root daemon を検出、LPE をスキップ</string>
+    <string name="ghost_prepare_payload">payload を準備中</string>
+    <string name="ghost_done">完了</string>
+    <string name="ghost_failed">失敗：%1$s</string>
+    <string name="ghost_bridge_dir_missing">bridge ディレクトリが存在しないか書込不可：%1$s（先に deploy/root_bridge.sh を実行）</string>
+    <string name="ghost_bridge_sent">コマンド送信済み、helper の exploit 実行を待機中（数分かかる場合あり）</string>
+    <string name="ghost_bridge_timeout">bridge タイムアウト（helper は常駐？%1$s 参照）</string>
+    <string name="ghost_bridge_report">bridge 報告：%1$s</string>
+    <string name="ghost_attempt">exploit 第 %1$s 回目の試行</string>
+    <string name="ghost_helper_started">helper が処理を開始</string>
+    <string name="ghost_ready_seen">exploit が ready マーカーに到達</string>
+    <string name="ghost_payload_replaced">payload を置換中</string>
+    <string name="ghost_wait_payload_root">payload が root で完了するのを待機中</string>
+    <string name="ghost_binary_missing">binary が存在しないか実行不可：%1$s</string>
+    <string name="ghost_exploit_started">exploit を起動中</string>
+    <string name="ghost_exploit_start_failed">exploit を起動できません（%1$s 参照）</string>
+    <string name="ghost_wait_ready">ready マーカーを待機中</string>
+    <string name="ghost_ready_timeout">ready マーカーがタイムアウト：%1$s</string>
+    <string name="ghost_ready_timeout_retry">ready マーカーがタイムアウト</string>
+    <string name="ghost_payload_write_failed">%1$s に書込不可（/data/local/tmp への書込権限？）</string>
+    <string name="ghost_wait_payload">payload の完了を待機中</string>
+    <string name="ghost_payload_timeout">done マーカーがタイムアウト。payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit: %1$s</string>
+    <string name="ghost_shizuku_not_running">Shizuku server が未実行（boot ごとに1回必要：deploy/start_shizuku.sh）</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku 未認可（権限リクエスト送信済み）</string>
+    <string name="ghost_shizuku_bind_failed">Shizuku UserService のバインドに失敗</string>
+    <string name="ghost_shizuku_root_run_shell">Shizuku server が root で起動、run_shell で権限を落として exploit を実行</string>
+    <string name="ghost_shizuku_no_run_shell">Shizuku server が root で起動し run_shell による降権不可；adb/shell で server を起動してください</string>
+    <string name="ghost_shizuku_bad_identity">Shizuku の実行主体が異常：%1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku 利用不可（%1$s）→ bridge helper にフォールバック</string>
+    <string name="ghost_attempt_shizuku">exploit 第 %1$s 回目の試行（Shizuku/shell 主体）</string>
+    <string name="ghost_kernel_panic">kernel panic：デバイスが再起動（想定内の失敗、要再試行）</string>
+    <string name="ghost_process_died">exploit プロセスが早期終了（OOM で kill された可能性）</string>
+    <string name="ghost_process_died_retry">exploit プロセスが早期終了（OOM で kill された可能性）、再試行</string>
+    <string name="ghost_retry_after">%1$s、再試行</string>
+    <string name="ghost_attempts_exhausted">exploit の試行がすべて失敗（%1$s 参照）</string>
+    <string name="ghost_fallback_failed">fallback 失敗：%1$s</string>
+    <string name="root_state_ok">root：利用可能</string>
+    <string name="root_state_rearming">root：消失、自動再構築中…</string>
+    <string name="root_state_rearmed">root：自動再構築済み</string>
+    <string name="root_state_lost">root：消失、再構築が必要</string>
+    <string name="root_state_cooldown">root：消失（冷却中、後で自動再試行）</string>
+    <string name="root_state_unknown">root：不明</string>
+    <string name="root_hint_run_scripts">実行：%1$s</string>
+    <string name="root_hint_engine">%1$s から実行できます</string>
+    <string name="root_metrics_fmt">前回 %1$d 秒（%2$s）· 成功 %3$d/%4$d</string>
+    <string name="root_keeper_fmt">チェック %1$d 回 · 自動再構築 %2$d 回</string>
+    <string name="sec_root_status">root 状態</string>
+    <string name="ghost_engine_selected">使用エンジン：%1$s</string>
+    <string name="root_help_body">root がないと：サイレント撮影、プライバシーランプ抑制、Wi-Fi メディア転送、メガネ側リング制御が使えません。\n先に adb でトリガー経路を準備してください：deploy/root_bridge.sh（または deploy/start_shizuku.sh）</string>
+    <string name="ring_err_busy_recording">録画中は撮影できません</string>
+    <string name="ring_err_busy">操作が多すぎます。しばらくお待ちください</string>
+    <string name="ring_err_record_timeout">録画の開始がタイムアウトしました（撮影モードに戻しました）</string>
+    <string name="ring_pick_title">リング機器を選択</string>
+    <string name="ring_pick_scan">新しい機器をスキャン…</string>
+    <string name="ring_pick_scanning">スキャン中…</string>
+    <string name="ring_pick_empty">リング機器が見つかりません（先にスマートフォンの設定でペア設定するか、近づいて再スキャンしてください）</string>
+    <string name="ring_pick_selected">選択しました：%1$s</string>
+    <string name="ring_pick_bonded">✓ ペア設定しました %1$s</string>
+    <string name="ring_pick_fail">✗ ペア設定に失敗：%1$s</string>
+</resources>

@@ -1,0 +1,334 @@
+<resources>
+    <string name="app_name">Rokid Remote</string>
+    <string name="tab_remote">Điều khiển</string>
+    <string name="tab_albums">Album</string>
+    <string name="tab_local">Máy</string>
+    <string name="conn_connected">Đã kết nối</string>
+    <string name="conn_disconnected">Chưa kết nối</string>
+    <string name="conn_connecting">Đang kết nối…</string>
+    <string name="btn_connect">Kết nối</string>
+    <string name="transport_bt">Truyền: Bluetooth</string>
+    <string name="transport_wifi">Truyền: Wi-Fi %1$s:%2$d</string>
+    <string name="transport_wifi_connecting">Truyền: đang kết nối Wi-Fi…</string>
+    <string name="btn_wifi_on">Bật truyền Wi-Fi</string>
+    <string name="btn_wifi_off">Tắt truyền Wi-Fi</string>
+    <string name="wifi_failed_manual">Không thể tự động kết nối Wi-Fi “%1$s” (mật khẩu %2$s). Hãy kết nối thủ công trong cài đặt Wi-Fi rồi thử lại.</string>
+    <string name="wifi_ap_not_ready">Điểm phát Wi-Fi của kính chưa sẵn sàng: cần có root trước (hoặc thử lại sau).</string>
+    <string name="btn_disconnect">Ngắt kết nối</string>
+    <string name="conn_card_title">Kết nối kính</string>
+    <string name="conn_no_device">Chưa chọn kính</string>
+    <string name="conn_pick_title">Chọn kính</string>
+    <string name="sec_capture">Chụp</string>
+    <string name="btn_photo">Chụp ảnh</string>
+    <string name="btn_video_start">Bắt đầu quay</string>
+    <string name="btn_video_stop">Dừng quay</string>
+    <string name="sec_led">Đèn báo riêng tư</string>
+    <string name="led_switch_label">Đèn báo (trắng)</string>
+    <string name="chip_white">Trắng</string>
+    <string name="chip_green">Xanh lá</string>
+    <string name="chip_blue">Xanh dương</string>
+    <string name="chip_red">Đỏ</string>
+    <string name="sec_advanced">Nâng cao (root/ghostlock)</string>
+    <string name="btn_advanced_show">Mở rộng</string>
+    <string name="btn_advanced_hide">Thu gọn</string>
+    <string name="ghost_switch_label">chế độ ẩn ghostlock (tắt đèn riêng tư khi chụp)</string>
+    <string name="root_auto_label">Tự động lấy root khi khởi động (AUTO)</string>
+    <string name="btn_acquire_root">Lấy root ngay</string>
+    <string name="btn_device_info">Thông tin thiết bị</string>
+    <string name="sec_display">Hiển thị kính</string>
+    <string name="chip_disp_conn">Kết nối</string>
+    <string name="chip_disp_root">Root</string>
+    <string name="chip_disp_camera">Máy ảnh</string>
+    <string name="chip_disp_storage">Bộ nhớ</string>
+    <string name="chip_disp_led">Đèn báo</string>
+    <string name="btn_disp_all">Hiện tất cả</string>
+    <string name="btn_disp_none">Ẩn tất cả</string>
+    <string name="sec_log">Nhật ký hoạt động</string>
+    <string name="btn_clear_log">Xóa</string>
+    <string name="toolbar_albums">Album</string>
+    <string name="content_desc_add">Thêm album</string>
+    <string name="content_desc_refresh">Làm mới</string>
+    <string name="empty_albums">Chưa có album\nChạm ＋ góc dưới phải để tạo album đầu tiên</string>
+    <string name="albums_not_connected">Chưa kết nối kính\nHãy kết nối Bluetooth ở tab “Điều khiển” trước</string>
+    <string name="albums_load_failed">Tải album thất bại</string>
+    <string name="action_retry">Thử lại</string>
+    <string name="album_item_count">%1$d mục</string>
+    <string name="menu_view">Xem</string>
+    <string name="menu_rename">Đổi tên</string>
+    <string name="menu_delete">Xóa</string>
+    <string name="dialog_new_album">Album mới</string>
+    <string name="dialog_rename_album">Đổi tên album</string>
+    <string name="hint_album_name">Tên album</string>
+    <string name="action_create">Tạo</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Hủy</string>
+    <string name="action_delete">Xóa</string>
+    <string name="confirm_delete_album">Xóa album “%1$s” và toàn bộ nội dung?\n(Chỉ xóa bản gốc trên kính; bản sao trên máy được giữ lại.)</string>
+    <string name="msg_album_created">Đã tạo album</string>
+    <string name="msg_album_renamed">Đã đổi tên album</string>
+    <string name="msg_album_deleted">Đã xóa album</string>
+    <string name="sel_count">Đã chọn %1$d mục</string>
+    <string name="action_select_all">Chọn tất cả</string>
+    <string name="action_download">Tải xuống</string>
+    <string name="empty_media">Album này không có phương tiện</string>
+    <string name="media_load_failed">Tải phương tiện thất bại</string>
+    <string name="confirm_delete_media">Xóa “%1$s” trên kính?\n(Chỉ xóa bản gốc; bản sao trên máy được giữ lại.)</string>
+    <string name="batch_deleting">Đang xóa %1$d/%2$d</string>
+    <string name="batch_downloading">Đang tải %1$d/%2$d</string>
+    <string name="msg_deleted">Đã xóa</string>
+    <string name="viewer_delete_remote">Xóa bản gốc trên kính</string>
+    <string name="viewer_downloading">Đang tải bản gốc (truyền Bluetooth, vui lòng chờ)…</string>
+    <string name="viewer_play">Phát video</string>
+    <string name="toolbar_local">Máy</string>
+    <string name="empty_local">Chưa tải xuống gì\nMở album trong “Album” để tải ảnh/video</string>
+    <string name="local_dir_prefix">Đã tải về máy</string>
+    <string name="album_unnamed">Album chưa đặt tên</string>
+    <string name="log_dialog_title">Nhật ký (đầy đủ)</string>
+    <string name="dialog_close">Đóng</string>
+    <string name="log_longpress_hint">Nhấn giữ để xem toàn bộ nhật ký</string>
+    <string name="silent_switch_label">Chụp im lặng (tắt tiếng màn trập/quay phim)</string>
+    <string name="btn_language">Ngôn ngữ: %1$s</string>
+    <string name="lang_dialog_title">Chọn ngôn ngữ</string>
+    <string name="lang_system">Theo hệ thống</string>
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+
+    <!-- i18n：操作紀錄／提示訊息（scripts/i18n 產出） -->
+    <string name="log_disconnected">Đã ngắt kết nối</string>
+    <string name="log_wifi_off">Truyền Wi-Fi đã tắt, media chuyển sang Bluetooth</string>
+    <string name="log_wifi_enabling">Đang bật truyền Wi-Fi… (lần đầu cần xác nhận tham gia "%1$s" trong hộp thoại hệ thống)</string>
+    <string name="log_wifi_enabled">✓ Đã bật truyền Wi-Fi (%1$s:%2$d)</string>
+    <string name="log_wifi_failed">✗ Truyền Wi-Fi: %1$s</string>
+    <string name="err_unknown">Lỗi không xác định</string>
+    <string name="toast_not_connected">Chưa kết nối kính</string>
+    <string name="log_capturing">Đang chụp ảnh…</string>
+    <string name="log_photo_ok">✓ Đã chụp ảnh %1$s</string>
+    <string name="log_photo_fail">✗ Chụp ảnh thất bại %1$s</string>
+    <string name="log_recording">● Đang quay video</string>
+    <string name="log_record_fail">✗ Quay video thất bại %1$s</string>
+    <string name="log_video_saved">✓ Đã lưu video %1$s</string>
+    <string name="log_stop_fail">✗ Dừng thất bại %1$s</string>
+    <string name="log_ghost_fail">Đặt ghostlock thất bại %1$s</string>
+    <string name="log_root_mode_fail">Đặt chế độ root thất bại %1$s</string>
+    <string name="silent_applied">✓ Đã bật chụp im lặng (đã khử tiếng màn trập/quay video)</string>
+    <string name="silent_pending">⚠ Đã đặt chế độ im lặng nhưng chưa áp dụng (cần root)</string>
+    <string name="silent_disabled">✓ Đã tắt chụp im lặng (đã khôi phục âm thanh)</string>
+    <string name="log_silent_fail">✗ Đặt chế độ im lặng thất bại %1$s</string>
+    <string name="log_led_enabling">Đang bật đèn báo riêng tư…</string>
+    <string name="log_led_disabling">Đang tắt đèn báo riêng tư…</string>
+    <string name="log_led_on_ok">✓ Đèn báo: bật</string>
+    <string name="log_led_off_ok">✓ Đèn báo: tắt</string>
+    <string name="log_led_fail">✗ Đặt đèn báo thất bại %1$s</string>
+    <string name="log_root_acquiring">Đang lấy root (có thể mất vài phút)…</string>
+    <string name="log_root_ready">✓ root đã sẵn sàng</string>
+    <string name="log_root_failed">✗ Lấy root thất bại</string>
+    <string name="log_root_fail">✗ root thất bại %1$s</string>
+    <string name="log_querying">Đang truy vấn thông tin thiết bị…</string>
+    <string name="log_query_fail">✗ Truy vấn thất bại %1$s</string>
+    <string name="log_progress">[Tiến độ] %1$s</string>
+    <string name="log_display_ok">✓ Đã cập nhật màn hình kính</string>
+    <string name="log_display_fail">✗ Đặt chế độ hiển thị thất bại %1$s</string>
+    <string name="led_name">Đèn %1$s</string>
+    <string name="log_led_switch">%1$s %2$s…</string>
+    <string name="log_led_done">✓ %1$s: %2$s</string>
+    <string name="log_led_switch_fail">✗ %1$s thất bại %2$s</string>
+    <string name="state_on">bật</string>
+    <string name="state_off">tắt</string>
+    <string name="state_enabled">bật</string>
+    <string name="state_disabled">tắt</string>
+    <string name="status_summary">Album %1$d · Media %2$d · root %3$s · ghostlock %4$s</string>
+    <string name="log_lang_switched">✓ Đã chuyển ngôn ngữ: %1$s</string>
+    <string name="toast_bt_disabled">Vui lòng bật Bluetooth trước</string>
+    <string name="toast_no_paired_device">Chưa có thiết bị Bluetooth nào được ghép nối. Hãy ghép nối kính trong cài đặt Bluetooth của hệ thống trước.</string>
+    <string name="toast_connect_failed">Kết nối thất bại: %1$s</string>
+    <string name="toast_no_local_media">Máy không có tệp nào của album này</string>
+    <string name="confirm_delete_local_files">Xóa %1$d tệp trên máy? (bản gốc trên kính không bị ảnh hưởng)</string>
+    <string name="batch_downloading_file">Đang tải %1$d/%2$d: %3$s</string>
+    <string name="toast_delete_done">Đã xóa xong: thành công %1$d</string>
+    <string name="toast_delete_done_fail">Đã xóa xong: thành công %1$d, thất bại %2$d</string>
+    <string name="toast_download_done">Đã tải xong: thành công %1$d</string>
+    <string name="toast_download_done_fail">Đã tải xong: thành công %1$d, thất bại %2$d</string>
+    <string name="dialog_download_note">\nSẽ tải tệp gốc từ kính (truyền Bluetooth chậm).</string>
+    <string name="err_local_file_missing">Không tìm thấy tệp trên máy</string>
+    <string name="toast_delete_fail">Xóa thất bại %1$s</string>
+    <string name="err_download_fail">Tải thất bại: %1$s</string>
+    <string name="toast_opening">Đang mở %1$s…</string>
+    <string name="toast_create_fail">Tạo thất bại %1$s</string>
+    <string name="toast_rename_fail">Đổi tên thất bại %1$s</string>
+    <string name="local_album_delete">Xóa album trên máy</string>
+    <string name="local_album_delete_msg">Xóa "%1$s" (%2$s) trên điện thoại?\nBản gốc trên kính không bị ảnh hưởng.</string>
+    <string name="toast_local_album_deleted">Đã xóa album trên máy</string>
+    <string name="media_type_video">Video</string>
+    <string name="media_type_photo">Ảnh</string>
+    <string name="wifi_ap_timeout">Điểm phát Wi-Fi của kính khởi động quá thời gian, vui lòng thử lại sau</string>
+    <string name="wifi_tcp_failed">Kết nối TCP thất bại: %1$s</string>
+    <string name="sec_ring">Điều khiển bằng nhẫn</string>
+    <string name="ring_switch_label">Bật điều khiển bằng cử chỉ của nhẫn</string>
+    <string name="ring_hint">Chạm = ảnh · Chạm đúp = video · Nhấn giữ = im lặng · Cuộn = đổi hiển thị</string>
+    <string name="ring_status_idle">Chưa có cử chỉ</string>
+    <string name="ring_status_fmt">%1$d cử chỉ · gần nhất: %2$s</string>
+    <string name="ring_learn_btn">Học cử chỉ</string>
+    <string name="ring_learn_hint">Hãy nhấn nút trên nhẫn…</string>
+    <string name="ring_learn_result">Đã nhận mã phím %1$s</string>
+    <string name="ring_map_title">Chọn hành động cho mã phím này</string>
+    <string name="ring_action_photo">Ảnh</string>
+    <string name="ring_action_video">Bắt đầu/dừng video</string>
+    <string name="ring_action_silent">Bật/tắt chụp im lặng</string>
+    <string name="ring_action_display_next">Thông tin hiển thị (tiếp)</string>
+    <string name="ring_action_display_prev">Thông tin hiển thị (lùi)</string>
+    <string name="ring_action_none">Không hành động</string>
+    <string name="ring_map_saved">Đã gán %1$s → %2$s</string>
+    <string name="ring_map_cleared">Đã xóa gán phím tùy chỉnh</string>
+    <string name="ring_pair_btn">Ghép nối nhẫn</string>
+    <string name="ring_glasses_switch">Điều khiển nhẫn phía kính</string>
+    <string name="ring_glasses_status">Kính: %1$s</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="log_expand">Phóng to</string>
+    <string name="sec_connection">Kết nối</string>
+    <string name="sec_capture_root">Chụp và quyền</string>
+    <string name="sec_led_settings">Đèn báo riêng tư</string>
+    <string name="sec_language">Ngôn ngữ</string>
+    <string name="wifi_switch_hint">Cả phương tiện và điều khiển đều ưu tiên Wi-Fi; Bluetooth chỉ dùng dự phòng</string>
+    <string name="led_colors_hint">Chọn màu đèn muốn bật</string>
+    <string name="ring_a_label">Cử chỉ phía điện thoại (nhẫn ghép với điện thoại)</string>
+    <string name="ring_a_hint">Cần app ở tiền cảnh (hỗ trợ nhấp chuột và phím media)</string>
+    <string name="ring_b_label">Cử chỉ phía kính (nhẫn/touchpad ghép với kính)</string>
+    <string name="ring_b_hint">Kính đọc evdev bằng root; hoạt động cả khi ở nền</string>
+    <string name="state_running">đang chạy</string>
+    <string name="state_stopped">đã dừng</string>
+    <string name="ring_phone_prefix">Điện thoại: %1$s</string>
+    <string name="log_app_started">Ứng dụng sẵn sàng</string>
+    <string name="action_search">Tìm album</string>
+    <string name="action_sort">Sắp xếp</string>
+    <string name="sort_name">Tên</string>
+    <string name="sort_count">Số mục</string>
+    <string name="sort_newest">Mới nhất</string>
+    <string name="local_summary">%1$d album · %2$d mục · dùng %3$s</string>
+    <string name="selected_albums">Đã chọn %1$d</string>
+    <string name="toast_local_albums_deleted">Đã xóa %1$d album trên máy</string>
+    <string name="confirm_delete_local_albums">Xóa %1$d album trên điện thoại?\n(bản gốc trên kính không bị ảnh hưởng)</string>
+    <string name="ring_state_enabled">Đã bật</string>
+    <string name="ring_state_disabled">Đã tắt</string>
+    <string name="ring_learn_waiting">Đang chờ phím…</string>
+    <string name="ring_map_set">Đã gán %1$s → %2$s</string>
+    <string name="ring_map_cleared_short">Đã xóa gán phím tùy chỉnh</string>
+    <string name="ring_no_action">%1$s → (không có hành động)</string>
+    <string name="ring_err_prefix">Lỗi: %1$s</string>
+    <string name="ring_photo_ok">Đã chụp ảnh %1$s</string>
+    <string name="ring_photo_fail">Chụp ảnh thất bại: %1$s</string>
+    <string name="ring_video_start">Bắt đầu quay</string>
+    <string name="ring_video_fail">Quay video thất bại: %1$s</string>
+    <string name="ring_video_saved">Đã lưu video %1$s</string>
+    <string name="ring_stop_fail">Dừng thất bại: %1$s</string>
+    <string name="ring_status_read_fail">Đọc trạng thái thất bại</string>
+    <string name="ring_silent_on">Chụp im lặng bật</string>
+    <string name="ring_silent_on_pending">Chụp im lặng bật (chờ root)</string>
+    <string name="ring_silent_off">Chụp im lặng tắt</string>
+    <string name="ring_silent_fail">Đặt chế độ im lặng thất bại: %1$s</string>
+    <string name="ring_display_switched">Đã chuyển hiển thị sang %1$s</string>
+    <string name="ring_display_fail">Đặt chế độ hiển thị thất bại: %1$s</string>
+    <string name="ring_on">bật</string>
+    <string name="ring_off">tắt</string>
+    <string name="sec_appearance">Giao diện</string>
+    <string name="light_mode_label">Chế độ sáng</string>
+    <string name="light_mode_hint">Tắt = giao diện tối; Bật = giao diện sáng</string>
+    <string name="ring_camera_not_ready">Camera chưa sẵn sàng (hãy mở ứng dụng trên kính)</string>
+    <string name="ring_status_no_device">Không tìm thấy thiết bị nhập (%1$s)</string>
+    <string name="ring_status_start_failed">Không khởi động được getevent</string>
+    <string name="ring_status_stopped">Đã dừng</string>
+    <string name="ring_display_none">Ẩn tất cả</string>
+    <string name="ghost_skip_lpe">Đã phát hiện root daemon thường trú, bỏ qua LPE</string>
+    <string name="ghost_prepare_payload">Đang chuẩn bị payload</string>
+    <string name="ghost_done">Hoàn tất</string>
+    <string name="ghost_failed">Thất bại: %1$s</string>
+    <string name="ghost_bridge_dir_missing">Thư mục bridge không tồn tại hoặc không ghi được: %1$s (chạy deploy/root_bridge.sh trước)</string>
+    <string name="ghost_bridge_sent">Đã gửi lệnh, đang chờ helper chạy exploit (có thể mất vài phút)</string>
+    <string name="ghost_bridge_timeout">bridge quá thời gian (helper có thường trú? xem %1$s)</string>
+    <string name="ghost_bridge_report">bridge báo cáo: %1$s</string>
+    <string name="ghost_attempt">Lần thử exploit thứ %1$s</string>
+    <string name="ghost_helper_started">helper đã bắt đầu xử lý</string>
+    <string name="ghost_ready_seen">exploit đã đạt mốc ready</string>
+    <string name="ghost_payload_replaced">Đang thay thế payload</string>
+    <string name="ghost_wait_payload_root">Đang chờ payload chạy xong với quyền root</string>
+    <string name="ghost_binary_missing">binary không tồn tại hoặc không chạy được: %1$s</string>
+    <string name="ghost_exploit_started">Đang khởi chạy exploit</string>
+    <string name="ghost_exploit_start_failed">Không thể khởi chạy exploit (xem %1$s)</string>
+    <string name="ghost_wait_ready">Đang chờ mốc ready</string>
+    <string name="ghost_ready_timeout">Mốc ready quá thời gian: %1$s</string>
+    <string name="ghost_ready_timeout_retry">Mốc ready quá thời gian</string>
+    <string name="ghost_payload_write_failed">Không ghi được %1$s (quyền ghi của App với /data/local/tmp?)</string>
+    <string name="ghost_wait_payload">Đang chờ payload hoàn tất</string>
+    <string name="ghost_payload_timeout">Mốc done quá thời gian. payload log=%1$s</string>
+    <string name="ghost_exploit_output">exploit: %1$s</string>
+    <string name="ghost_shizuku_not_running">Shizuku server chưa chạy (cần một lần mỗi boot: deploy/start_shizuku.sh)</string>
+    <string name="ghost_shizuku_unauthorized">Shizuku chưa được cấp quyền (đã gửi yêu cầu cấp quyền)</string>
+    <string name="ghost_shizuku_bind_failed">Liên kết Shizuku UserService thất bại</string>
+    <string name="ghost_shizuku_root_run_shell">Shizuku server chạy bằng root, dùng run_shell để hạ quyền chạy exploit</string>
+    <string name="ghost_shizuku_no_run_shell">Shizuku server chạy bằng root và không có run_shell để hạ quyền; hãy khởi động server qua adb/shell</string>
+    <string name="ghost_shizuku_bad_identity">Danh tính thực thi Shizuku bất thường: %1$s</string>
+    <string name="ghost_shizuku_unavailable">Shizuku không khả dụng (%1$s) → quay về bridge helper</string>
+    <string name="ghost_attempt_shizuku">Lần thử exploit thứ %1$s (danh tính Shizuku/shell)</string>
+    <string name="ghost_kernel_panic">kernel panic: thiết bị đã khởi động lại (thất bại bình thường, cần thử lại)</string>
+    <string name="ghost_process_died">Tiến trình exploit kết thúc sớm (có thể bị OOM kill)</string>
+    <string name="ghost_process_died_retry">Tiến trình exploit kết thúc sớm (có thể bị OOM kill), thử lại</string>
+    <string name="ghost_retry_after">%1$s, thử lại</string>
+    <string name="ghost_attempts_exhausted">Mọi lần thử exploit đều thất bại (xem %1$s)</string>
+    <string name="ghost_fallback_failed">fallback thất bại: %1$s</string>
+    <string name="root_state_ok">root: khả dụng</string>
+    <string name="root_state_rearming">root: mất, đang tự khôi phục…</string>
+    <string name="root_state_rearmed">root: đã tự khôi phục</string>
+    <string name="root_state_lost">root: mất, cần khôi phục lại</string>
+    <string name="root_state_cooldown">root: mất (đang chờ, sẽ tự thử lại sau)</string>
+    <string name="root_state_unknown">root: không rõ</string>
+    <string name="root_hint_run_scripts">Chạy: %1$s</string>
+    <string name="root_hint_engine">Có thể kích hoạt qua %1$s</string>
+    <string name="root_metrics_fmt">Lần trước %1$d giây (%2$s) · thành công %3$d/%4$d</string>
+    <string name="root_keeper_fmt">%1$d lần kiểm tra · %2$d lần tự khôi phục</string>
+    <string name="sec_root_status">root trạng thái</string>
+    <string name="ghost_engine_selected">Engine đang dùng: %1$s</string>
+    <string name="root_help_body">Không có root: chụp im lặng, chặn đèn báo, truyền media qua Wi-Fi và điều khiển nhẫn trên kính sẽ không hoạt động.\nHãy chuẩn bị trigger qua adb trước: deploy/root_bridge.sh (hoặc deploy/start_shizuku.sh)</string>
+    <string name="ring_err_busy_recording">Đang quay video, không thể chụp ảnh</string>
+    <string name="ring_err_busy">Thao tác quá nhanh, vui lòng đợi</string>
+    <string name="ring_err_record_timeout">Quay video quá thời gian — đã trở về chế độ chụp ảnh</string>
+    <string name="ring_pick_title">Chọn thiết bị nhẫn</string>
+    <string name="ring_pick_scan">Quét thiết bị mới…</string>
+    <string name="ring_pick_scanning">Đang quét…</string>
+    <string name="ring_pick_empty">Không tìm thấy thiết bị nhẫn (hãy ghép nối trong cài đặt của điện thoại, hoặc lại gần và quét lại)</string>
+    <string name="ring_pick_selected">Đã chọn: %1$s</string>
+    <string name="ring_pick_bonded">✓ Đã ghép nối %1$s</string>
+    <string name="ring_pick_fail">✗ Ghép nối thất bại: %1$s</string>
+</resources>

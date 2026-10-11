@@ -1,0 +1,77 @@
+=== PATH D TEST START (Mon Aug 24 23:34:17 CST 2026) ===
+uid=0(root) gid=0(root) groups=0(root) context=u:r:kernel:s0
+Permissive
+
+=== BASELINE (camera idle) ===
+brightness=0
+led_current=2
+is_take_on=1
+is_spread=1
+session_open=[
+]
+enforce_psensor(sysfs)=1
+thres_pct=0
+psensor=1
+psensor0=0
+hall=1
+
+########## STEP 2: SIMULATE CAMERA-ACTIVE BASELINE ##########
+--- setprop session_open 1 ---
+rc=0
+--- service call lights_ctrl 8 (sendEvent camera-open) ---
+Result: Parcel(00000000    '....')
+--- LED after camera-active baseline ---
+brightness=255
+  mCurrentEvent=Event{mType=EVENT_TYPE_WARN(2), mId=EVENT_WARN_ID_CAMERA_OPEN(2014), mCallPid='25466', mTime='176772', mLightId=8, mState=TURN_ON, mPriority=8000, isRgb=false, mDuration=0, mColor=0x000000, mCurrent=0x020202}
+  mIsPowerOff=false
+  mIsBooted=true
+  DBG=false
+  Factory: com.rokid.server.light.EventFactoryV4@bbd5be1
+  Event size =1
+
+########## STEP 3: SUPPRESS LED VIA P-SENSOR / WEARING-STATE SPOOF ##########
+--- try sysfs is_take_on node (expected absent) ---
+/data/local/tmp/.ghostlock_root.sh[35]: can't create /sys/class/sensors/proximity/is_take_on: No such file or directory
+node not found (as expected)
+--- forge wearing/folding state via properties ---
+set is_take_on=0 rc=0
+set is_spread=0 rc=0
+--- forge psensor enforcement OFF via property (init.rc -> PSOC sysfs) ---
+set enforce_psensor=0 rc=0
+--- LED state after ALL state forgery ---
+brightness=255
+  mCurrentEvent=Event{mType=EVENT_TYPE_WARN(2), mId=EVENT_WARN_ID_CAMERA_OPEN(2014), mCallPid='25466', mTime='176772', mLightId=8, mState=TURN_ON, mPriority=8000, isRgb=false, mDuration=0, mColor=0x000000, mCurrent=0x020202}
+  mIsPowerOff=false
+  mIsBooted=true
+  DBG=false
+  Factory: com.rokid.server.light.EventFactoryV4@bbd5be1
+  Event size =2
+--- properties/sysfs after forgery (check overwrite) ---
+is_take_on=0
+is_spread=1
+enforce_psensor(sysfs)=0
+--- dmesg transitions ---
+[  179.949450] Rokid,PSOC-TP-R 1-0008: psensor_delay_work before set extcon psensor = 0
+[  179.949474] rt600_spi_boot spi0.0: proximity state = 0
+
+########## STEP 4: RESTORE & VERIFY ##########
+restore is_take_on=1 rc=0
+restore is_spread=1 rc=0
+restore enforce_psensor=1 rc=0
+Result: Parcel(00000000    '....')
+clear session_open rc=0
+--- final state ---
+brightness=0
+is_take_on=1
+is_spread=1
+session_open=[
+]
+enforce_psensor(sysfs)=1
+  mCurrentEvent=null
+  mIsPowerOff=false
+  mIsBooted=true
+  DBG=false
+  Factory: com.rokid.server.light.EventFactoryV4@bbd5be1
+  Event size =0
+
+=== PATH_D_TEST_DONE ===

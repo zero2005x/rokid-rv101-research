@@ -1,0 +1,17 @@
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+build/
+out/
+.gradle/
+local.properties
+*.iml
+.idea/
+*.log
+app/libs/*.aar
+app/libs/*.jar
+app/src/main/assets/ghostlock
+debug.keystore

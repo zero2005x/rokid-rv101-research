@@ -1,0 +1,96 @@
+=== GHOSTLOCK RUNLOG ===
+tag=w2_clean version=v959 ts=134437
+--- host time ---
+Sat Aug 22 01:44:37 PM CST 2026
+--- uptime before ---
+ 13:44:38 up 0 min,  0 users,  load average: 2.41, 0.55, 0.18
+--- loadavg before ---
+2.41 0.55 0.18 4/1270 2866
+--- nr_threads (field 4 total) ---
+running/total=1/1270
+--- meminfo head ---
+MemTotal:        1816600 kB
+MemFree:          177324 kB
+MemAvailable:     853036 kB
+Buffers:            4976 kB
+--- getenforce before ---
+Enforcing
+--- device binary sha1 ---
+ec342a5aaf999d0a41ccd7ccc24d028e8b7f637e  /data/local/tmp/ghostlock_rv101
+--- local binary sha1 ---
+ec342a5aaf999d0a41ccd7ccc24d028e8b7f637e  /home/kali/rokid_root/source_code/ghostlock_rv101/build/ghostlock_rv101
+--- environment ---
+--- command ---
+GL_PURGE_CNT=0\ GL_TAIL_KILLS=16\ GL_DUMMY_KILLS=0\ W2_ATTEMPTS=1\ /data/local/tmp/ghostlock_rv101 
+=== RUN OUTPUT ===
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=2881 uid=2000 euid=2000 gid=2000
+[*] [T+26358ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffe979a2ac0c slide=0x000000296fe00000
+[*] printk_formats: "Function call interrupts" -> 0xffffffe979aca100 slide=0x000000296fe00000
+[+] KASLR: slide=0x000000296fe00000 base=0xffffffe977e00000 (2 anchors)
+[*] FOPS install attempt 1/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000006795db2728 (t=9563, ratio=1912)
+[*]   collision[2]: 00000067962a9ee0 (t=9492, ratio=1898)
+[*]   collision[3]: 0000006796a1aa68 (t=9563, ratio=1912)
+[*] kernelsnitch: top times: 9563 9563 9492 9 9 9 9 9
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11368 mm=FOUND
+[*] kernelsnitch: elapsed 2304ms mm=ffffff8071b583c0
+[*] leaked mm=ffffff8071b583c0 slab base=ffffff8071b58000
+[*] v9.14 settle[settle]: 61 rounds, o2=1070 objs=822 (quiet=5)
+[*] v9.10 gate: mm slabs 86 -> 85 objs 822 -> 702 (dip=1 calm=0)
+[*] v9.12 reclaim: o2 1 -> 2146 across full sequence (gate window 86 -> 2146, first-send=1)
+[*] v9.12 reclaim: 768/768 socketpairs, 768/768 SKB vehicles sent (15872 bytes each)
+[*] requeue ret=-1 errno=35
+[*] waiter wait_requeue_pi ret=-1 errno=110
+[*] pselect route target=ffffff8071b59608 value=ffffff8071b59500 mode=5 page=ffffff8071b58000 fake_lock=ffffff8071b58e00 fake_w0=ffffff8071b59000 fake_task=ffffff8071b59200 in=0000000000000000 out1=ffffff8071b59600 out2=ffffffe97a7bcbc0 out3=0000000000000000 out4=0000000000000001 ex0=0000000000000000 ex1=0000000000000000 ex2=ffffff8071b59200 ex3=ffffff8071b58e00 ex4=8000000000000082
+[*] pselect: calling select now (window 200000us, forged bytes resident)
+[*] consumer punch 1/5 (+20000us) tid=8926
+[*] consumer punch 1 returned ret=0 errno=0
+[*] consumer punch 2/5 (+55000us) tid=8926
+[*] consumer punch 2 returned ret=0 errno=0
+[*] consumer punch 3/5 (+90000us) tid=8926
+[*] consumer punch 3 returned ret=0 errno=0
+[*] consumer punch 4/5 (+125000us) tid=8926
+[*] consumer punch 4 returned ret=0 errno=0
+[*] consumer punch 5/5 (+160000us) tid=8926
+[*] consumer punch 5 returned ret=0 errno=0
+[*] pselect: select returned
+[*] pselect returned ret=1 errno=0 calls=5 success=5
+[*] punch_done=1 (waited 0 spins)
+[*] owner lock chain ret=0 errno=0
+[*]   DIAG veh[0] n=15872 llseek=0xffffffe97901ab88 read=0xffffffe979039168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[1] n=15872 llseek=0xffffffe97901ab88 read=0xffffffe979039168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*]   DIAG veh[2] n=15872 llseek=0xffffffe97901ab88 read=0xffffffe979039168 scratch=0x0000000000000000 safe=0x0000000000000000
+[*] install_fake_fops_v2 DIAG: write#1 MISSED (vehicle -1, llseek=0x0000000000000000 exp=0xffffffe97a7bcbc0)
+[*] cleanup: 0 vehicle(s) with diffs, 0 with STRICT signature
+[*] FOPS install attempt 2/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 00000067939fd150 (t=8873, ratio=1774)
+[*]   collision[2]: 0000006793aa86a8 (t=9109, ratio=1821)
+[*]   collision[3]: 0000006793bd3000 (t=9162, ratio=1832)
+[*] kernelsnitch: top times: 9162 9109 8873 20 20 19 19 19
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=11820 mm=FOUND
+[*] kernelsnitch: elapsed 1645ms mm=ffffff8050c830c0
+[*] leaked mm=ffffff8050c830c0 slab base=ffffff8050c80000
+=== RUN DONE (pipe rc=255) ===
+--- host time ---
+Sat Aug 22 01:45:42 PM CST 2026
+--- adb device state ---
+error: device '<DEVICE_SERIAL>' not found
+--- uptime after ---
+adb.exe: device '<DEVICE_SERIAL>' not found
+--- getenforce after ---
+adb.exe: device '<DEVICE_SERIAL>' not found
+--- log file: /home/kali/rokid_root/reports/ghostlock_runlogs/run_w2_clean_v959_134437.log ---

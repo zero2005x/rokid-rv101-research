@@ -1,0 +1,22 @@
+=== W2 diag run 11:14:00 uptime=396 ===
+[+] ghostlock_rv101 v9.30 — CVE-2026-43499 (GhostLock) / Rokid RV101 1.22.009
+[+] startup: pid=3114 uid=2000 euid=2000 gid=2000
+[*] [T+396670ms] KASLR leak
+[*] printk_formats: "Rescheduling interrupts" -> 0xffffffd272e2ac0c slide=0x0000001269200000
+[*] printk_formats: "Function call interrupts" -> 0xffffffd272eca100 slide=0x0000001269200000
+[+] KASLR: slide=0x0000001269200000 base=0xffffffd271200000 (2 anchors)
+[*] FOPS install attempt 1/6
+[*] v9.6 diag: flood clones ok=765 fail=0
+[*] kernelsnitch: baseline=5 threshold=50
+[*] v9.13 diag: dummy clones ok=450 fail=0 (first errno=0 Success)
+[*] v9.15 diag: purge clones ok=0 fail=0
+Threads:	4097
+[*]   collision[1]: 0000006428082d10 (t=9003, ratio=1800)
+[*]   collision[2]: 000000642822fa78 (t=9217, ratio=1843)
+[*]   collision[3]: 00000064282caf50 (t=9189, ratio=1837)
+[*] kernelsnitch: top times: 9217 9189 9003 7 7 7 7 7
+[*] kernelsnitch child: 3/3 collisions
+[*] kernelsnitch: hashsize=1024 sz=0x3c0 single_matches=10982 mm=FOUND
+[*] kernelsnitch: elapsed 1502ms mm=ffffff80288ee580
+[*] leaked mm=ffffff80288ee580 slab base=ffffff80288ec000
+=== end 11:14:09 ===
